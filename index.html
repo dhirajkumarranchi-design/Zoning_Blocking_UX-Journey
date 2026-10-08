@@ -204,6 +204,7 @@ input[type=date],input[type=time]{color-scheme:dark}
  <button data-t="move" class="primary" title="Move selected / clicked object (G) — click an object and drag it"><b><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.5v15M2.5 10h15M10 2.5l-2.6 2.6M10 2.5l2.6 2.6M10 17.5l-2.6-2.6M10 17.5l2.6-2.6M2.5 10l2.6-2.6M2.5 10l2.6 2.6M17.5 10l-2.6-2.6M17.5 10l-2.6 2.6"/></svg></b>Move</button>
  <button data-t="select" title="Select only, no drag-move (V) — box/shift-click select without moving anything"><b><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 2.5 L4 16.5 L8 13 L10.5 17.5 L12.5 16.3 L10 11.8 L15 11.5 Z"/></svg></b>Select</button>
  </div>
+ <button data-t="rotate" title="Rotate (O) — click a shape then drag to spin it. 10° steps by default, Shift = 90° steps, Ctrl/Cmd+Shift = 45° steps, always following the cursor's direction. Type an exact value in Position &amp; rotation once something's selected."><b><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16.3 10.2a6.3 6.3 0 1 1-1.9-4.9"/><path d="M16.8 3.2v4.6h-4.6"/></svg></b>Rotate</button>
  <div class="sep"></div>
  <div class="toolgrp" data-grp="zone">
  <button data-t="rect" class="primary" title="Rectangle zone (R)"><b><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4.5" width="14" height="11"/></svg></b>Zone</button>
@@ -304,7 +305,7 @@ input[type=date],input[type=time]{color-scheme:dark}
   <div class="box" id="boxRotate" style="display:none"><h4>Rotate</h4>
    <div class="row"><div><label>Step (°)</label><input type="number" id="iRotStep" value="15" step="1"></div>
     <div style="display:flex;align-items:flex-end;gap:6px"><button id="bRotCCW" title="Rotate counter-clockwise" style="flex:1">↺</button><button id="bRotCW" title="Rotate clockwise" style="flex:1">↻</button></div></div>
-   <div class="sub" style="margin-top:6px">Or drag the orange handle above a selected shape (Move tool).</div>
+   <div class="sub" style="margin-top:6px">Or drag the orange handle above a selected shape (Move tool), or use the Rotate tool (O) to drag anywhere. Both snap to 10° by default — hold Shift for 90°, Ctrl/Cmd+Shift for 45° — always turning toward the cursor.</div>
   </div>
   <div class="box" id="boxArray" style="display:none"><h4>Array / repeat</h4>
    <div class="row"><div><label>Count (total incl. original)</label><input type="number" id="iArrN" value="2" min="2" max="200"></div></div>
@@ -439,7 +440,9 @@ input[type=date],input[type=time]{color-scheme:dark}
   <div class="foot" id="ctot"></div>
  </div>
 </aside>
-<footer><span id="fScale"></span><span id="fCur"></span><span id="fZoom"></span><span id="fSel"></span><span style="flex:1"></span><span>Wheel zoom · Space-drag pan · Shift-click / box multi-select · Shift = 90° · Ctrl+A/C/V · Ctrl+Shift+D duplicate · Ctrl+D Daylight · Del</span></footer>
+<footer><span id="fScale"></span><span id="fCur"></span><span id="fZoom"></span><span id="fSel"></span>
+ <span style="display:flex;align-items:center;gap:5px"><label for="cmdLine" style="opacity:.75">Command:</label><input id="cmdLine" title="AutoCAD-style command line — type a tool or action name/abbreviation (MOVE, M, ROTATE, RO, RECTANG, REC, LINE, ERASE, COPY, ARRAY, UNDO…) and press Enter. Esc clears it. This never collides with the single-key shortcuts below, which only fire outside text boxes." placeholder="type a command, Enter to run" style="width:190px;background:#161616;color:#eee;border:1px solid #444;border-radius:3px;padding:2px 7px;font-size:11.5px"></span>
+ <span style="flex:1"></span><span>Wheel zoom · Space-drag pan · Shift-click / box multi-select · Shift = 90° · Rotate (O): 10° steps, Shift 90°, Ctrl/Cmd+Shift 45° · Ctrl+A/C/V · Ctrl+Shift+D duplicate · Ctrl+D Daylight · Del · Command line ← AutoCAD-style (type MOVE, RO, REC, LINE, ERASE…)</span></footer>
 
 <div id="modal"><div class="mdl">
  <h3>Import space program</h3>
@@ -769,6 +772,13 @@ function rotateObjInPlace(o,delta){const c=centerOf(o);
  else if((o.type==='door'||o.type==='window')&&!o.wid)o.ang=(o.ang||0)+delta;
  else if(o.type==='wall'){o.a=rotPt(o.a,c,delta);o.b=rotPt(o.b,c,delta);reflowWallOpenings(o)}
  else if(o.type==='poly'||o.type==='pen'||o.type==='brush')o.pts=o.pts.map(p=>rotPt(p,c,delta))}
+// V12.1: resize/rotate anchor is always the shape's own bottom-right corner, never the
+// center and never "wherever the top-left happened to be" — for rect/rrect/stairs that's
+// the TRUE rotated vertex (so it stays visually pinned through a rotate+resize combo); for
+// everything else (no w/h rectangle to speak of) it's the bbox's bottom-right corner.
+function brAnchor(o){if(o.type==='rect'||o.type==='rrect'||o.type==='stairs'){const c=centerOf(o);return rotPt({x:o.x+o.w,y:o.y+o.h},c,o.rot||0)}
+ const b=bbox(o);return{x:b.x+b.w,y:b.y+b.h}}
+function tlVertex(o){const c=centerOf(o);return rotPt({x:o.x,y:o.y},c,o.rot||0)}
 function groupBBox(arr){const bs=arr.map(bbox),x=Math.min(...bs.map(b=>b.x)),y=Math.min(...bs.map(b=>b.y)),r=Math.max(...bs.map(b=>b.x+b.w)),bt=Math.max(...bs.map(b=>b.y+b.h));return{x,y,w:r-x,h:bt-y}}
 function scaleGeom(o,orig,anchor,fx,fy){const sx=v=>anchor.x+(v-anchor.x)*fx,sy=v=>anchor.y+(v-anchor.y)*fy;
  if(o.type==='rect'||o.type==='rrect'||o.type==='stairs'){o.x=sx(orig.x);o.y=sy(orig.y);o.w=orig.w*fx;o.h=orig.h*fy;if(o.type==='rrect')o.rad=(orig.rad||0)*(fx+fy)/2}
@@ -787,6 +797,12 @@ function rotateGeomAround(o,orig,pivot,delta){
  else if(o.type==='door'||o.type==='window'){if(!orig.wid){const c=rotPt({x:orig.x,y:orig.y},pivot,delta);o.x=c.x;o.y=c.y;o.ang=(orig.ang||0)+delta}}
  else if(o.type==='wall'||o.type==='dim'){o.a=rotPt(orig.a,pivot,delta);o.b=rotPt(orig.b,pivot,delta);if(o.type==='wall')reflowWallOpenings(o)}
  else if(o.type==='poly'||o.type==='pen'||o.type==='brush')o.pts=orig.pts.map(p=>rotPt(p,pivot,delta))}
+// V12: drag-rotate is quantized instead of free-angle ("random") — 10° steps by default,
+// Shift = 90° steps, Ctrl/Cmd+Shift = 45° steps (same combo on Mac, since the app already
+// treats ctrlKey||metaKey as equivalent everywhere else). Direction always follows the
+// cursor — only the granularity changes.
+function rotSnapStep(e){return(e&&(e.ctrlKey||e.metaKey)&&e.shiftKey)?45:(e&&e.shiftKey)?90:10}
+function snapRotDelta(delta,e){const stepRad=rotSnapStep(e)*Math.PI/180;return Math.round(delta/stepRad)*stepRad}
 function areaPx(p){let a=0;for(let i=0;i<p.length;i++){const j=(i+1)%p.length;a+=p[i].x*p[j].y-p[j].x*p[i].y}return Math.abs(a)/2}
 const pxToM2=px=>px*S.scale*S.scale/1e6,m2ToPx=m2=>m2*1e6/(S.scale*S.scale),pxM=v=>v*S.scale/1000,mPx=m=>m*1000/S.scale;
 const toU=m2=>unit==='SF'?m2*SF:m2;
@@ -1231,13 +1247,13 @@ function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#303030';ctx.fillRe
  drawColGrid(ctx,view.k);
  S.objs.forEach(o=>{if(layerVisible(o))drawObj(o,ctx,view.k)});drawBound(ctx,view.k);drawFlows(ctx,view.k);drawDayShadows(ctx,view.k);drawEnvelope(ctx,view.k);
  sels.forEach((o,i)=>{const b=bbox(o),pd=4/view.k;ctx.setLineDash([6/view.k,4/view.k]);ctx.strokeStyle=i===sels.length-1?'#d35400':'#f0b27a';ctx.lineWidth=2/view.k;ctx.strokeRect(b.x-pd,b.y-pd,b.w+2*pd,b.h+2*pd);ctx.setLineDash([]);
-  if(sels.length===1&&(o.type==='rect'||o.type==='rrect'||o.type==='stairs')){ctx.fillStyle='#d35400';const s=9/view.k;ctx.fillRect(o.x+o.w-s/2,o.y+o.h-s/2,s,s)}
+  if(sels.length===1&&(o.type==='rect'||o.type==='rrect'||o.type==='stairs')){ctx.fillStyle='#d35400';const s=9/view.k,tl=tlVertex(o);ctx.fillRect(tl.x-s/2,tl.y-s/2,s,s)}
   if(sels.length===1&&o.type==='poly'){ctx.fillStyle='#d35400';o.pts.forEach(q=>ctx.fillRect(q.x-4/view.k,q.y-4/view.k,8/view.k,8/view.k))}
   if(sels.length===1&&(o.type==='ngon'||o.type==='circle')){ctx.fillStyle='#d35400';const s=9/view.k;ctx.beginPath();ctx.arc(o.x+o.r,o.y,s/2,0,Math.PI*2);ctx.fill()}
   if(sels.length===1&&ROTATABLE.includes(o.type)){const hx=b.x+b.w/2,hy=b.y-24/view.k;ctx.strokeStyle='#d35400';ctx.lineWidth=1.3/view.k;ctx.beginPath();ctx.moveTo(hx,b.y);ctx.lineTo(hx,hy);ctx.stroke();
    ctx.beginPath();ctx.arc(hx,hy,6/view.k,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#d35400';ctx.lineWidth=1.5/view.k;ctx.stroke()}});
  if(sels.length>1){const bb=groupBBox(sels),pd=6/view.k;ctx.setLineDash([]);ctx.strokeStyle='#2f80ed';ctx.lineWidth=1.5/view.k;ctx.strokeRect(bb.x-pd,bb.y-pd,bb.w+2*pd,bb.h+2*pd);
-  const hs=9/view.k;ctx.fillStyle='#2f80ed';ctx.fillRect(bb.x+bb.w+pd-hs/2,bb.y+bb.h+pd-hs/2,hs,hs);
+  const hs=9/view.k;ctx.fillStyle='#2f80ed';ctx.fillRect(bb.x-pd-hs/2,bb.y-pd-hs/2,hs,hs);
   const hx=bb.x+bb.w/2,hy=bb.y-pd-24/view.k;ctx.beginPath();ctx.moveTo(bb.x+bb.w/2,bb.y-pd);ctx.lineTo(hx,hy);ctx.stroke();
   ctx.beginPath();ctx.arc(hx,hy,6/view.k,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle='#2f80ed';ctx.lineWidth=1.5/view.k;ctx.stroke()}
  if(snapHighlight){const sp=snapHighlight,span=4000/view.k;ctx.save();ctx.strokeStyle='#ff5050';ctx.lineWidth=1/view.k;ctx.setLineDash([4/view.k,3/view.k]);
@@ -1558,10 +1574,15 @@ function setTool(t){tool=t;draft=null;polyMode='line';wallChainPts=null;dimChain
  if(t==='circle')toast('Drag from the centre outward to set the radius.');
  if(t==='poly')toast('Click to place straight corners. Type a number + Enter for an exact edge length. Use the Line/Arc toggle (or L/A keys) to bend a segment. Double-click or Enter to finish.',6500);
  if(t==='dimchain')toast('Click a chain of points to string dimensions end to end. Double-click/Enter/Esc to stop.',5000);
+ if(t==='rotate')switchTab('pS'); // reveal the Rotate box + absolute-degree input the instant the tool is picked, not just once a drag starts
  draw()}
 document.querySelectorAll('nav [data-t]').forEach(b=>b.onclick=()=>setTool(b.dataset.t));
 setTool('move');
-document.querySelectorAll('.tabs div').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tabs div').forEach(x=>x.classList.toggle('on',x===t));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id===t.dataset.p))});
+// V12.1: factored out so code (not just a tab click) can switch panes — used to auto-reveal
+// the Properties tab (where the Rotate box + the absolute-degree input live) the moment a
+// rotate operation starts, since loadSel() alone never changes which tab is on top.
+function switchTab(paneId){document.querySelectorAll('.tabs div').forEach(x=>x.classList.toggle('on',x.dataset.p===paneId));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id===paneId))}
+document.querySelectorAll('.tabs div').forEach(t=>t.onclick=()=>switchTab(t.dataset.p));
 function setUnit(u){unit=u;$('uSF').classList.toggle('on',u==='SF');$('uM2').classList.toggle('on',u==='m²');sync()}
 $('uSF').onclick=()=>setUnit('SF');$('uM2').onclick=()=>setUnit('m²');$('scalePill').onclick=()=>openScaleSetupModal();
 $('ssuKnown').onclick=()=>{closeScaleSetupModal();setTool('calib')};
@@ -1604,20 +1625,35 @@ cv.onmousedown=e=>{
   sync();return}
  if(tool==='move'){const s=sel();
   if(sels.length>1){const bb=groupBBox(sels),pd=6/view.k,t=10/view.k;
-   if(Math.abs(raw.x-(bb.x+bb.w+pd))<t&&Math.abs(raw.y-(bb.y+bb.h+pd))<t){push();drag={groupResize:1,anchor:{x:bb.x-pd,y:bb.y-pd},origW:bb.w+2*pd,origH:bb.h+2*pd,orig:JSON.parse(JSON.stringify(sels))};return}
+   // V12.1: anchor is the group's bottom-right corner (fixed); the handle you grab and
+   // drag is now the top-left, which moves to follow the cursor.
+   if(Math.abs(raw.x-(bb.x-pd))<t&&Math.abs(raw.y-(bb.y-pd))<t){push();drag={groupResize:1,anchor:{x:bb.x+bb.w+pd,y:bb.y+bb.h+pd},origW:bb.w+2*pd,origH:bb.h+2*pd,orig:JSON.parse(JSON.stringify(sels))};return}
    const hx=bb.x+bb.w/2,hy=bb.y-pd-24/view.k;
-   if(Math.hypot(raw.x-hx,raw.y-hy)<9/view.k){push();const cx=bb.x+bb.w/2,cy=bb.y+bb.h/2;drag={groupRotate:1,cx,cy,startAng:Math.atan2(raw.y-cy,raw.x-cx),orig:JSON.parse(JSON.stringify(sels))};return}}
-  if(sels.length===1&&(s.type==='rect'||s.type==='rrect'||s.type==='stairs')){const t=10/view.k;if(Math.abs(raw.x-(s.x+s.w))<t&&Math.abs(raw.y-(s.y+s.h))<t){push();drag={resize:1,w0:s.w,h0:s.h,area:Math.abs(s.w*s.h)};return}}
+   if(Math.hypot(raw.x-hx,raw.y-hy)<9/view.k){push();switchTab('pS');const cx=bb.x+bb.w,cy=bb.y+bb.h;drag={groupRotate:1,cx,cy,startAng:Math.atan2(raw.y-cy,raw.x-cx),orig:JSON.parse(JSON.stringify(sels))};return}}
+  if(sels.length===1&&(s.type==='rect'||s.type==='rrect'||s.type==='stairs')){const t=10/view.k,tl=tlVertex(s);if(Math.abs(raw.x-tl.x)<t&&Math.abs(raw.y-tl.y)<t){push();drag={resize:1,w0:s.w,h0:s.h,area:Math.abs(s.w*s.h),anchor:brAnchor(s),rot:s.rot||0};return}}
   if(sels.length===1&&(s.type==='ngon'||s.type==='circle')){const t=10/view.k;if(Math.hypot(raw.x-(s.x+s.r),raw.y-s.y)<t){
    if(s.locked){toast('Area locked — unlock to resize (radius changes area 1:1)');return}
    push();drag={radiusAdj:1};return}}
   if(sels.length===1&&s.type==='poly'){const vi=s.pts.findIndex(q=>Math.hypot(q.x-raw.x,q.y-raw.y)<8/view.k);if(vi>=0){push();drag={vert:vi,area0:areaPx(pts(s))};return}}
   if(sels.length===1&&ROTATABLE.includes(s.type)){const b=bbox(s),hx=b.x+b.w/2,hy=b.y-24/view.k;
-   if(Math.hypot(raw.x-hx,raw.y-hy)<9/view.k){push();const c=centerOf(s);drag={rotate:1,cx:c.x,cy:c.y,startAng:Math.atan2(raw.y-c.y,raw.x-c.x),orig:JSON.parse(JSON.stringify(s)),idx:S.objs.indexOf(s)};return}}
+   if(Math.hypot(raw.x-hx,raw.y-hy)<9/view.k){push();switchTab('pS');const c=brAnchor(s);drag={rotate:1,cx:c.x,cy:c.y,startAng:Math.atan2(raw.y-c.y,raw.x-c.x),orig:JSON.parse(JSON.stringify(s)),idx:S.objs.indexOf(s)};return}}
   const h=hit(raw);
   if(h){if(e.shiftKey)sels=sels.includes(h)?sels.filter(x=>x!==h):[...sels,h];else if(!sels.includes(h))sels=[h];
    loadSel();push();drag={mv:1,last:raw,acc:{x:0,y:0}}}
   else{if(!e.shiftKey)sels=[];draft={type:'marq',x:raw.x,y:raw.y,w:0,h:0};drag={marq:1,a:raw,add:e.shiftKey}}
+  sync();return}
+ if(tool==='rotate'){
+  // V12 dedicated Rotate tool: click a shape (or click empty to pick one up, shift-click to
+  // add to the selection) then drag anywhere to spin it — same quantized-angle mechanics as
+  // the handle drag in Move, just without having to grab the small handle first.
+  const h=hit(raw);
+  if(h&&!sels.includes(h)){sels=e.shiftKey?[...sels,h]:[h];loadSel()}
+  else if(!h&&!sels.length){sync();return}
+  const targets=sels.filter(o=>ROTATABLE.includes(o.type));
+  if(!targets.length){toast('Nothing rotatable selected — click a zone, wall, or other shape first.');sync();return}
+  push();switchTab('pS');
+  if(sels.length===1){const s=sels[0],c=brAnchor(s);drag={rotate:1,cx:c.x,cy:c.y,startAng:Math.atan2(raw.y-c.y,raw.x-c.x),orig:JSON.parse(JSON.stringify(s)),idx:S.objs.indexOf(s)}}
+  else{const bb=groupBBox(sels),cx=bb.x+bb.w,cy=bb.y+bb.h;drag={groupRotate:1,cx,cy,startAng:Math.atan2(raw.y-cy,raw.x-cx),orig:JSON.parse(JSON.stringify(sels))}}
   sync();return}
  if(tool==='rect'){draft={type:'rect',x:w.x,y:w.y,w:0,h:0,cat:$('iCat').value,num:nextRoomNum($('iCat').value),...st};drag={box:1,a:w}}
  else if(tool==='rrect'){draft={type:'rrect',x:w.x,y:w.y,w:0,h:0,rad:mPx(.6),cat:$('iCat').value,num:nextRoomNum($('iCat').value),...st};drag={box:1,a:w}}
@@ -1656,7 +1692,13 @@ cv.onmousemove=e=>{const raw=toW(e.offsetX,e.offsetY),w=gp(raw);mouse=(tool==='s
  else if(drag&&drag.mv){let dx=raw.x-drag.last.x,dy=raw.y-drag.last.y;
   if($('iGrid').checked){drag.acc.x+=dx;drag.acc.y+=dy;const b=bbox(sel()),nx=gs(b.x+drag.acc.x)-b.x,ny=gs(b.y+drag.acc.y)-b.y;dx=nx;dy=ny;drag.acc.x-=nx;drag.acc.y-=ny}
   sels.forEach(o=>move(o,dx,dy));drag.last=raw;sync()}
- else if(drag&&drag.resize){const s=sel();let nw=w.x-s.x,nh=w.y-s.y,warn='';
+ else if(drag&&drag.resize){const s=sel();
+  // V12.1: anchor (bottom-right corner, world-fixed, rotation-aware) never moves — the
+  // point under the cursor is the TOP-LEFT (opposite) corner instead of s.x,s.y directly,
+  // so first un-rotate the cursor-to-anchor vector back into the shape's own local frame
+  // to recover the (possibly signed) local w/h, exactly like the old nw/nh did at rot=0.
+  const rot=drag.rot||0,cr=Math.cos(rot),sr=Math.sin(rot),dx=drag.anchor.x-w.x,dy=drag.anchor.y-w.y;
+  let nw=dx*cr+dy*sr,nh=-dx*sr+dy*cr,warn='';
   if(s.locked){const area=drag.area||Math.abs(nw*nh)||1,aw0=Math.abs(drag.w0||1),ah0=Math.abs(drag.h0||1);
    let aw=Math.abs(nw)||.001,ah=Math.abs(nh)||.001;
    if(Math.abs(aw-aw0)>=Math.abs(ah-ah0)){aw=Math.max(aw,.001);ah=area/aw}else{ah=Math.max(ah,.001);aw=area/ah}
@@ -1668,6 +1710,10 @@ cv.onmousemove=e=>{const raw=toW(e.offsetX,e.offsetY),w=gp(raw);mouse=(tool==='s
   else{s.w=nw;s.h=nh;const minW=s.minW||0,minH=s.minH||0;
    if(minW&&Math.abs(s.w)<minW)warn+=`Too narrow in X — min ${pxM(minW).toFixed(2)} m. `;
    if(minH&&Math.abs(s.h)<minH)warn+=`Too narrow in Y — min ${pxM(minH).toFixed(2)} m.`}
+  // re-anchor: the center is always the midpoint of the two opposite corners (true for any
+  // rotation, since rotation preserves midpoints), so recover x,y from that instead of
+  // leaving them untouched — this is what actually keeps the bottom-right corner fixed.
+  const cx=(w.x+drag.anchor.x)/2,cy=(w.y+drag.anchor.y)/2;s.x=cx-s.w/2;s.y=cy-s.h/2;
   lt=dimTxt(s.w,s.h)+(warn?'\n⚠ '+warn:'');sync()}
  else if(drag&&drag.radiusAdj){const s=sel();s.r=Math.max(5,Math.hypot(w.x-s.x,w.y-s.y));lt=`r ${pxM(s.r).toFixed(2)} m`;sync()}
  else if(drag&&drag.vert!==undefined){const s=sel(),prev=s.pts[drag.vert];s.pts[drag.vert]=w;
@@ -1676,13 +1722,17 @@ cv.onmousemove=e=>{const raw=toW(e.offsetX,e.offsetY),w=gp(raw);mouse=(tool==='s
    else lt=fmt(zA(s))+' '+unit}
   else lt=fmt(zA(s))+' '+unit;
   sync()}
- else if(drag&&drag.rotate){const curAng=Math.atan2(raw.y-drag.cy,raw.x-drag.cx),delta=curAng-drag.startAng;
-  const fresh=JSON.parse(JSON.stringify(drag.orig));rotateObjInPlace(fresh,delta);S.objs[drag.idx]=fresh;sels=[fresh];
-  lt=`${(delta*180/Math.PI).toFixed(1)}°`;sync()}
- else if(drag&&drag.groupResize){const anchor=drag.anchor,fx=Math.max(.05,(raw.x-anchor.x)/drag.origW),fy=Math.max(.05,(raw.y-anchor.y)/drag.origH);
+ else if(drag&&drag.rotate){const curAng=Math.atan2(raw.y-drag.cy,raw.x-drag.cx),delta=snapRotDelta(curAng-drag.startAng,e),pivot={x:drag.cx,y:drag.cy};
+  // V12.1: pivot is the shape's bottom-right anchor (drag.cx/cy), not its center — use the
+  // already-external-pivot-aware rotateGeomAround (previously group-rotate only) instead of
+  // rotateObjInPlace, which can only ever spin a shape around its own center.
+  const fresh=JSON.parse(JSON.stringify(drag.orig));rotateGeomAround(fresh,drag.orig,pivot,delta);S.objs[drag.idx]=fresh;sels=[fresh];
+  if(SCALARROT.includes(fresh.type))$('iRotAbs').value=((fresh.rot||0)*180/Math.PI).toFixed(1); // live-update while dragging, not just at drag-end
+  lt=`${(delta*180/Math.PI).toFixed(0)}° · ${rotSnapStep(e)}° steps`;sync()}
+ else if(drag&&drag.groupResize){const anchor=drag.anchor,fx=Math.max(.05,(anchor.x-raw.x)/drag.origW),fy=Math.max(.05,(anchor.y-raw.y)/drag.origH);
   sels.forEach((o,i)=>scaleGeom(o,drag.orig[i],anchor,fx,fy));lt=`× ${fx.toFixed(2)} / ${fy.toFixed(2)}`;sync()}
- else if(drag&&drag.groupRotate){const curAng=Math.atan2(raw.y-drag.cy,raw.x-drag.cx),delta=curAng-drag.startAng,pivot={x:drag.cx,y:drag.cy};
-  sels.forEach((o,i)=>rotateGeomAround(o,drag.orig[i],pivot,delta));lt=`${(delta*180/Math.PI).toFixed(1)}°`;sync()}
+ else if(drag&&drag.groupRotate){const curAng=Math.atan2(raw.y-drag.cy,raw.x-drag.cx),delta=snapRotDelta(curAng-drag.startAng,e),pivot={x:drag.cx,y:drag.cy};
+  sels.forEach((o,i)=>rotateGeomAround(o,drag.orig[i],pivot,delta));lt=`${(delta*180/Math.PI).toFixed(0)}° · ${rotSnapStep(e)}° steps`;sync()}
  else if(drag&&(drag.box||drag.marq)){const a=drag.a,p=drag.marq?raw:w;draft.x=Math.min(a.x,p.x);draft.y=Math.min(a.y,p.y);draft.w=Math.abs(p.x-a.x);draft.h=Math.abs(p.y-a.y);if(!drag.marq)lt=dimTxt(draft.w,draft.h)}
  else if(drag&&drag.wallBulge){const a=drag.prev,b=drag.end,dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1,ux=-dy/len,uy=dx/len,relx=raw.x-a.x,rely=raw.y-a.y;
   drag.bulge=relx*ux+rely*uy;lt=`arc wall · bulge ${pxM(drag.bulge).toFixed(2)} m`}
@@ -1813,8 +1863,55 @@ window.onkeydown=e=>{if($('modal').style.display==='flex'||$('vmodal').style.dis
   ngonSides=Math.max(3,Math.min(16,ngonSides+(k===']'?1:-1)));if(draft&&draft.type==='ngon')draft.n=ngonSides;draw()}
  else if(sels.length&&k.startsWith('arrow')){e.preventDefault();push();const s=e.shiftKey?10:1;sels.forEach(o=>move(o,k==='arrowleft'?-s:k==='arrowright'?s:0,k==='arrowup'?-s:k==='arrowdown'?s:0));sync()}
  else if(k==='f')fit();
- else{const m={v:'select',g:'move',r:'rect',p:'poly',n:'pen',b:'brush',t:'text',m:'measure',u:'boundary',k:'calib',h:'pan',w:'wall',d:'door',e:'security',c:'comment',y:'window',s:'stairs',j:'dimchain'};if(m[k])setTool(m[k])}};
+ else{const m={v:'select',g:'move',r:'rect',p:'poly',n:'pen',b:'brush',t:'text',m:'measure',u:'boundary',k:'calib',h:'pan',w:'wall',d:'door',e:'security',c:'comment',y:'window',s:'stairs',j:'dimchain',o:'rotate'};if(m[k])setTool(m[k])}};
 window.onkeyup=e=>{if(e.code==='Space')space=false};
+// V12.1: AutoCAD-style command line — a SEPARATE <input> (#cmdLine), additive alongside
+// every single-key instant shortcut above (v/g/r/p/n/b/t/m/u/k/h/w/d/e/c/y/s/j/o untouched).
+// Typing happens inside a real <input>, which window.onkeydown already ignores (its very
+// first guard returns early for INPUT targets), so there is no collision either way: the
+// single letter 'r' on the canvas still means Rect instantly, while typing "REC" + Enter in
+// this box also means Rect — same mnemonic family, two different trigger paths, like real
+// AutoCAD where a toolbar icon and typing "RECTANG" both exist side by side.
+const CMD={
+ select:()=>setTool('select'),v:()=>setTool('select'),
+ move:()=>setTool('move'),m:()=>setTool('move'),
+ rotate:()=>setTool('rotate'),ro:()=>setTool('rotate'),
+ line:()=>setTool('wall'),l:()=>setTool('wall'),wall:()=>setTool('wall'),
+ pline:()=>setTool('poly'),pl:()=>setTool('poly'),polyline:()=>setTool('poly'),poly:()=>setTool('poly'),
+ rectang:()=>setTool('rect'),rec:()=>setTool('rect'),rectangle:()=>setTool('rect'),r:()=>setTool('rect'),
+ rrect:()=>setTool('rrect'),roundrect:()=>setTool('rrect'),
+ circle:()=>setTool('circle'),c:()=>setTool('circle'),
+ polygon:()=>setTool('ngon'),pol:()=>setTool('ngon'),ngon:()=>setTool('ngon'),
+ text:()=>setTool('text'),dt:()=>setTool('text'),mtext:()=>setTool('text'),t:()=>setTool('text'),
+ dimlinear:()=>setTool('dimchain'),dli:()=>setTool('dimchain'),dim:()=>setTool('dimchain'),j:()=>setTool('dimchain'),
+ measure:()=>setTool('measure'),dist:()=>setTool('measure'),di:()=>setTool('measure'),
+ pan:()=>setTool('pan'),p:()=>setTool('pan'),h:()=>setTool('pan'),
+ boundary:()=>setTool('boundary'),bnd:()=>setTool('boundary'),u:()=>setTool('boundary'),
+ calibrate:()=>setTool('calib'),cal:()=>setTool('calib'),k:()=>setTool('calib'),
+ door:()=>setTool('door'),do:()=>setTool('door'),d:()=>setTool('door'),
+ window:()=>setTool('window'),win:()=>setTool('window'),y:()=>setTool('window'),
+ stairs:()=>setTool('stairs'),st:()=>setTool('stairs'),s:()=>setTool('stairs'),
+ security:()=>setTool('security'),sec:()=>setTool('security'),
+ comment:()=>setTool('comment'),cm:()=>setTool('comment'),
+ freehand:()=>setTool('pen'),pen:()=>setTool('pen'),n:()=>setTool('pen'),
+ brush:()=>setTool('brush'),b:()=>setTool('brush'),
+ erase:()=>del(),e:()=>del(),delete:()=>del(),
+ copy:()=>dup(),co:()=>dup(),cp:()=>dup(),duplicate:()=>dup(),
+ undo:()=>undo(),
+ redo:()=>redo(),
+ array:()=>doArray(),ar:()=>doArray(),
+ renumber:()=>renumberZones(),ren:()=>renumberZones(),
+ overlap:()=>checkOverlaps(),ov:()=>checkOverlaps(),
+ zoom:()=>fit(),z:()=>fit(),ze:()=>fit(),zoomextents:()=>fit(),
+ escape:()=>{draft=null;drag=null;wallChainPts=null;dimChainPts=null;sels=[];sync()},esc:()=>{draft=null;drag=null;wallChainPts=null;dimChainPts=null;sels=[];sync()}
+};
+function runCmd(raw){const k=(raw||'').trim().toLowerCase();if(!k)return;const fn=CMD[k];
+ if(fn){fn();toast(`Command: ${raw.trim().toUpperCase()}`,1400)}
+ else toast(`Unknown command "${raw.trim()}" — try MOVE, ROTATE(RO), RECTANG(REC), LINE, ERASE, COPY, ARRAY, UNDO…`,4000)}
+(function(){const cl=$('cmdLine');if(!cl)return;
+ cl.onkeydown=ev=>{if(ev.key==='Enter'){ev.preventDefault();runCmd(cl.value);cl.value='';cl.blur()}
+  else if(ev.key==='Escape'){ev.preventDefault();cl.value='';cl.blur()}};
+})();
 function applyStyle(ev){if(!sels.length)return;push();const id=ev.target.id;sels.forEach(s=>{
  if(isZone(s)){if(id==='iName')s.name=$('iName').value;if(id==='iFill')s.fill=$('iFill').value;if(id==='iOp')s.op=+$('iOp').value;if(id==='iCat')s.cat=$('iCat').value}
  if(id==='iStroke')s.stroke=$('iStroke').value;if(id==='iFs'&&s.type==='text')s.fs=+$('iFs').value;if(id==='iW'&&(s.type==='pen'||s.type==='brush'))s.w=s.type==='brush'?+$('iW').value*4:+$('iW').value});sync()}
