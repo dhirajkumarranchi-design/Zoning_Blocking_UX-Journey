@@ -510,14 +510,14 @@ input[type=date],input[type=time]{color-scheme:dark}
   <button data-act="pan">✋ Pan tool <span class="sub ctxShortcut">H · Space-drag</span></button>
  </div>
  <button id="bShowMetrics" title="Show the metrics panel (Legend, USF/USM, custom)">📊 Metrics</button>
- <div id="metricsPanel">
+ <div id="metricsPanel" class="floating">
   <div id="dragMetrics" class="floatHandle" title="Drag to move (while floating)">
    <button id="bCollapseMetrics" class="tog" title="Collapse/expand">▾</button>
    <span>⠿ Metrics</span>
    <div style="display:flex;gap:4px" id="metricsGearWrap">
     <button type="button" class="hudGearBtn" id="hgBtnMetrics" title="Position lock">⚙</button>
     <button id="metricsGear" title="Choose which metrics show">⚙</button>
-    <button id="bFloatMetrics" class="tog" title="Dock / float this panel">⧉</button>
+    <button id="bFloatMetrics" class="tog off" title="Dock / float this panel">⧉</button>
     <button id="bCloseMetrics" title="Hide this panel">✕</button>
     <div id="metricsGearMenu"></div>
    </div>
@@ -2059,7 +2059,7 @@ function drawObj(o,g,k){g.save();
    g.font=`${fs}px Segoe UI`;g.fillStyle='#555';
    areaLines.forEach(t=>{g.fillText(t,c.x,ly);ly+=lh});
    if(o.cat){g.font=`${fs*.82}px Segoe UI`;g.fillStyle='#8a6a3a';g.fillText(o.cat,c.x,ly)}}
-  if(sels.includes(o)){const bdg=zoneLockBadge(o,k);g.beginPath();g.arc(bdg.x,bdg.y,bdg.r,0,Math.PI*2);
+  if(sels.length===1&&sels.includes(o)){const bdg=zoneLockBadge(o,k);g.beginPath();g.arc(bdg.x,bdg.y,bdg.r,0,Math.PI*2);
    g.fillStyle=o.locked?'#c99a5c':'rgba(255,255,255,.82)';g.fill();
    g.lineWidth=1/k;g.strokeStyle=o.locked?'#8a6a3a':'#999';g.stroke();
    g.font=`${bdg.r*1.3}px Segoe UI`;g.textAlign='center';g.textBaseline='middle';
@@ -3206,6 +3206,14 @@ cv.onmousedown=e=>{
   const nr=22*(hud.north.scale||1);
   if(!hud.north.locked&&Math.hypot(e.offsetX-(northPos.x+nr+9),e.offsetY-northPos.y)<8){drag={northMove:1,dx:e.offsetX-northPos.x,dy:e.offsetY-northPos.y};cv.style.cursor='grabbing';return}
   if(Math.hypot(e.offsetX-northPos.x,e.offsetY-northPos.y)<nr+8){drag={northDrag:1};cv.style.cursor='grabbing';return}}
+ // V13.5: the scale bar's 📌/⠿ icon (its left-hand gutter strip) is now a real clickable
+ // position-lock toggle, same affordance other HUD widgets already had via an on-widget gear
+ // button -- previously this lock was only reachable from the side panel's Display box.
+ {const sr0=scaleBarRect(),iw=16*sr0.sc;
+  if(e.offsetX>=sr0.x&&e.offsetX<=sr0.x+iw&&e.offsetY>=sr0.y&&e.offsetY<=sr0.y+sr0.h){
+   hud.scalebar.locked=!hud.scalebar.locked;applyHudVisuals();
+   toast(hud.scalebar.locked?'Scale bar position locked':'Scale bar position unlocked',2000);
+   draw();return}}
  if(!hud.scalebar.locked){const sr=scaleBarRect();if(e.offsetX>=sr.x&&e.offsetX<=sr.x+sr.w&&e.offsetY>=sr.y&&e.offsetY<=sr.y+sr.h){
    drag={scaleBarMove:1,dx:e.offsetX-sr.x,dy:e.offsetY-sr.y};cv.style.cursor='grabbing';return}}
  const raw=toW(e.offsetX,e.offsetY),w=(tool==='select'||tool==='move')?raw:gp(raw);mouse=w;
@@ -3213,20 +3221,14 @@ cv.onmousedown=e=>{
  const st={name:$('iName').value||'Zone',fill:$('iFill').value,stroke:$('iStroke').value,op:+$('iOp').value};
  // V12.3: lock badge is only drawn (and only clickable) on a zone that's part of the
  // current selection -- hit-test is restricted to `sels`, not every zone on the canvas.
- if((tool==='select'||tool==='move')&&sels.length){const lk=sels.filter(isZone).filter(layerVisible).find(o=>{const bd=zoneLockBadge(o,view.k);return Math.hypot(raw.x-bd.x,raw.y-bd.y)<bd.r*1.4});
-  if(lk){push();
-   // clicking the lock badge on a zone that's part of a multi-selection toggles the WHOLE
-   // selection together with this one click (and keeps it selected) -- "1 common click".
-   if(sels.length>1&&sels.every(isZone)){const allLocked=sels.every(o=>o.locked);sels.forEach(o=>o.locked=!allLocked)}
-   else{lk.locked=!lk.locked;sels=[lk]}
-   loadSel();sync();draw();return}}
- // position-lock badge -- same "1 common click toggles the whole multi-selection" convention
- // as the area-lock badge just above, but its own flag (posLocked) and its own badge position.
- if((tool==='select'||tool==='move')&&sels.length){const plk=sels.filter(isZone).filter(layerVisible).find(o=>{const bd=posLockBadge(o,view.k);return Math.hypot(raw.x-bd.x,raw.y-bd.y)<bd.r*1.4});
-  if(plk){push();
-   if(sels.length>1&&sels.every(isZone)){const allPLocked=sels.every(o=>o.posLocked);sels.forEach(o=>o.posLocked=!allPLocked)}
-   else{plk.posLocked=!plk.posLocked;sels=[plk]}
-   loadSel();sync();draw();return}}
+ // V13.5: individual per-zone badges are only drawn/hittable for a SINGLE selection now -- a
+ // multi-selection shows just the one group indicator in #multiSelBar (msAreaLock/msPosLock)
+ // instead, so there's no longer a per-zone badge for a multi-select click to land on.
+ if((tool==='select'||tool==='move')&&sels.length===1){const lk=sels.filter(isZone).filter(layerVisible).find(o=>{const bd=zoneLockBadge(o,view.k);return Math.hypot(raw.x-bd.x,raw.y-bd.y)<bd.r*1.4});
+  if(lk){push();lk.locked=!lk.locked;loadSel();sync();draw();return}}
+ // position-lock badge -- same single-selection-only convention as the area-lock badge above.
+ if((tool==='select'||tool==='move')&&sels.length===1){const plk=sels.filter(isZone).filter(layerVisible).find(o=>{const bd=posLockBadge(o,view.k);return Math.hypot(raw.x-bd.x,raw.y-bd.y)<bd.r*1.4});
+  if(plk){push();plk.posLocked=!plk.posLocked;loadSel();sync();draw();return}}
  // Task #117: grid-line/column selection takes priority over zone hit-testing in Select (its
  // own hit-test, own selection array `gcSel` -- see the big comment by drawColGrid). Only wired
  // into the Select tool, same as the zone-lock-badge check just above.
@@ -4186,24 +4188,43 @@ function xlsxFromRows(sheetName,rows,styles){const enc=new TextEncoder();
   {name:'xl/_rels/workbook.xml.rels',data:enc.encode(wbRels)},
   {name:'xl/styles.xml',data:enc.encode(STYLES_XML)},
   {name:'xl/worksheets/sheet1.xml',data:enc.encode(sheet)}])}
-const TPL_HEADERS=['Function','Area','Area Unit','Qty','Group','Min Width','Min Depth','Tag'];
+// V13.5: Task #131 -- the downloadable template now carries every column the import mapper
+// (autoMap/buildProg, above) actually understands, not just the original 8. The 3 newer
+// optional columns (Color, Circulation %, Circulation Color) are appended at the end so
+// existing filled-in templates from before this change still line up column-for-column on the
+// first 8. "(required)"/"(optional)" suffixes are plain text and don't interfere with the
+// header-detection regexes in autoMap -- every one of them was checked against its own column's
+// regex before being added. A trailing Notes block (after a blank separator row) explains the
+// optional columns in the file itself; those rows have no Area value, so buildProg's own
+// "name && area>0" filter silently drops them if someone re-imports the template unedited.
+const TPL_HEADERS=['Function (required)','Area (required)','Area Unit (optional)','Qty (optional)','Group (optional)','Min Width (optional)','Min Depth (optional)','Tag (optional)','Color (optional)','Circulation % (optional)','Circulation Color (optional)'];
 const TPL_ROWS=[
-['Arrival & Reception','850','SF','1','Front of House','9','9',''],
-['Waiting Lounge / Cafe','600','SF','1','Front of House','10','10',''],
-['Interview Room','120','SF','4','Talent','8','10',''],
-['Large Interview Room','450','SF','1','Talent','12','15',''],
-['HR Suite','1050','SF','1','Talent','15','20',''],
-['Consultation Cabin','110','SF','2','Medical','8','9',''],
-['Recovery Room','180','SF','2','Medical','9','10',''],
-['Wellness Vestibule','270','SF','1','Medical','10','10',''],
-['Workspace','2100','SF','1','Work','20','30',''],
-['Collab / Meeting','850','SF','1','Work','15','18',''],
-['Housekeeping Store','450','SF','1','Support','8','10',''],
-['Mail & Stationery','340','SF','1','Support','8','10','']];
+['Arrival & Reception','850','SF','1','Front of House','9','9','','4A90D9','35',''],
+['Waiting Lounge / Cafe','600','SF','1','Front of House','10','10','','','',''],
+['Interview Room','120','SF','4','Talent','8','10','Small','','',''],
+['Large Interview Room','450','SF','1','Talent','12','15','Large','','',''],
+['HR Suite','1050','SF','1','Talent','15','20','','','',''],
+['Consultation Cabin','110','SF','2','Medical','8','9','','','',''],
+['Recovery Room','180','SF','2','Medical','9','10','','','',''],
+['Wellness Vestibule','270','SF','1','Medical','10','10','','','',''],
+['Workspace','2100','SF','1','Work','20','30','','','',''],
+['Collab / Meeting','850','SF','1','Work','15','18','','','15',''],
+['Housekeeping Store','450','SF','1','Support','8','10','','','',''],
+['Mail & Stationery','340','SF','1','Support','8','10','','','','95A5A6']];
+const TPL_NOTES=[
+['','','','','','','','','','',''],
+['Notes — only Function and Area are required; every other column is optional.','','','','','','','','','',''],
+['• Area Unit: "SF" or "m²" — leave blank to use SF.','','','','','','','','','',''],
+['• Qty: number of identical rooms this line represents — leave blank for 1.','','','','','','','','','',''],
+['• Group: department / adjacency cluster, used for auto-layout grouping and default coloring.','','','','','','','','','',''],
+['• Min Width / Min Depth: smallest footprint this room should ever shrink to, in the unit below.','','','','','','','','','',''],
+['• Tag: a secondary label (e.g. room size) kept alongside the room, not used for layout.','','','','','','','','','',''],
+['• Color / Circulation Color: a hex code such as 4A90D9 (the # is optional) — overrides the auto palette / project circulation color for just this line.','','','','','','','','','',''],
+['• Circulation %: per-line override of the project circulation allowance — leave blank to use the project default.','','','','','','','','','','']];
 function tplCsv(){const esc=v=>/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;
- return '﻿'+[TPL_HEADERS,...TPL_ROWS].map(r=>r.map(esc).join(',')).join('\r\n')+'\r\n'}
+ return '﻿'+[TPL_HEADERS,...TPL_ROWS,...TPL_NOTES].map(r=>r.map(esc).join(',')).join('\r\n')+'\r\n'}
 $('bTpl').onclick=e=>{e.preventDefault();dl('space_program_template.csv',URL.createObjectURL(new Blob([tplCsv()],{type:'text/csv;charset=utf-8'})))};
-$('bTplXl').onclick=e=>{e.preventDefault();try{const bytes=xlsxFromRows('Program',[TPL_HEADERS,...TPL_ROWS]);dl('space_program_template.xlsx',URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})))}catch(err){alert('Could not build the Excel template: '+err.message)}};
+$('bTplXl').onclick=e=>{e.preventDefault();try{const bytes=xlsxFromRows('Program',[TPL_HEADERS,...TPL_ROWS,...TPL_NOTES]);dl('space_program_template.xlsx',URL.createObjectURL(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})))}catch(err){alert('Could not build the Excel template: '+err.message)}};
 /* ---------- auto layout ---------- */
 function worst(row,side){const s=row.reduce((a,b)=>a+b.v,0),mx=Math.max(...row.map(r=>r.v)),mn=Math.min(...row.map(r=>r.v));return Math.max(side*side*mx/(s*s),s*s/(side*side*mn))}
 function squarify(items,r,out){items=[...items];let rect={...r};
@@ -4647,8 +4668,17 @@ $('bCollapseMetrics').onclick=()=>$('metricsPanel').classList.toggle('collapsed'
 $('bCloseMetrics').onclick=()=>{metricsPanelClosed=true;renderMetricsPanel()};
 $('bShowMetrics').onclick=()=>{metricsPanelClosed=false;renderMetricsPanel()};
 function setMetricsFloat(on){const p=$('metricsPanel');p.classList.toggle('floating',on);$('bFloatMetrics').classList.toggle('off',on);
- if(!on){p.style.top='';p.style.left=''}}
+ if(!on){p.style.top='';p.style.left='';positionMetricsBelowView3d()}}
 $('bFloatMetrics').onclick=()=>setMetricsFloat(!$('metricsPanel').classList.contains('floating'));
+// Task #129: the metrics dock's default position (no custom drag yet) sits touching the
+// 2D/3D switch bar's bottom edge, not a hardcoded guess -- recomputed from the switch bar's
+// actual rendered height so it stays touching (never overlapping, never gapped) at any HUD
+// scale. Right-edge alignment comes for free: both share the same CSS `right` anchor. Skipped
+// once the user has dragged the metrics dock (style.left set), and skipped harmlessly when the
+// switch bar hasn't been laid out yet (e.g. a headless test environment with no real layout).
+function positionMetricsBelowView3d(){const mp=$('metricsPanel');if(mp.style.left)return;
+ const vb=$('view3dBar').getBoundingClientRect();if(!vb.width&&!vb.height)return;
+ mp.style.top=vb.bottom+'px';mp.style.right='14px'}
 setupFloatDrag($('dragMetrics'),'#metricsPanel',()=>hud.metrics.locked);
 // Task #126: shared "position lock + size" popover for the floating HUD overlays, opened by a
 // small gear button on each one (view3dBar, and gizmoDock/axisGizmo2D which share one "axis"
@@ -4664,7 +4694,8 @@ function applyHudVisuals(){
  $('hgBtnMetrics').classList.toggle('on',hud.metrics.locked);
  $('northScaleLbl').textContent=Math.round((hud.north.scale||1)*100)+'%';
  $('scaleBarScaleLbl').textContent=Math.round((hud.scalebar.scale||1)*100)+'%';
- $('iNorthLock').checked=hud.north.locked;$('iScaleBarLock').checked=hud.scalebar.locked}
+ $('iNorthLock').checked=hud.north.locked;$('iScaleBarLock').checked=hud.scalebar.locked;
+ positionMetricsBelowView3d()}
 function openHudGear(key,btnEl){hudGearTarget=key;const st=hud[key];
  $('hgLock').checked=!!st.locked;
  $('hgSizeRow').style.display=('scale' in st)?'block':'none';
