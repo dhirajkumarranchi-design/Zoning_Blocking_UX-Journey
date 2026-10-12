@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v13.8</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v13.9</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -320,7 +320,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v13.8</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v13.9</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
  <div class="hb" style="border:0"><span id="scalePill" class="pill bad" title="Click to calibrate">⚠ Scale not verified</span></div>
@@ -1421,7 +1421,12 @@ let img=new Image(),S={objs:[],scale:24,verified:false,prog:[],flows:[],bound:nu
 // Task #126: every floating HUD overlay (north arrow, axis/gimbal, 2D/3D switch, scale bar)
 // gets its own position-lock flag and size multiplier, independent of each other and of the
 // zone/shape position-lock above. `metrics` only gets a lock (no scale -- see hud gear menu).
-let hud={north:{locked:false,scale:1},axis:{locked:false,scale:1},view3d:{locked:false,scale:1},metrics:{locked:false},scalebar:{locked:false,scale:1}},hudGearTarget=null;
+// Review fix: view3d/axis/metrics now default to LOCKED -- their shipped position (flush with
+// the canvas's own edge, see the calc() fix below) is deliberate, so a stray drag shouldn't be
+// this easy; the user unlocks any of them from its own gear button whenever they do want to
+// move it. North and the scale bar are unchanged (still default-unlocked) -- nobody asked for
+// those to change, and both already sit out of the way at the plan's own corners.
+let hud={north:{locked:false,scale:1},axis:{locked:true,scale:1},view3d:{locked:true,scale:1},metrics:{locked:true},scalebar:{locked:false,scale:1}},hudGearTarget=null;
 // Task #117: manual structural grid + columns. S.gridLines = manually drawn line segments
 // (any length/angle, unequal spacing -- no auto-repeat like the existing lettered Bay X/Y grid).
 // S.columns = column markers generated at grid-line intersections (or left after a split),
@@ -1536,20 +1541,99 @@ function openCombinePopup(zs){combineTarget=zs;
  pop.style.left=Math.min(Math.max(sx-115,10),cw-240)+'px';pop.style.top=Math.min(Math.max(sy-10,10),ch-170)+'px';
  pop.style.display='block';$('cbName').focus();$('cbName').select()}
 function closeCombinePopup(){$('combinePop').style.display='none';combineTarget=null}
+// V13.9: "Combine into unit" now does a REAL geometric merge (unionPolys above) instead of just
+// tagging shapes with a shared unitId -- two touching/overlapping shapes become one actual
+// L-shaped (or cross/C-shaped, etc.) polygon zone, "like two shapes of water joining into one".
+// The originals are kept on the new zone as `mergedFrom` (not left in S.objs) purely so "Split
+// unit" can restore them later; if the union ever comes back empty/degenerate for some reason,
+// this falls back to the OLD tag-only grouping so Combine still does something useful rather
+// than silently failing.
 function commitCombinePopup(){const zs=combineTarget;if(!zs){closeCombinePopup();return}
  const name=$('cbName').value.trim();
  if(!name){toast('Combine cancelled — no name given');closeCombinePopup();return}
  push();
- const uid='u'+(_uid++),cat=zs[0].cat;
- zs.forEach(o=>{o.unitId=uid;o.unitName=name;o.name=name;if(cat)o.cat=cat});
- sels=zs;closeCombinePopup();sync();toast(`Combined ${zs.length} shapes into "${name}"`,3500)}
+ const first=zs[0],cat=first.cat,fromCentroids=zs.map(o=>centerOf(o));
+ let loops=[];try{loops=unionPolys(zs.map(o=>ensureCCW(pts(o))))}catch(e){loops=[]}
+ if(loops.length&&loops[0].length>=3){
+  const uid='u'+(_uid++),merged=loops[0];
+  const newZone={type:'poly',pts:merged,segArc:merged.map(()=>0),name,cat,fill:first.fill,stroke:first.stroke,op:first.op,
+   num:nextRoomNum(cat),unitId:uid,unitName:name,circOn:first.circOn,circPct:first.circPct,spaceType:first.spaceType,
+   mergedFrom:zs.map(o=>({...o}))};
+  const insertAt=S.objs.indexOf(first);
+  S.objs=S.objs.filter(o=>!zs.includes(o));
+  S.objs.splice(Math.min(insertAt,S.objs.length),0,newZone);
+  sels=[newZone];
+  startMergeSplash(fromCentroids,centerOf(newZone));
+  closeCombinePopup();sync();toast(`Merged ${zs.length} shapes into one "${name}" zone`,3500)
+ }else{
+  const uid='u'+(_uid++);
+  zs.forEach(o=>{o.unitId=uid;o.unitName=name;o.name=name;if(cat)o.cat=cat});
+  sels=zs;closeCombinePopup();sync();toast(`Combined ${zs.length} shapes into "${name}" (kept as separate outlines)`,3500)
+ }}
 function splitUnit(){
  const uids=[...new Set(sels.filter(o=>o.unitId).map(o=>o.unitId))];
  if(!uids.length){toast('Select a shape that belongs to a combined unit first');return}
- push();let n=0;S.objs.forEach(o=>{if(uids.includes(o.unitId)){delete o.unitId;delete o.unitName;n++}});
+ push();let restoredObjs=[],strippedN=0;
+ uids.forEach(uid=>{
+  const merged=S.objs.find(o=>o.unitId===uid&&o.mergedFrom);
+  if(merged){const idx=S.objs.indexOf(merged);S.objs.splice(idx,1,...merged.mergedFrom);restoredObjs=restoredObjs.concat(merged.mergedFrom)}
+  else S.objs.forEach(o=>{if(o.unitId===uid){delete o.unitId;delete o.unitName;strippedN++}})});
+ sels=restoredObjs.length?restoredObjs:[];
+ const n=restoredObjs.length||strippedN;
  sync();toast(`Split ${uids.length} unit(s) — ${n} shape(s) separated`,3000)}
+// V13.9: the continuous "liquid glass" shimmer wherever two zones' solid edges actually touch
+// (any zones, not just circulation-enabled ones -- this is purely a visual cue that an edge is
+// shared, independent of the circulation-ring feature). Pairwise edgeOverlapInterval is the same
+// touching-run detector the circulation rings already use, just run across EVERY zone pair.
+function computeTouchingSeams(){
+ const zones=S.objs.filter(o=>isZone(o)&&layerVisible(o));
+ if(zones.length<2)return[];
+ const eps=mPx(.1),segs=[];
+ for(let i=0;i<zones.length;i++){const pa=ensureCCW(pts(zones[i]));
+  for(let j=i+1;j<zones.length;j++){const pb=ensureCCW(pts(zones[j]));
+   for(let a=0;a<pa.length;a++){const a0=pa[a],a1=pa[(a+1)%pa.length];
+    for(let b=0;b<pb.length;b++){const b0=pb[b],b1=pb[(b+1)%pb.length];
+     const iv=edgeOverlapInterval(a0,a1,b0,b1,eps);
+     if(iv)segs.push({p0:lerpPt(a0,a1,iv.lo/iv.len),p1:lerpPt(a0,a1,iv.hi/iv.len)})}}}}
+ return segs}
+// No gradients (fragile color-stop math for a "nice to have"), just a per-segment sine pulse on
+// alpha/width -- cheap, robust, and staggering each seam's phase by its own index keeps several
+// seams from all pulsing in lockstep, which reads more like water than a blinking light.
+function drawTouchingSeams(g,k){
+ const segs=computeTouchingSeams();if(!segs.length)return;
+ const now=Date.now();g.save();g.lineCap='round';
+ segs.forEach((s,i)=>{const pulse=(Math.sin(now/900+i*0.7)+1)/2;
+  g.strokeStyle=`rgba(190,225,255,${(.18+.22*pulse).toFixed(3)})`;g.lineWidth=(4+2*pulse)/k;
+  g.beginPath();g.moveTo(s.p0.x,s.p0.y);g.lineTo(s.p1.x,s.p1.y);g.stroke();
+  g.strokeStyle=`rgba(255,255,255,${(.25+.35*pulse).toFixed(3)})`;g.lineWidth=1.5/k;
+  g.beginPath();g.moveTo(s.p0.x,s.p0.y);g.lineTo(s.p1.x,s.p1.y);g.stroke()});
+ g.restore()}
+// One-shot "two splashes of water joining into one" animation, played once when Combine actually
+// merges shapes. Bounded, self-stopping RAF loop (explicit duration, always clears itself) --
+// never a forever-running timer, so it can't leak or stall anything if a redraw is skipped.
+let mergeAnim=null;
+function startMergeSplash(fromCentroids,toCentroid){
+ mergeAnim={from:fromCentroids,to:toCentroid,t0:Date.now(),dur:700};
+ if(typeof requestAnimationFrame==='function')requestAnimationFrame(mergeSplashTick)}
+function mergeSplashTick(){
+ if(!mergeAnim)return;
+ if(Date.now()-mergeAnim.t0>=mergeAnim.dur){mergeAnim=null;draw();return}
+ draw();
+ if(typeof requestAnimationFrame==='function')requestAnimationFrame(mergeSplashTick)}
+function drawMergeSplash(g,k){
+ if(!mergeAnim)return;
+ const el=Date.now()-mergeAnim.t0,p=Math.min(1,el/mergeAnim.dur),ease=1-Math.pow(1-p,3);
+ g.save();
+ mergeAnim.from.forEach(f=>{
+  const x=f.x+(mergeAnim.to.x-f.x)*ease,y=f.y+(mergeAnim.to.y-f.y)*ease,r=(14+26*p)/k,alpha=(1-p)*.8;
+  g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fillStyle=`rgba(140,210,255,${alpha.toFixed(3)})`;g.fill();
+  g.strokeStyle=`rgba(255,255,255,${(alpha*.9).toFixed(3)})`;g.lineWidth=2/k;g.stroke()});
+ const ringR=(6+40*ease)/k,ringA=p>.15?(1-p)*.9:0;
+ if(ringA>0){g.beginPath();g.arc(mergeAnim.to.x,mergeAnim.to.y,ringR,0,Math.PI*2);
+  g.strokeStyle=`rgba(200,230,255,${ringA.toFixed(3)})`;g.lineWidth=3/k;g.stroke()}
+ g.restore()}
 function drawUnits(g,k){const groups={};S.objs.forEach(o=>{if(o.unitId&&layerVisible(o))(groups[o.unitId]=groups[o.unitId]||[]).push(o)});
- Object.values(groups).forEach(members=>{if(!members.length)return;
+ Object.values(groups).forEach(members=>{if(members.length<2)return; // a merged unit is ONE real zone now -- it draws its own outline/label already
   const bb=groupBBox(members),pd=10/k;g.save();g.setLineDash([7/k,5/k]);g.lineWidth=2/k;g.strokeStyle='#c99a5c';
   g.strokeRect(bb.x-pd,bb.y-pd,bb.w+2*pd,bb.h+2*pd);g.setLineDash([]);
   if($('iLbl').checked){const name=members[0].unitName||members[0].name,areaM2=members.reduce((s,o)=>s+pxToM2(areaPx(pts(o))),0);
@@ -1767,6 +1851,63 @@ function clipPoly(subject,clip){let output=subject;
    if((sideP>0&&sideQ<0)||(sideP<0&&sideQ>0)){const t=sideP/(sideP-sideQ);output.push({x:P.x+t*(Q.x-P.x),y:P.y+t*(Q.y-P.y)})}}}
  return output}
 function polyIntersectArea(pA,pB){const clipped=clipPoly(ensureCCW(pA),ensureCCW(pB));return clipped.length>2?Math.abs(signedArea(clipped)):0}
+// V13.9: real geometric UNION of 2+ simple polygons (used by "Combine into unit" so two
+// touching/overlapping shapes become ONE actual merged outline -- e.g. two rects sharing an
+// edge become one true L-shaped polygon, not two rectangles wearing a shared label). clipPoly
+// above only does convex-clip intersection, not general union, and a textbook exact polygon-
+// union (Weiler-Atherton incl. all its touching/collinear-edge special cases) is a lot of
+// fragile code for a floor-plan tool that only ever needs this for simple, non-self-intersecting
+// room shapes. Pragmatic alternative, hand-verified against known L/cross/C-shape cases before
+// wiring it in: rasterize all input polygons onto a shared fine grid ("is this cell inside ANY
+// of them"), trace the boundary of the merged inside-region cell-by-cell, then collapse every
+// run of collinear boundary points back into long straight edges. For axis-aligned rooms (the
+// common case) that reproduces the exact corner count and a near-exact area (sub-1% grid
+// quantization); for anything else it's a close visual approximation -- plenty for this tool.
+// Returns an array of CCW loops (by area, largest first) rather than a single polygon so a
+// caller can cope with an unexpected split result instead of assuming it always merges to one.
+function unionPolys(polys,targetCells){
+ targetCells=targetCells||500;
+ let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+ polys.forEach(p=>p.forEach(pt=>{minX=Math.min(minX,pt.x);minY=Math.min(minY,pt.y);maxX=Math.max(maxX,pt.x);maxY=Math.max(maxY,pt.y)}));
+ if(!(maxX>minX)||!(maxY>minY))return[];
+ const pad=Math.max(1,(maxX-minX+maxY-minY)*0.02);
+ minX-=pad;minY-=pad;maxX+=pad;maxY+=pad;
+ const spanX=maxX-minX,spanY=maxY-minY,cell=Math.max(spanX,spanY)/targetCells;
+ const cols=Math.max(1,Math.round(spanX/cell)),rows=Math.max(1,Math.round(spanY/cell));
+ const inside=new Uint8Array(cols*rows);
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+  const px=minX+(c+.5)*cell,py=minY+(r+.5)*cell;
+  for(const poly of polys){if(inPoly({x:px,y:py},poly)){inside[r*cols+c]=1;break}}}
+ const idx=(r,c)=>r*cols+c,isInside=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols&&inside[idx(r,c)];
+ const edges=[];
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+  if(!isInside(r,c))continue;
+  const x0=minX+c*cell,x1=x0+cell,y0=minY+r*cell,y1=y0+cell;
+  if(!isInside(r-1,c))edges.push({a:{x:x0,y:y0},b:{x:x1,y:y0}});
+  if(!isInside(r,c+1))edges.push({a:{x:x1,y:y0},b:{x:x1,y:y1}});
+  if(!isInside(r+1,c))edges.push({a:{x:x1,y:y1},b:{x:x0,y:y1}});
+  if(!isInside(r,c-1))edges.push({a:{x:x0,y:y1},b:{x:x0,y:y0}})}
+ const key=p=>p.x.toFixed(3)+','+p.y.toFixed(3),byStart=new Map();
+ edges.forEach(e=>{const k=key(e.a);if(!byStart.has(k))byStart.set(k,[]);byStart.get(k).push(e)});
+ const used=new Set(),loops=[];
+ for(const e0 of edges){
+  if(used.has(e0))continue;
+  const loopPts=[e0.a];let cur=e0,guard=0;
+  while(guard++<edges.length+5){
+   used.add(cur);loopPts.push(cur.b);
+   if(key(cur.b)===key(e0.a))break;
+   const choices=(byStart.get(key(cur.b))||[]).filter(x=>!used.has(x));
+   if(!choices.length)break;
+   cur=choices[0]}
+  if(loopPts.length>3)loops.push(loopPts)}
+ function simplify(loop){const p=loop.slice(0,-1),n=p.length,out=[];
+  for(let i=0;i<n;i++){const p0=p[(i-1+n)%n],p1=p[i],p2=p[(i+1)%n];
+   const cross=(p1.x-p0.x)*(p2.y-p1.y)-(p1.y-p0.y)*(p2.x-p1.x);
+   if(Math.abs(cross)>=1e-6)out.push(p1)}
+  return out.length>=3?out:p}
+ const simplified=loops.map(simplify).filter(l=>l.length>=3).map(ensureCCW);
+ simplified.sort((a,b)=>areaPx(b)-areaPx(a));
+ return simplified}
 /* ---------- V12.2: per-zone circulation buffer rings ----------
    Each zone can carry a dashed "circulation" buffer ring around it, sized by area:
    ring area = zone area × circPct/100, ring width = ring area / zone perimeter (thin-ring
@@ -2106,7 +2247,7 @@ function drawObj(o,g,k){g.save();
    const tw=g.measureText(txt).width+8/k,tagX=cb.x+2/k,tagY=cb.y+cb.h-fs2*1.8-2/k;
    g.fillStyle='rgba(255,255,255,.9)';g.fillRect(tagX,tagY,tw,fs2*1.6);g.strokeStyle='#888';g.lineWidth=1/k;g.strokeRect(tagX,tagY,tw,fs2*1.6);
    g.fillStyle='#555';g.textAlign='left';g.textBaseline='middle';g.fillText(txt,tagX+4/k,tagY+fs2*.8);g.textBaseline='alphabetic'}
-  if($('iLbl').checked&&!o.unitId){const c=centroid(p),b=bbox(o);let fs=Math.max(Math.min(12/k,b.h/3.8,b.w/8),3/k);g.textAlign='center';
+  if($('iLbl').checked&&(!o.unitId||o.mergedFrom)){const c=centroid(p),b=bbox(o);let fs=Math.max(Math.min(12/k,b.h/3.8,b.w/8),3/k);g.textAlign='center';
    // V13 items 6/7: area is shown as BOTH units, stacked one line above the other (primary =
    // current `unit` preference on top, the other unit underneath), instead of one SF-or-m² line.
    const nameLbl=o.num?(o.num+' '+o.name):o.name,areaLines=fmtArea2Lines(pxToM2(areaPx(p)));
@@ -2508,9 +2649,17 @@ function drawNorth(g){g.setTransform(1,0,0,1,0,0);const ang=(+($('iNorthA').valu
  g.save();g.translate(cx,cy);g.rotate(ang);g.fillStyle='rgba(255,255,255,.92)';g.beginPath();g.arc(0,0,r+8,0,Math.PI*2);g.fill();g.strokeStyle='#888';g.lineWidth=1;g.stroke();
  g.beginPath();g.moveTo(0,-r);g.lineTo(7*(r/22),8*(r/22));g.lineTo(0,2*(r/22));g.lineTo(-7*(r/22),8*(r/22));g.closePath();g.fillStyle='#222';g.fill();
  g.restore();g.fillStyle='#222';g.font=`600 ${11*(r/22)}px Segoe UI`;g.textAlign='center';g.fillText('N',cx,cy-r-10);g.textAlign='left';
- // small drag handle — grab here to FLOAT (reposition) the compass; grab the ring itself to rotate it.
- // Hidden while position-locked -- nothing to drag, so no handle to show.
- if(hud.north.locked){g.fillStyle='#c0392b';g.beginPath();g.arc(cx+r+9,cy,7,0,Math.PI*2);g.fill();g.fillStyle='#fff';g.font='9px Segoe UI';g.textAlign='center';g.textBaseline='middle';g.fillText('📌',cx+r+9,cy+0.5);g.textAlign='left';g.textBaseline='alphabetic';return}
+ // V13.9 review fix: the compass's own 📌/📍 lock badge (left side) is now a real clickable
+ // position-lock toggle -- same "add position lock gear here" affordance the scale bar and the
+ // metrics/axis/view3d docks already had. It's drawn ALWAYS (both locked and unlocked), unlike
+ // the move handle below, so there's always something to click regardless of state.
+ const lx=cx-r-9,ly=cy;g.beginPath();g.arc(lx,ly,7,0,Math.PI*2);
+ g.fillStyle=hud.north.locked?'#c0392b':'rgba(255,255,255,.92)';g.fill();g.strokeStyle='#888';g.lineWidth=1;g.stroke();
+ g.fillStyle=hud.north.locked?'#fff':'#555';g.font='9px Segoe UI';g.textAlign='center';g.textBaseline='middle';
+ g.fillText(hud.north.locked?'📌':'📍',lx,ly+0.5);g.textAlign='left';g.textBaseline='alphabetic';
+ // small drag handle (right side) — grab here to FLOAT (reposition) the compass; grab the ring
+ // itself to rotate it. Hidden while position-locked -- nothing to drag, so no handle to show.
+ if(hud.north.locked)return;
  const hx=cx+r+9,hy=cy;g.beginPath();g.arc(hx,hy,6,0,Math.PI*2);g.fillStyle='rgba(255,255,255,.92)';g.fill();g.strokeStyle='#888';g.lineWidth=1;g.stroke();
  g.fillStyle='#555';g.font='9px Segoe UI';g.textAlign='center';g.textBaseline='middle';g.fillText('⠿',hx,hy+0.5);g.textAlign='left';g.textBaseline='alphabetic'}
 /* ---------- daylighting ---------- */
@@ -2694,7 +2843,7 @@ function draw(){if(mode3D){const b=$('multiSelBar');if(b)b.classList.remove('sho
  drawColGrid(ctx,view.k);
  drawGridLines(ctx,view.k);
  drawCircRings(ctx,view.k);
- S.objs.forEach(o=>{if(layerVisible(o))drawObj(o,ctx,view.k)});drawUnits(ctx,view.k);drawColumns(ctx,view.k);drawBound(ctx,view.k);drawFlows(ctx,view.k);drawDayShadows(ctx,view.k);drawEnvelope(ctx,view.k);
+ S.objs.forEach(o=>{if(layerVisible(o))drawObj(o,ctx,view.k)});drawUnits(ctx,view.k);drawTouchingSeams(ctx,view.k);drawMergeSplash(ctx,view.k);drawColumns(ctx,view.k);drawBound(ctx,view.k);drawFlows(ctx,view.k);drawDayShadows(ctx,view.k);drawEnvelope(ctx,view.k);
  sels.forEach((o,i)=>{const b=bbox(o),pd=4/view.k;ctx.setLineDash([6/view.k,4/view.k]);ctx.strokeStyle=i===sels.length-1?'#d35400':'#f0b27a';ctx.lineWidth=2/view.k;ctx.strokeRect(b.x-pd,b.y-pd,b.w+2*pd,b.h+2*pd);ctx.setLineDash([]);
   // Task #127: 8 Photoshop-style handles (corners + edge midpoints) instead of the old lone
   // tl corner square -- small squares on corners, small diamonds on edge midpoints.
@@ -3262,6 +3411,10 @@ function drawDraftDims(o,g,k){
 cv.onmousedown=e=>{
  if($('iNorth').checked){
   const nr=22*(hud.north.scale||1);
+  if(Math.hypot(e.offsetX-(northPos.x-nr-9),e.offsetY-northPos.y)<8){
+   hud.north.locked=!hud.north.locked;applyHudVisuals();
+   toast(hud.north.locked?'North arrow position locked':'North arrow position unlocked',2000);
+   draw();return}
   if(!hud.north.locked&&Math.hypot(e.offsetX-(northPos.x+nr+9),e.offsetY-northPos.y)<8){drag={northMove:1,dx:e.offsetX-northPos.x,dy:e.offsetY-northPos.y};cv.style.cursor='grabbing';return}
   if(Math.hypot(e.offsetX-northPos.x,e.offsetY-northPos.y)<nr+8){drag={northDrag:1};cv.style.cursor='grabbing';return}}
  // V13.5: the scale bar's 📌/⠿ icon (its left-hand gutter strip) is now a real clickable
