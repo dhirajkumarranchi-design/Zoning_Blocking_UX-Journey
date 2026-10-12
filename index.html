@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v12</title>
+<!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
+     version from now on -- it had gone stale at "v12" for several versions. -->
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v13.8</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -169,17 +171,24 @@ nav .sep{grid-column:1/-1;width:100%;height:1px;background:#3b3b3b;margin:3px 0}
 #cvw{grid-area:cv;position:relative;overflow:hidden}
 canvas{display:block}
 #cv3d{position:absolute;top:0;left:0;display:none;touch-action:none}
-#view3dBar{position:fixed;right:14px;top:14px;z-index:46;display:flex;gap:8px;align-items:center;
+#view3dBar{position:fixed;right:calc(var(--sidew) + 14px);top:14px;z-index:46;display:flex;gap:8px;align-items:center;
  background:linear-gradient(150deg,rgba(50,50,50,.94),rgba(28,28,28,.94));border:1px solid rgba(201,154,92,.4);
  border-radius:11px;padding:6px 10px;font-size:12px;box-shadow:0 10px 26px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);
  transition:left .18s ease,border-color .15s ease;transform-origin:top right}
+/* Review fix: view3dBar/gizmoDock/axisGizmo2D/metricsPanel are position:fixed (so dragging them
+   stays simple, viewport-relative math -- see setupFloatDrag), but their DEFAULT position must
+   sit relative to the actual canvas panel (#cvw), not the full window -- #cvw is narrower than
+   the window by nav's and aside's widths. calc(var(--navw)/--sidew) keeps the default corner
+   flush with the canvas's own edge and keeps tracking it live as those panels resize, collapse
+   or float. Same technique #consolePanel already used for its left/right. Once dragged, the
+   drag handler pins an explicit pixel value instead, same as before. */
 #view3dBar:hover{border-color:var(--acc)}
 #view3dBar .gripTag{cursor:move;color:var(--mut);font-size:13px;letter-spacing:1px;padding:0 2px;user-select:none}
 #view3dBar .gripTag:hover{color:var(--acc2txt)}
 #view3dBar button{padding:4px 8px;font-size:12px}
 #view3dControls{display:none;align-items:center;gap:8px}
 #view3dControls label{display:flex;align-items:center;gap:4px;color:var(--mut);white-space:nowrap}
-#gizmoDock{position:fixed;left:14px;bottom:14px;width:96px;height:96px;display:none;z-index:14;transform-origin:bottom left}
+#gizmoDock{position:fixed;left:calc(var(--navw) + 14px);bottom:14px;width:96px;height:96px;display:none;z-index:14;transform-origin:bottom left}
 #cv3dGizmo{position:absolute;inset:0;width:96px;height:96px;cursor:grab;border-radius:50%;
  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.10),rgba(40,40,40,.94) 62%);
  border:1px solid rgba(201,154,92,.45);box-shadow:0 10px 26px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.05);
@@ -190,7 +199,7 @@ canvas{display:block}
  color:#201506;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:move;user-select:none;
  box-shadow:0 3px 8px rgba(0,0,0,.45);border:1.5px solid rgba(255,255,255,.55);z-index:15}
 #gizmoMoveHandle:hover{filter:brightness(1.12)}
-#axisGizmo2D{position:fixed;left:14px;bottom:14px;z-index:14;
+#axisGizmo2D{position:fixed;left:calc(var(--navw) + 14px);bottom:14px;z-index:14;
  background:radial-gradient(circle at 30% 24%,rgba(255,255,255,.08),rgba(40,40,40,.94) 64%);
  border:1px solid rgba(201,154,92,.45);border-radius:12px;padding:7px;box-shadow:0 10px 26px rgba(0,0,0,.5);
  cursor:move;user-select:none;transition:border-color .15s ease;transform-origin:bottom left}
@@ -311,7 +320,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v12</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v13.8</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
  <div class="hb" style="border:0"><span id="scalePill" class="pill bad" title="Click to calibrate">⚠ Scale not verified</span></div>
@@ -1821,14 +1830,21 @@ function edgeOverlapInterval(a0,a1,b0,b1,eps){
 // One zone's own ring, as a set of per-edge trapezoid bands (inner edge -> matching offset
 // outer edge). Each band tracks the sub-intervals (along its own length) that overlap a
 // neighbor -- only those slivers get cut out when rendering/measuring, below.
+// V13.8: each band's own outer edge now runs on ITS edge's own parallel offset line (foot =
+// inner vertex + this edge's own outward normal*d), not the shared miter corner -- that's what
+// lets the two bands meeting at a vertex end at two DIFFERENT points (the round-corner feature,
+// just below, fills the wedge between them with either an arc or the old sharp miter, per
+// vertex). A band's own straight run is unaffected either way.
 function buildCircBands(o){
- const inner=ensureCCW(pts(o));if(inner.length<3)return[];
+ const inner=ensureCCW(pts(o));if(inner.length<3)return{bands:[],inner,d:0};
  const area=areaPx(inner),perim=perimOf(inner),extra=area*(Math.max(0,+o.circPct||0))/100,d=perim>0?extra/perim:0;
- if(!(d>0.4))return[];
- const outer=offsetPolyOut(inner,d),n=inner.length,bands=[];
- for(let i=0;i<n;i++){const j=(i+1)%n;const a0=inner[i],a1=inner[j],len=Math.hypot(a1.x-a0.x,a1.y-a0.y)||1;
-  bands.push({a0,a1,o0:outer[i],o1:outer[j],len,cuts:[]})}
- return bands}
+ if(!(d>0.4))return{bands:[],inner,d:0};
+ const n=inner.length,normals=[];
+ for(let i=0;i<n;i++){const a=inner[i],b=inner[(i+1)%n],ex=b.x-a.x,ey=b.y-a.y,len=Math.hypot(ex,ey)||1;normals.push({x:ey/len,y:-ex/len})}
+ const bands=[];
+ for(let i=0;i<n;i++){const j=(i+1)%n,a0=inner[i],a1=inner[j],len=Math.hypot(a1.x-a0.x,a1.y-a0.y)||1,nm=normals[i];
+  bands.push({a0,a1,o0:{x:a0.x+nm.x*d,y:a0.y+nm.y*d},o1:{x:a1.x+nm.x*d,y:a1.y+nm.y*d},n:nm,len,cuts:[]})}
+ return{bands,inner,d}}
 const lerpPt=(a,b,f)=>({x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f});
 // Merges a band's cut intervals and returns the OPEN (still-circulating) sub-ranges that
 // remain, as [{t0,t1}, ...] along the band's own 0..len.
@@ -1842,6 +1858,42 @@ function openSubBands(b){
 function bandQuadAt(b,t0,t1){const f0=t0/b.len,f1=t1/b.len;
  return{a0:lerpPt(b.a0,b.a1,f0),a1:lerpPt(b.a0,b.a1,f1),o0:lerpPt(b.o0,b.o1,f0),o1:lerpPt(b.o0,b.o1,f1)}}
 function bandAreaOpen(b){return openSubBands(b).reduce((s,seg)=>{const q=bandQuadAt(b,seg.t0,seg.t1);return s+areaPx([q.a0,q.a1,q.o1,q.o0])},0)}
+// V13.8: the join between two adjacent bands' outer feet, at each of the zone's own inner
+// vertices. "Rounded corners, except when it doesn't make sense" -- rounds a corner with a
+// filled circular fillet (radius d, centered on that inner vertex) ONLY when ALL of these hold:
+//   - the vertex is CONVEX (a reflex/concave corner keeps the old sharp miter -- rounding a
+//     concave notch would bulge the ring back INTO the zone, which looks wrong)
+//   - the ring is still fully OPEN on both sides right up to that vertex (a vertex sitting at a
+//     neighbor-zone suppression cut already has a real gap there -- no joint is drawn at all,
+//     same as before this feature existed)
+//   - the turn is big enough to actually see as a corner (a near-straight run falls back to the
+//     sharp wedge too, which is visually identical to a "round" corner at that point anyway)
+// The sharp fallback reconstructs the EXACT old shape (same clamped-miter formula as the old
+// offsetPolyOut), so nothing changes visually for any corner this feature doesn't round.
+function buildCircCorners(bands,inner,d){
+ const n=bands.length,corners=[];
+ if(!(d>0.4)||n<3)return corners;
+ for(let V=0;V<n;V++){
+  const prev=bands[(V-1+n)%n],cur=bands[V];
+  const prevOpen=openSubBands(prev),curOpen=openSubBands(cur),EPS=.5;
+  const prevReaches=prevOpen.some(s=>s.t1>prev.len-EPS),curReaches=curOpen.some(s=>s.t0<EPS);
+  if(!prevReaches||!curReaches){corners.push(null);continue} // suppressed right at this vertex -- leave the gap
+  const footIn=prev.o1,footOut=cur.o0,nPrev=prev.n,nCur=cur.n;
+  const cross=nPrev.x*nCur.y-nPrev.y*nCur.x,dot=nPrev.x*nCur.x+nPrev.y*nCur.y;
+  const gap=Math.hypot(footOut.x-footIn.x,footOut.y-footIn.y);
+  if(cross>1e-3&&gap>.5){ // convex, with a real enough turn to actually see -- round it
+   const delta=Math.atan2(cross,dot),a0=Math.atan2(nPrev.y,nPrev.x),steps=Math.max(1,Math.ceil(Math.abs(delta)/.4)),arcPts=[];
+   for(let s=1;s<steps;s++){const a=a0+delta*(s/steps);arcPts.push({x:inner[V].x+Math.cos(a)*d,y:inner[V].y+Math.sin(a)*d})}
+   corners.push({poly:[inner[V],footIn,...arcPts,footOut]})
+  }else{ // reflex, or too straight to bother -- the old sharp miter wedge, same shape as before
+   let mx=nPrev.x+nCur.x,my=nPrev.y+nCur.y;const mlen=Math.hypot(mx,my);let miter;
+   if(mlen<1e-6)miter=footOut;
+   else{mx/=mlen;my/=mlen;const cosHalf=Math.max(.35,mx*nCur.x+my*nCur.y),miterLen=d/cosHalf;miter={x:inner[V].x+mx*miterLen,y:inner[V].y+my*miterLen}}
+   corners.push({poly:[inner[V],footIn,miter,footOut]})
+  }
+ }
+ return corners}
+function cornerAreaOf(c){return c?areaPx(c.poly):0}
 // Computes every circulation-enabled zone's own bands, then cuts out just the overlapping
 // sub-range where two zones' solid edges actually touch (both sides of that shared run drop
 // their ring there, no re-adding that area anywhere else). Recomputed from scratch each
@@ -1849,7 +1901,7 @@ function bandAreaOpen(b){return openSubBands(b).reduce((s,seg)=>{const q=bandQua
 function computeCircBandsAll(){
  const zones=S.objs.filter(o=>isZone(o)&&layerVisible(o));zones.forEach(initCircDefaults);
  const active=zones.filter(o=>o.circOn),eps=mPx(.1);
- const entries=active.map(o=>({o,bands:buildCircBands(o)}));
+ const entries=active.map(o=>{const bc=buildCircBands(o);return{o,bands:bc.bands,inner:bc.inner,d:bc.d}});
  for(let i=0;i<entries.length;i++)for(let j=i+1;j<entries.length;j++){
   entries[i].bands.forEach(ba=>{entries[j].bands.forEach(bb=>{
    const ivA=edgeOverlapInterval(ba.a0,ba.a1,bb.a0,bb.a1,eps);
@@ -1857,11 +1909,12 @@ function computeCircBandsAll(){
    ba.cuts.push({lo:ivA.lo,hi:ivA.hi});
    const ivB=edgeOverlapInterval(bb.a0,bb.a1,ba.a0,ba.a1,eps);
    if(ivB)bb.cuts.push({lo:ivB.lo,hi:ivB.hi})})})}
+ entries.forEach(e=>{e.corners=buildCircCorners(e.bands,e.inner,e.d)});
  return entries}
 // Each zone's own CURRENT ring area (post-suppression), in plan px^2 -- used both for
 // rendering and for the NSF+Circulation=USF accounting in the space-program panel/export.
 function circAreaByZone(){const entries=computeCircBandsAll(),m=new Map();
- entries.forEach(e=>m.set(e.o,e.bands.reduce((s,b)=>s+bandAreaOpen(b),0)));
+ entries.forEach(e=>m.set(e.o,e.bands.reduce((s,b)=>s+bandAreaOpen(b),0)+e.corners.reduce((s,c)=>s+cornerAreaOf(c),0)));
  return m}
 // Filled (shaded), not just outlined -- in the Circulation color (S.circColor; default
 // yellow), which the user can repick any time (color input) or pull from the space program.
@@ -1869,10 +1922,15 @@ function circAreaByZone(){const entries=computeCircBandsAll(),m=new Map();
 // whatever sliver of a ring would otherwise fall inside it.
 function drawCircRings(g,k){const entries=computeCircBandsAll(),col=S.circColor||'#ffe9a8';
  g.save();
- entries.forEach(({bands})=>{bands.forEach(b=>{openSubBands(b).forEach(seg=>{
-  const q=bandQuadAt(b,seg.t0,seg.t1);
-  g.beginPath();g.moveTo(q.a0.x,q.a0.y);g.lineTo(q.a1.x,q.a1.y);g.lineTo(q.o1.x,q.o1.y);g.lineTo(q.o0.x,q.o0.y);g.closePath();
-  g.fillStyle=rgba(col,.5);g.fill();g.strokeStyle=rgba(col,.85);g.lineWidth=1/k;g.stroke()})})});
+ entries.forEach(({bands,corners})=>{
+  bands.forEach(b=>{openSubBands(b).forEach(seg=>{
+   const q=bandQuadAt(b,seg.t0,seg.t1);
+   g.beginPath();g.moveTo(q.a0.x,q.a0.y);g.lineTo(q.a1.x,q.a1.y);g.lineTo(q.o1.x,q.o1.y);g.lineTo(q.o0.x,q.o0.y);g.closePath();
+   g.fillStyle=rgba(col,.5);g.fill();g.strokeStyle=rgba(col,.85);g.lineWidth=1/k;g.stroke()})});
+  corners.forEach(c=>{if(!c)return;
+   g.beginPath();g.moveTo(c.poly[0].x,c.poly[0].y);for(let i=1;i<c.poly.length;i++)g.lineTo(c.poly[i].x,c.poly[i].y);g.closePath();
+   g.fillStyle=rgba(col,.5);g.fill();g.strokeStyle=rgba(col,.85);g.lineWidth=1/k;g.stroke()})
+ });
  g.restore()}
 function findOverlaps(){const zones=S.objs.filter(isZone),warns=[],minArea=mPx(0.3)*mPx(0.3);
  for(let i=0;i<zones.length;i++)for(let j=i+1;j<zones.length;j++){const bi=bbox(zones[i]),bj=bbox(zones[j]);
@@ -4633,7 +4691,7 @@ setupFloatDrag($('dragConsole'),'#consolePanel');
    plan canvas as a dockable HTML panel instead of being painted as pixels on top of the
    drawing. Collapsible, floatable/draggable, closable, with a gear menu to choose which
    cards show, plus user-defined custom metric cards. ---------- */
-let metricsPanelClosed=false;
+let metricsPanelClosed=true; // review fix: metrics dock starts closed -- 📊 Metrics opens it
 function renderMetricsPanel(){
  const body=$('metricsBody');let html='';
  if($('iLegend').checked){const rows=legendData();
@@ -4678,7 +4736,14 @@ $('bFloatMetrics').onclick=()=>setMetricsFloat(!$('metricsPanel').classList.cont
 // switch bar hasn't been laid out yet (e.g. a headless test environment with no real layout).
 function positionMetricsBelowView3d(){const mp=$('metricsPanel');if(mp.style.left)return;
  const vb=$('view3dBar').getBoundingClientRect();if(!vb.width&&!vb.height)return;
- mp.style.top=vb.bottom+'px';mp.style.right='14px'}
+ // Floating: metricsPanel is position:fixed (viewport-space, like view3dBar itself), so the
+ // same calc(var(--sidew) + 14px) right-offset keeps the two flush with the canvas's own right
+ // edge together, not the window's -- see the CSS comment by #view3dBar.
+ // Docked: metricsPanel is position:absolute, i.e. already relative to #cvw's own box, so its
+ // right:14px is correct as-is (no sidew correction needed) and vb.bottom (viewport-space) has
+ // to be converted into #cvw-relative space by subtracting #cvw's own viewport-space top.
+ if(mp.classList.contains('floating')){mp.style.top=vb.bottom+'px';mp.style.right='calc(var(--sidew) + 14px)'}
+ else{const cvwTop=$('cvw').getBoundingClientRect().top;mp.style.top=(vb.bottom-cvwTop)+'px';mp.style.right='14px'}}
 setupFloatDrag($('dragMetrics'),'#metricsPanel',()=>hud.metrics.locked);
 // Task #126: shared "position lock + size" popover for the floating HUD overlays, opened by a
 // small gear button on each one (view3dBar, and gizmoDock/axisGizmo2D which share one "axis"
