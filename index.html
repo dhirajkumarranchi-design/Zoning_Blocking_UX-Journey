@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v14.0</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v14.1</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -320,7 +320,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v14.0</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v14.1</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -1542,7 +1542,7 @@ let LAYVIS={zone:true,wall:true,door:true,security:true,sketch:true,dim:true,com
 const sel=()=>sels[sels.length-1]||null;
 function toast(t,ms=3200){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',ms);try{clPush('log',t)}catch(_){}}
 const snap=()=>JSON.stringify(S);
-function push(){hist.push(snap());if(hist.length>150)hist.shift();fut=[]}
+function push(){hist.push(snap());if(hist.length>150)hist.shift();fut=[];if(typeof rtScheduleBroadcast==='function')rtScheduleBroadcast()}
 function restore(j){const p=S.plan;S=JSON.parse(j);if(!S.gridLines)S.gridLines=[];if(!S.columns)S.columns=[];if(S.plan!==p)setPlan(S.plan,false);sels=[];gcSel=[];sync()}
 function undo(){if(hist.length){fut.push(snap());restore(hist.pop())}}
 function redo(){if(fut.length){hist.push(snap());restore(fut.pop())}}
@@ -3002,6 +3002,7 @@ function draw(){if(mode3D){const b=$('multiSelBar');if(b)b.classList.remove('sho
  // V13: Legend / Overall USF/USM moved off the canvas into the dockable #metricsPanel (see
  // renderMetricsPanel, called from sync()) -- no longer painted as pixels here.
  scaleBar();if($('iNorth').checked)drawNorth(ctx);if($('iDayOn').checked)drawSunCompass(ctx);
+ if(typeof drawRemoteCursors==='function')drawRemoteCursors(ctx);
  $('fZoom').textContent=`Zoom ${Math.round(view.k*100)}%`;
  $('alignbar').style.display=sels.length>1?'flex':'none';$('selN').textContent=sels.length+' selected';
  syncMultiSelBar()}
@@ -5222,13 +5223,13 @@ function cloudConnect(url,key){
  sb.auth.onAuthStateChange((_event,session)=>onSession(session));
  sb.auth.getSession().then(({data})=>onSession(data&&data.session))}
 function cloudTryAutoConnect(){const cfg=cloudCfgLoad();if(cfg&&cfg.url&&cfg.key)cloudConnect(cfg.url,cfg.key)}
-function cloudDisconnectProject(){sb=null;cloudState={email:null,workspaces:[],activeWs:null,wsName:'',boards:[],activeBoard:null,role:null,members:[]};cloudCfgClear();cloudUiRefreshStep()}
+function cloudDisconnectProject(){if(typeof rtLeaveChannel==='function')rtLeaveChannel();sb=null;cloudState={email:null,workspaces:[],activeWs:null,wsName:'',boards:[],activeBoard:null,role:null,members:[]};cloudCfgClear();cloudUiRefreshStep()}
 function cloudSignIn(){const email=$('cwEmail').value.trim();
  if(!email){$('cwLoginMsg').textContent='Enter an email first.';return}
  $('cwLoginMsg').textContent='Sending…';
  sb.auth.signInWithOtp({email}).then(({error})=>{
   $('cwLoginMsg').textContent=error?('Could not send the link — '+error.message):'Magic link sent — check your email, then come back to this tab.'})}
-function cloudSignOut(){if(sb)sb.auth.signOut();cloudState.email=null;cloudState.activeWs=null;cloudUiRefreshStep()}
+function cloudSignOut(){if(typeof rtLeaveChannel==='function')rtLeaveChannel();if(sb)sb.auth.signOut();cloudState.email=null;cloudState.activeWs=null;cloudUiRefreshStep()}
 // A workspace can invite someone by email before they've ever logged in -- their
 // workspace_members row has no user_id yet. The first time they sign in, attach it (the RLS
 // policy only lets a row be claimed by its own matching email) so future lookups can use either.
@@ -5276,6 +5277,7 @@ function cloudCreateBoard(){const name=$('cwNewBoardName').value.trim()||'Untitl
  sb.from('boards').insert({workspace_id:cloudState.activeWs,name,data,updated_by:cloudState.email}).select('id').single().then(({data:row,error})=>{
   if(error){$('cwBoardMsg').textContent='Could not save — '+error.message;return}
   $('cwNewBoardName').value='';cloudState.lastLoadedAt=new Date().toISOString();
+  if(typeof rtJoinBoard==='function')rtJoinBoard(row.id);
   cloudRefreshBoards().then(()=>{cloudState.activeBoard=row.id;$('cwBoard').value=row.id;$('cwBoardMsg').textContent='Saved as a new board.'})})}
 function cloudSaveBoard(){if(!cloudState.activeBoard){toast('Pick a board first, or Save as new');return}
  const data=JSON.parse(projectSnap());
@@ -5287,6 +5289,7 @@ function cloudLoadBoard(){const id=$('cwBoard').value;
  sb.from('boards').select('data,updated_at').eq('id',id).single().then(({data,error})=>{
   if(error){$('cwBoardMsg').textContent='Could not load — '+error.message;return}
   loadProjectObj(data.data);cloudState.activeBoard=id;cloudState.lastLoadedAt=data.updated_at;
+  if(typeof rtJoinBoard==='function')rtJoinBoard(id);
   $('cwBoardMsg').textContent='Loaded.';closeCloudModal()})}
 function cloudCheckUpdates(){if(!cloudState.activeBoard)return;
  sb.from('boards').select('updated_at,updated_by').eq('id',cloudState.activeBoard).single().then(({data,error})=>{
@@ -5315,6 +5318,84 @@ $('cwCreateBoard').onclick=cloudCreateBoard;
 $('cwCheckUpdates').onclick=cloudCheckUpdates;
 $('cwInviteBtn').onclick=cloudInvite;
 cloudTryAutoConnect(); // pick up an already-connected project + signed-in session, if any
+
+// ========================================================================
+// Cloud Stage 2: live sync -- while signed in with a board joined, every
+// edit (any of push()'s 99 existing call sites -- draw, move, delete,
+// combine, resize, everything undo already covers) gets broadcast to
+// everyone else looking at the same board over a Supabase Realtime
+// channel, and every connected person's live cursor is shown on the
+// canvas. Deliberately NOT a textbook CRDT (no Yjs): conflicts resolve by
+// a single per-object "newer timestamp wins" merge pass, same spirit as
+// unionPolys()'s accepted ~1% approximation -- good enough for a
+// floor-plan tool where two people drawing on the same floor at once is
+// the normal case, not pixel-perfect simultaneous-edit arbitration.
+// Entirely opt-in and additive: with no sb client or no board joined,
+// every function here is a no-op, and solo/offline editing is untouched.
+// ========================================================================
+// var (not let): drawRemoteCursors/rtScheduleBroadcast are called from draw()/push(), which
+// run during page init (setTool('move') at startup) -- BEFORE this line is reached textually.
+// var's hoisted `undefined` avoids the temporal-dead-zone ReferenceError `let` would throw there.
+var rtChannel=null,rtActorId=null,rtPeers={},rtDirtyTimer=null,rtLastCursorSentAt=0;
+const RT_DEBOUNCE_MS=350,RT_CURSOR_THROTTLE_MS=80;
+function rtColorFor(email){let h=0;for(let i=0;i<(email||'').length;i++)h=(h*31+email.charCodeAt(i))|0;
+ const palette=['#e74c3c','#e67e22','#f1c40f','#27ae60','#16a085','#2980b9','#8e44ad','#d63384'];
+ return palette[Math.abs(h)%palette.length]}
+function rtEnsureIds(){S.objs.forEach(o=>{if(!o.id)o.id=nextId()})}
+function rtLeaveChannel(){if(rtChannel&&sb){try{sb.removeChannel(rtChannel)}catch(e){}}clearTimeout(rtDirtyTimer);rtChannel=null;rtPeers={};rtActorId=null}
+function rtJoinBoard(boardId){
+ rtLeaveChannel();
+ if(!sb||!boardId||typeof sb.channel!=='function')return;
+ rtActorId=(cloudState.email||'anon')+':'+Math.random().toString(36).slice(2);
+ const ch=sb.channel('board:'+boardId,{config:{presence:{key:rtActorId}}});
+ ch.on('broadcast',{event:'edit'},({payload})=>{if(payload&&payload.actor!==rtActorId)rtApplyRemote(payload)});
+ ch.on('presence',{event:'sync'},()=>{
+  const state=ch.presenceState();rtPeers={};
+  Object.keys(state).forEach(key=>{if(key===rtActorId)return;const metas=state[key];if(metas&&metas.length)rtPeers[key]=metas[metas.length-1]});
+  draw()});
+ rtChannel=ch; // set BEFORE subscribe(): some clients fire the SUBSCRIBED callback synchronously,
+ // and rtTrackCursor below no-ops while rtChannel is still null/the old channel
+ ch.subscribe(status=>{if(status==='SUBSCRIBED')rtTrackCursor(mouse||{x:0,y:0})})}
+function rtBroadcastNow(){
+ if(!rtChannel)return;
+ rtEnsureIds();
+ const ts=Date.now();
+ S.objs.forEach(o=>{o.rtTs=ts});
+ rtChannel.send({type:'broadcast',event:'edit',payload:{actor:rtActorId,floorIdx:curFloor,ts,objs:S.objs}})}
+function rtScheduleBroadcast(){if(!rtChannel)return;clearTimeout(rtDirtyTimer);rtDirtyTimer=setTimeout(rtBroadcastNow,RT_DEBOUNCE_MS)}
+// Merge an incoming floor snapshot from another peer into our own objects for the floor
+// you're both currently looking at. Per object: newer rtTs wins outright; an object we have
+// that's missing from the incoming snapshot is dropped only if it's OLDER than that snapshot
+// (remote genuinely deleted it) -- one we just added/edited after remote's snapshot was taken
+// is kept (remote simply doesn't know about it yet, and will on its next broadcast).
+function rtMergeFloorObjs(localObjs,incoming,incomingTs){
+ const byId={};localObjs.forEach(o=>{if(o.id)byId[o.id]=o});
+ const incomingIds=new Set();
+ (incoming||[]).forEach(o=>{incomingIds.add(o.id);const mine=byId[o.id];
+  if(!mine||!mine.rtTs||o.rtTs>=mine.rtTs)byId[o.id]=o});
+ return Object.values(byId).filter(o=>incomingIds.has(o.id)||(o.rtTs&&o.rtTs>incomingTs))}
+function rtApplyRemote(payload){
+ if(!payload||payload.floorIdx!==curFloor)return; // only the floor you're both on stays live
+ S.objs=rtMergeFloorObjs(S.objs,payload.objs,payload.ts);
+ sels=sels.filter(o=>S.objs.includes(o));gcSel=gcSel.filter(o=>S.objs.includes(o));
+ sync()}
+function rtTrackCursor(w){
+ if(!rtChannel)return;
+ const now=Date.now();if(now-rtLastCursorSentAt<RT_CURSOR_THROTTLE_MS)return;rtLastCursorSentAt=now;
+ rtChannel.track({email:cloudState.email,color:rtColorFor(cloudState.email),x:w.x,y:w.y,floorIdx:curFloor})}
+function drawRemoteCursors(g){
+ g.setTransform(1,0,0,1,0,0);
+ Object.values(rtPeers||{}).forEach(p=>{
+  if(!p||p.floorIdx!==curFloor)return;
+  const sx=p.x*view.k+view.x,sy=p.y*view.k+view.y,label=p.email||'';
+  g.save();g.fillStyle=p.color||'#3498db';g.strokeStyle='rgba(0,0,0,.4)';g.lineWidth=1;
+  g.beginPath();g.arc(sx,sy,5,0,Math.PI*2);g.fill();g.stroke();
+  g.font='11px sans-serif';const tw=g.measureText(label).width;
+  g.fillStyle='rgba(17,17,17,.85)';g.fillRect(sx+8,sy-14,tw+8,16);
+  g.fillStyle='#fff';g.fillText(label,sx+12,sy-2);
+  g.restore()})}
+cv.addEventListener('mousemove',e=>{if(!rtChannel)return;rtTrackCursor(toW(e.offsetX,e.offsetY))});
+
 const W=$('cvw');['dragover'].forEach(v=>W.addEventListener(v,e=>e.preventDefault()));
 W.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(!f)return;if(/\.(csv|tsv|txt|xlsx|xls)$/i.test(f.name)){openImport();readProgFile(f)}else if(/\.json$/i.test(f.name))f.text().then(t=>loadProjectObj(JSON.parse(t)));else openPlan(f)});
 floors=[{name:'Level 1',data:snap()}];curFloor=0;
