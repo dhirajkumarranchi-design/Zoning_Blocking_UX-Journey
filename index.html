@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v14.2</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v14.3</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -227,6 +227,9 @@ canvas{display:block}
    overflow:hidden. */
 #ctxMenu{position:absolute;display:none;background:var(--panel2);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.45);padding:4px;z-index:20;min-width:210px;max-width:270px;max-height:70vh;overflow-y:auto;overflow-x:hidden;font-size:12.5px}
 #ctxMenu .ctxLbl{padding:5px 10px;color:var(--mut);font-size:11px}
+#ctxMenu #ctxObjLbl{font-weight:600;color:var(--txt);border-bottom:1px solid var(--line);margin-bottom:3px;padding-bottom:6px}
+#ctxMenu #ctxObjLbl:empty{display:none}
+#ctxMenu button.ctxDanger{color:#e5534b}
 #ctxMenu button{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 8px;width:100%;text-align:left;border:0;background:none;padding:7px 10px;border-radius:5px;color:var(--txt);box-sizing:border-box}
 #ctxMenu button:hover{background:var(--acc);color:#fff}
 .ctxShortcut{color:var(--mut);font-size:11px;white-space:nowrap;margin-left:auto}
@@ -321,7 +324,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v14.2</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v14.3</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -491,6 +494,9 @@ input[type=date],input[type=time]{color-scheme:dark}
  <input id="zoneRenameBox" title="Enter to rename, Esc to cancel">
  <div id="live"></div><div id="toast"></div>
  <div id="ctxMenu">
+  <div class="ctxLbl" id="ctxObjLbl"></div>
+  <button data-act="delete" id="ctxDelete" class="ctxDanger">🗑 Delete <span class="sub ctxShortcut">Del</span></button>
+  <button data-act="duplicate" id="ctxDuplicate">⧉ Duplicate <span class="sub ctxShortcut">Ctrl+Shift+D</span></button>
   <div class="ctxSubWrap" id="ctxShapeWrap">
    <button type="button" class="ctxSubBtn" id="ctxShapeToggle">▭ Change shape <span>▸</span></button>
    <div class="ctxSubPanel" id="ctxShapePanel">
@@ -513,8 +519,8 @@ input[type=date],input[type=time]{color-scheme:dark}
   <button data-act="wallify">🧱 Generate walls from zoning <span class="sub ctxShortcut">cmd: WALLIFY</span></button>
   <button data-act="combineUnit" id="ctxCombineUnit">🔗 Combine into unit…</button>
   <button data-act="splitUnit" id="ctxSplitUnit" style="display:none">✂ Split unit</button>
-  <button data-act="cut">✂ Cut <span class="sub ctxShortcut">Ctrl+X</span></button>
-  <button data-act="copy">⧉ Copy <span class="sub ctxShortcut">Ctrl+C</span></button>
+  <button data-act="cut" id="ctxCut">✂ Cut <span class="sub ctxShortcut">Ctrl+X</span></button>
+  <button data-act="copy" id="ctxCopy">⧉ Copy <span class="sub ctxShortcut">Ctrl+C</span></button>
   <button data-act="paste">📋 Paste <span class="sub ctxShortcut">Ctrl+V</span></button>
   <button data-act="move">✥ Move tool <span class="sub ctxShortcut">G</span></button>
   <button data-act="select">⬚ Select tool <span class="sub ctxShortcut">V</span></button>
@@ -4202,7 +4208,9 @@ function renderCtxConvertSection(){
 // and CMD command-line table above -- Move is G, Select is V, Pan is H/Space-drag; Array,
 // Renumber, Overlap and Fix-overlaps have no single on-canvas key, only a command-line word).
 function ctxAction(act){
- if(act==='array'){switchTab('pS');setTimeout(()=>{const n=$('iArrN');if(n)n.focus()},0);toast('Set count & spacing, then “Generate array” — or type ARRAY in the command line',3000)}
+ if(act==='delete')del();
+ else if(act==='duplicate')dup();
+ else if(act==='array'){switchTab('pS');setTimeout(()=>{const n=$('iArrN');if(n)n.focus()},0);toast('Set count & spacing, then “Generate array” — or type ARRAY in the command line',3000)}
  else if(act==='renumber')renumberZones();
  else if(act==='overlaps')checkOverlaps();
  else if(act==='fixoverlaps')fixOverlaps();
@@ -4242,13 +4250,31 @@ $('ctxConvertToggle').onclick=e=>{e.stopPropagation();toggleCtxSub('ctxConvertWr
 $('ctxMenu').querySelectorAll('[data-shape]').forEach(b=>b.onclick=()=>{applyShapeChange(b.dataset.shape);closeCtxMenu()});
 $('ctxMenu').querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>{ctxAction(b.dataset.act);closeCtxMenu()});
 document.addEventListener('mousedown',e=>{if(!$('ctxMenu').contains(e.target))closeCtxMenu()});
+// touch: the canvas touch layer preventDefault()s pointerdown, which suppresses the compat
+// mousedown above -- so tapping away on iPad needs its own close hook. (A long-press opens the
+// menu ~550ms AFTER its own pointerdown, so this never closes the menu it's about to open.)
+document.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;if(!$('ctxMenu').contains(e.target))closeCtxMenu()},true);
 window.addEventListener('blur',closeCtxMenu);
+// V14.3: plain-English name of what was right-clicked, shown as the menu's header line.
+function ctxObjName(o){
+ if(isZone(o))return o.name||'Zone';
+ const N={wall:'Wall',door:'Door',window:'Window',dim:'Dimension',text:'Text / comment',security:'Security device',
+  pen:'Sketch',brush:'Sketch',stairs:'Stairs',furniture:'Furniture'};
+ return (o.type==='furniture'&&o.name)||N[o.type]||(o.type.charAt(0).toUpperCase()+o.type.slice(1))}
+// V14.3: right-click (or iPad long-press) now works on EVERY drawn element, not just zones,
+// and on empty canvas too. Items that only make sense for zones (change shape, convert, combine
+// / split unit) hide themselves when nothing in the selection is a zone; Delete / Duplicate /
+// Cut / Copy hide on empty canvas, leaving Paste and the general tools.
 cv.oncontextmenu=e=>{e.preventDefault();
  const raw=toW(e.offsetX,e.offsetY),h=hit(raw);
- if(h&&isZone(h)){if(!sels.includes(h)){sels=[h];loadSel()}
-  renderCtxConvertSection();
-  $('ctxCombineUnit').style.display=sels.filter(isZone).length>1?'block':'none';
-  $('ctxSplitUnit').style.display=sels.some(o=>o.unitId)?'block':'none';
+ if(h){if(!sels.includes(h)){sels=[h];loadSel();draw()}}
+ {const onObj=!!h,anyZone=onObj&&sels.some(isZone),show=(id,on)=>{const el=$(id);if(el)el.style.display=on?'':'none'};
+  $('ctxObjLbl').textContent=!onObj?'':sels.length>1?`${sels.length} selected`:ctxObjName(h);
+  ['ctxDelete','ctxDuplicate','ctxCut','ctxCopy'].forEach(id=>show(id,onObj));
+  show('ctxShapeWrap',anyZone);show('ctxConvertWrap',anyZone);
+  if(anyZone)renderCtxConvertSection();
+  $('ctxCombineUnit').style.display=onObj&&sels.filter(isZone).length>1?'block':'none';
+  $('ctxSplitUnit').style.display=onObj&&sels.some(o=>o.unitId)?'block':'none';
   const m=$('ctxMenu');m.querySelectorAll('.ctxSubWrap.open').forEach(w=>w.classList.remove('open'));
   m.style.left='0px';m.style.top='0px';m.style.display='block';
   // V13.1: measure the menu's actual rendered size and clamp it inside the canvas wrapper so it
@@ -4263,8 +4289,7 @@ cv.oncontextmenu=e=>{e.preventDefault();
   if(left<0)left=0;
   if(top+mh>wh)top=Math.max(0,wh-mh);
   if(top<0)top=0;
-  m.style.left=left+'px';m.style.top=top+'px'}
- else closeCtxMenu()};
+  m.style.left=left+'px';m.style.top=top+'px'}};
 $('iCordonCustom').onchange=()=>{push();applyCordonTag()};
 $('iRRad').onchange=()=>{const s=sel();if(!s||s.type!=='rrect')return;push();s.rad=mPx(+$('iRRad').value||0);sync()};
 $('iNgonN').onchange=()=>{const s=sel();if(!s||s.type!=='ngon')return;push();s.n=Math.max(3,Math.min(16,+$('iNgonN').value||6));ngonSides=s.n;sync()};
