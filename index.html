@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v14.1</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v14.2</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -170,6 +170,7 @@ nav .sep{grid-column:1/-1;width:100%;height:1px;background:#3b3b3b;margin:3px 0}
 #scalePop .px{color:var(--mut);font-size:11px;margin:-4px 0 8px}
 #cvw{grid-area:cv;position:relative;overflow:hidden}
 canvas{display:block}
+#c{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #cv3d{position:absolute;top:0;left:0;display:none;touch-action:none}
 #view3dBar{position:fixed;right:calc(var(--sidew) + 14px);top:14px;z-index:46;display:flex;gap:8px;align-items:center;
  background:linear-gradient(150deg,rgba(50,50,50,.94),rgba(28,28,28,.94));border:1px solid rgba(201,154,92,.4);
@@ -320,7 +321,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v14.1</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v14.2</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -3395,7 +3396,9 @@ function setTool(t){tool=t;draft=null;polyMode='line';wallChainPts=null;dimChain
  if(t==='freehandbound')toast('Trace the floor outline — click for a straight corner, hold-drag for a curve. Click near the start to close, or double-click/Enter to finish and replace this floor\'s boundary with it.',8000);
  if(t==='dimchain')toast('Click a chain of points to string dimensions end to end. Double-click/Enter/Esc to stop.',5000);
  if(t==='rotate')switchTab('pS'); // reveal the Rotate box + absolute-degree input the instant the tool is picked, not just once a drag starts
- cv.style.touchAction=(t==='freehandzone'||t==='freehandbound')?'none':'auto';
+ // V14.2: 'none' for EVERY tool now -- the touch layer below handles one-finger draw/select/
+ // drag and two-finger pinch/pan itself; 'auto' let iPad Safari hijack those as page scroll/zoom.
+ cv.style.touchAction='none';
  draw()}
 document.querySelectorAll('nav [data-t]').forEach(b=>b.onclick=()=>setTool(b.dataset.t));
 setTool('move');
@@ -3807,6 +3810,61 @@ cv.onpointermove=e=>{if(!FREEHAND_TOOLS.has(tool)||e.pointerType==='mouse'||e.po
 function endFreehandPointer(e){if(!FREEHAND_TOOLS.has(tool)||e.pointerType==='mouse'||e.pointerId!==freehandPointerId)return;e.preventDefault();
  freehandPointerId=null;cv.onmouseup(fwdPointer(e))}
 cv.onpointerup=endFreehandPointer;cv.onpointercancel=endFreehandPointer;
+// V14.2: iPad / touch / Apple Pencil for EVERY other tool (draw, select, move, resize, walls,
+// poly, dims...) -- same forwarding idea as the freehand block above, into the same mouse
+// handlers, so no tool logic is duplicated. Added with addEventListener so it runs alongside
+// (never replaces) the freehand onpointer* handlers above, and skips anything they own.
+//  - 1 finger/pen: forwarded as mousedown/mousemove/mouseup. The mousedown is held back until
+//    the finger moves a few px, lifts, or ~90ms pass, so a two-finger gesture that lands
+//    slightly staggered doesn't first start a stray rect/selection.
+//  - 2 fingers: pinch to zoom + drag to pan (same view transform the mouse wheel uses).
+//  - double-tap: forwarded as dblclick (finish a poly, rename a zone...).
+//  - long-press (select/move tool): forwarded as the right-click context menu.
+const tPts={};let tMode=null,tId=null,tDown=null,tSent=false,tHold=null,tLong=null,tPinch=null,tLastTap=null,tMoved=false;
+const T_SLOP=6,T_HOLD_MS=90,T_LONG_MS=550,T_DBL_MS=350,T_DBL_PX=30;
+function tEvt(p,src){return{offsetX:p.x,offsetY:p.y,button:0,shiftKey:!!(src&&src.shiftKey),ctrlKey:false,metaKey:false,preventDefault(){},target:cv}}
+function tSendDown(){if(tSent||!tDown)return;tSent=true;clearTimeout(tHold);cv.onmousedown(tEvt(tDown))}
+function tClearTimers(){clearTimeout(tHold);clearTimeout(tLong);tHold=tLong=null}
+function tTouchOwned(e){return e.pointerType==='mouse'||FREEHAND_TOOLS.has(tool)||mode3D}
+function tBeginPinch(){const ids=Object.keys(tPts).slice(0,2),a=tPts[ids[0]],b=tPts[ids[1]];
+ tPinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,m:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},k:view.k,vx:view.x,vy:view.y}}
+cv.addEventListener('pointerdown',e=>{if(tTouchOwned(e))return;e.preventDefault();
+ try{cv.setPointerCapture(e.pointerId)}catch(_){}
+ tPts[e.pointerId]={x:e.offsetX,y:e.offsetY};
+ const n=Object.keys(tPts).length;
+ if(n===1){tMode='single';tId=e.pointerId;tDown={x:e.offsetX,y:e.offsetY,t:Date.now()};tSent=false;tMoved=false;
+  tHold=setTimeout(tSendDown,T_HOLD_MS);
+  if(tool==='select'||tool==='move')tLong=setTimeout(()=>{if(tMode!=='single'||tMoved)return;
+   tSendDown();cv.onmouseup(tEvt(tDown));tMode='done';
+   cv.oncontextmenu(Object.assign(tEvt(tDown),{clientX:e.clientX,clientY:e.clientY}))},T_LONG_MS)}
+ else if(n===2){tClearTimers();
+  // a one-finger action already started -> finish it where it is, then hand over to pinch
+  if(tMode==='single'&&tSent)cv.onmouseup(tEvt(tPts[tId]||tDown));
+  tMode='pinch';tBeginPinch()}});
+cv.addEventListener('pointermove',e=>{if(tTouchOwned(e)||!tPts[e.pointerId])return;e.preventDefault();
+ tPts[e.pointerId]={x:e.offsetX,y:e.offsetY};
+ if(tMode==='single'&&e.pointerId===tId){
+  if(!tMoved&&Math.hypot(e.offsetX-tDown.x,e.offsetY-tDown.y)>T_SLOP){tMoved=true;clearTimeout(tLong)}
+  if(tMoved||tSent){tSendDown();cv.onmousemove(tEvt(tPts[tId],e))}}
+ else if(tMode==='pinch'&&tPinch){const ids=Object.keys(tPts).slice(0,2);if(ids.length<2)return;
+  const a=tPts[ids[0]],b=tPts[ids[1]],d=Math.hypot(a.x-b.x,a.y-b.y)||1,m={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+  const k=Math.min(40,Math.max(0.02,tPinch.k*d/tPinch.d));
+  // keep the world point that was under the starting midpoint under the current midpoint
+  const wx=(tPinch.m.x-tPinch.vx)/tPinch.k,wy=(tPinch.m.y-tPinch.vy)/tPinch.k;
+  view.k=k;view.x=m.x-wx*k;view.y=m.y-wy*k;draw()}});
+function tEnd(e){if(tTouchOwned(e)||!tPts[e.pointerId])return;e.preventDefault();
+ const p=tPts[e.pointerId];delete tPts[e.pointerId];
+ if(tMode==='single'&&e.pointerId===tId){tClearTimers();
+  const quickTap=!tMoved&&Date.now()-tDown.t<300;
+  tSendDown();cv.onmouseup(tEvt(p));
+  if(quickTap&&e.type==='pointerup'){
+   if(tLastTap&&Date.now()-tLastTap.t<T_DBL_MS&&Math.hypot(p.x-tLastTap.x,p.y-tLastTap.y)<T_DBL_PX){tLastTap=null;cv.ondblclick(tEvt(p))}
+   else tLastTap={x:p.x,y:p.y,t:Date.now()}}
+  tMode=null;tId=null;tDown=null}
+ else if(tMode==='pinch'){const left=Object.keys(tPts).length;
+  if(left<2){tPinch=null;tMode=left?'done':null}} // lifting one of two fingers doesn't start a new drag
+ else if(!Object.keys(tPts).length)tMode=null}
+cv.addEventListener('pointerup',tEnd);cv.addEventListener('pointercancel',tEnd);
 function matchBulgesToWalls(o){if(o.type!=='poly')return;const walls=S.objs.filter(x=>x.type==='wall'&&x.bow);if(!walls.length)return;
  o.segArc=o.segArc||o.pts.map(_=>0);
  for(let i=0;i<o.pts.length;i++){if(o.segArc[i])continue;const a=o.pts[i],b=o.pts[(i+1)%o.pts.length];
