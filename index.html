@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v13.9</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v14.0</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -275,7 +275,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}tr:hover td{backgro
 .bar{height:6px;background:#3a3a3a;border-radius:3px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--acc)}
 footer{grid-area:st;background:var(--panel);border-top:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:0 14px;font-size:11.5px;color:var(--mut)}
 /* modal */
-#modal,#vmodal,#scaleSetupModal,#settingsModal,#dayModal,#lightModal,#floorNameModal,#exportModal,#libModal,#wallifyScopeModal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:20}
+#modal,#vmodal,#scaleSetupModal,#settingsModal,#dayModal,#lightModal,#floorNameModal,#exportModal,#libModal,#wallifyScopeModal,#cloudModal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:20}
 /* Furniture library is a floating PALETTE, not a blocking modal -- it has to stay open and the
    canvas stay visible/clickable underneath it so pieces can be dragged straight onto the plan. */
 #furnLibModal{position:absolute;left:14px;top:60px;width:min(380px,92vw);max-height:min(76vh,620px);
@@ -320,8 +320,9 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v13.9</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v14.0</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
+ <div class="hb"><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
  <div class="hb" style="border:0"><span id="scalePill" class="pill bad" title="Click to calibrate">⚠ Scale not verified</span></div>
  <div style="flex:1"></div>
@@ -929,6 +930,68 @@ input[type=date],input[type=time]{color-scheme:dark}
  </div>
  <div class="mf"><button id="setClose">Close</button></div>
 </div></div>
+<!-- V14 Stage 1: cloud workspaces -- email login + shared workspaces + invite-by-email + cloud
+     save/load of the board, on top of Supabase (auth+Postgres+RLS). The app stays fully usable
+     solo/offline with no login at all; this is an opt-in add-on reachable from the ☁ Cloud
+     button, not a gate in front of the editor. -->
+<div id="cloudModal"><div class="mdl" style="width:min(720px,94vw)">
+ <h3>☁ Cloud workspace</h3>
+ <div class="mb">
+  <div id="cwConnectSec">
+   <div class="sub">This app has no backend of its own, so collaboration runs on a free <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a> project you create once (no card needed, ~2 minutes). Run the provided schema in its SQL editor, then paste the two values it gives you below — they're stored only in this browser (localStorage).</div>
+   <div class="row" style="margin-top:10px">
+    <div><label>Supabase project URL</label><input id="cwUrl" placeholder="https://xxxx.supabase.co"></div>
+    <div><label>Supabase anon/public key</label><input id="cwKey" placeholder="eyJ…" type="password"></div>
+   </div>
+   <div class="sub" style="margin-top:4px">The anon key is meant to be public-facing (every Supabase frontend ships it) — real protection comes from the Row Level Security policies in the schema, not from hiding this key.</div>
+   <button class="pri" id="cwConnect" style="width:100%;margin-top:10px">🔌 Connect</button>
+   <div class="sub" id="cwConnectMsg" style="margin-top:6px;min-height:14px"></div>
+  </div>
+  <div id="cwLoginSec" style="display:none">
+   <div class="sub">Connected to <b id="cwConnectedHost"></b>. <a href="#" id="cwReconnect">Use a different project</a></div>
+   <div class="row" style="margin-top:10px;align-items:flex-end">
+    <div style="flex:1"><label>Email</label><input id="cwEmail" placeholder="you@example.com" type="email"></div>
+    <button class="pri" id="cwSendLink">✉ Send magic link</button>
+   </div>
+   <div class="sub" id="cwLoginMsg" style="margin-top:6px;min-height:14px"></div>
+  </div>
+  <div id="cwAppSec" style="display:none">
+   <div class="sub">Signed in as <b id="cwWhoAmI"></b> on <b id="cwConnectedHost2"></b>. <a href="#" id="cwSignOut">Sign out</a> · <a href="#" id="cwReconnect2">Switch project</a></div>
+   <div style="border-top:1px solid var(--line);margin:14px 0"></div>
+   <h4 style="margin:0 0 6px;font-size:13px;color:var(--txt);text-transform:none;letter-spacing:0">Workspace</h4>
+   <div class="row" style="align-items:flex-end">
+    <div style="flex:1"><label>Your workspaces</label><select id="cwWorkspace"></select></div>
+    <div style="flex:1"><label>New workspace name</label><input id="cwNewWsName" placeholder="e.g. Acme HQ Fit-out"></div>
+    <button id="cwCreateWs">+ Create</button>
+   </div>
+   <div id="cwWorkspaceBody" style="display:none">
+    <div style="border-top:1px solid var(--line);margin:14px 0"></div>
+    <h4 style="margin:0 0 6px;font-size:13px;color:var(--txt);text-transform:none;letter-spacing:0">Board (this file's content, saved to the workspace)</h4>
+    <div class="row" style="align-items:flex-end">
+     <div style="flex:1"><label>Boards in this workspace</label><select id="cwBoard"></select></div>
+     <button id="cwLoadBoard">⬇ Load</button>
+     <button id="cwSaveBoard" class="pri">💾 Save</button>
+    </div>
+    <div class="row" style="margin-top:8px;align-items:flex-end">
+     <div style="flex:1"><label>Save current work as a NEW board</label><input id="cwNewBoardName" placeholder="e.g. Level 1 — working draft"></div>
+     <button id="cwCreateBoard">+ Save as new</button>
+    </div>
+    <div class="sub" id="cwBoardMsg" style="margin-top:6px;min-height:14px"></div>
+    <button id="cwCheckUpdates" style="width:100%;margin-top:4px">🔄 Check for a newer save from someone else</button>
+    <div style="border-top:1px solid var(--line);margin:14px 0"></div>
+    <h4 style="margin:0 0 6px;font-size:13px;color:var(--txt);text-transform:none;letter-spacing:0">Who has access <span style="color:#999;font-weight:400" id="cwRoleTag"></span></h4>
+    <div id="cwMembers" class="sub"></div>
+    <div class="row" id="cwInviteRow" style="margin-top:8px;align-items:flex-end">
+     <div style="flex:1"><label>Invite by email</label><input id="cwInviteEmail" placeholder="teammate@example.com" type="email"></div>
+     <div><label>Role</label><select id="cwInviteRole"><option value="editor" selected>Editor</option><option value="viewer">Viewer</option></select></div>
+     <button id="cwInviteBtn">+ Invite</button>
+    </div>
+    <div class="sub" id="cwInviteMsg" style="margin-top:6px;min-height:14px"></div>
+   </div>
+  </div>
+ </div>
+ <div class="mf"><button id="cwClose">Close</button></div>
+</div></div>
 <div id="dayModal"><div class="mdl" style="width:min(640px,94vw)">
  <h3>☀ Daylight / Solar Analysis</h3>
  <div class="mb">
@@ -1135,6 +1198,12 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 </div>
 
+<!-- V14 Stage 1: Supabase client for cloud workspaces (auth + Postgres + RLS). Loaded from a
+     CDN so this stays a single file with no build step; if there's no network (or the user
+     never connects a project), the app below checks for `window.supabase` before using it and
+     simply keeps the Cloud panel in its "not connected" state -- everything else works offline
+     exactly as before this feature existed. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 /* ---------- in-app console (captures console.log/warn/error + app toasts) ---------- */
 const CL_MAX=300,clEntries=[];
@@ -3855,7 +3924,7 @@ $('bCopy').onclick=dup;$('bDel').onclick=del;$('bUndo').onclick=undo;$('bRedo').
 $('bFurnClose').onclick=closeFurnitureLibrary;
 setupFloatDrag($('furnLibHandle'),'#furnLibModal');
 window.addEventListener('pointermove',furnDragMove);window.addEventListener('pointerup',furnDragEnd);
-window.onkeydown=e=>{if($('modal').style.display==='flex'||$('vmodal').style.display==='flex'||$('settingsModal').style.display==='flex'||$('scaleSetupModal').style.display==='flex'||$('lightModal').style.display==='flex'||$('floorNameModal').style.display==='flex'||$('exportModal').style.display==='flex'||$('furnLibModal').style.display==='flex'||$('wallifyScopeModal').style.display==='flex')return;
+window.onkeydown=e=>{if($('modal').style.display==='flex'||$('vmodal').style.display==='flex'||$('settingsModal').style.display==='flex'||$('scaleSetupModal').style.display==='flex'||$('lightModal').style.display==='flex'||$('floorNameModal').style.display==='flex'||$('exportModal').style.display==='flex'||$('furnLibModal').style.display==='flex'||$('wallifyScopeModal').style.display==='flex'||$('cloudModal').style.display==='flex')return;
  if($('dayModal').style.display==='flex'){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'){e.preventDefault();closeDayModal()}return}
  if((e.target.tagName==='INPUT'&&!['range','checkbox','color'].includes(e.target.type))||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA')return;
  const k=e.key.toLowerCase();
@@ -5110,6 +5179,142 @@ function loadProjectObj(obj){hist=[];fut=[];
  else{floors=[{name:'Level 1',data:JSON.stringify(obj||{})}];curFloor=0}
  loadFloor(curFloor);
  if(obj&&obj.ui)applyUI(obj.ui)}
+// ========================================================================
+// V14 Stage 1: Cloud workspaces (Supabase: auth + Postgres + RLS)
+// Opt-in collaboration on top of the existing local/offline editor -- email login, shared
+// workspaces, invite-by-email with roles, cloud save/load of the board. Reuses projectSnap()/
+// loadProjectObj() (the same payload the local Save/Open-file feature already uses) as the
+// cloud payload, so a cloud "board" is exactly a saved project JSON, just stored in Postgres
+// instead of downloaded as a file. Nothing in this block runs unless the user opens the ☁ Cloud
+// panel and connects a project (pastes a URL + key, saved only in localStorage) -- everybody
+// else keeps using the app exactly as before, fully offline. See cloud_schema.sql for the
+// tables/policies this expects.
+// ========================================================================
+let sb=null,cloudState={email:null,workspaces:[],activeWs:null,wsName:'',boards:[],activeBoard:null,role:null,members:[],lastLoadedAt:null};
+function cloudCfgLoad(){try{return JSON.parse(localStorage.getItem('zoningCloudCfg')||'null')}catch(e){return null}}
+function cloudCfgSave(url,key){try{localStorage.setItem('zoningCloudCfg',JSON.stringify({url,key}))}catch(e){}}
+function cloudCfgClear(){try{localStorage.removeItem('zoningCloudCfg')}catch(e){}}
+function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function openCloudModal(){cloudUiRefreshStep();$('cloudModal').style.display='flex'}
+function closeCloudModal(){$('cloudModal').style.display='none'}
+function cloudStatusPill(){const el=$('cwStatusPill');
+ if(!sb)el.textContent='';
+ else if(!cloudState.email)el.textContent='☁ not signed in';
+ else el.textContent=`☁ ${cloudState.email}${cloudState.activeWs?' · '+(cloudState.wsName||''):''}`}
+// Which of the three panel sections (connect a project / sign in / workspace+board) shows,
+// purely a function of current state -- no page reload needed moving between steps.
+function cloudUiRefreshStep(){
+ cloudStatusPill();
+ const cfg=cloudCfgLoad(),host=cfg?(()=>{try{return new URL(cfg.url).host}catch(e){return cfg.url}})():'';
+ if(!sb){$('cwConnectSec').style.display='block';$('cwLoginSec').style.display='none';$('cwAppSec').style.display='none';return}
+ if(!cloudState.email){$('cwConnectSec').style.display='none';$('cwLoginSec').style.display='block';$('cwAppSec').style.display='none';
+  $('cwConnectedHost').textContent=host;return}
+ $('cwConnectSec').style.display='none';$('cwLoginSec').style.display='none';$('cwAppSec').style.display='block';
+ $('cwWhoAmI').textContent=cloudState.email;$('cwConnectedHost2').textContent=host}
+function cloudConnect(url,key){
+ if(!url||!key){$('cwConnectMsg').textContent='Both the project URL and the anon key are needed.';return}
+ if(typeof window.supabase==='undefined'){$('cwConnectMsg').textContent="Couldn't load the Supabase library — check your internet connection and try again.";return}
+ let client;try{client=window.supabase.createClient(url,key)}catch(e){$('cwConnectMsg').textContent='That URL/key pair looks invalid.';return}
+ sb=client;cloudCfgSave(url,key);$('cwConnectMsg').textContent='Connected.';
+ const onSession=session=>{cloudState.email=session&&session.user?session.user.email:null;
+  if(cloudState.email){cloudClaimInvites();cloudRefreshWorkspaces()}
+  cloudUiRefreshStep()};
+ sb.auth.onAuthStateChange((_event,session)=>onSession(session));
+ sb.auth.getSession().then(({data})=>onSession(data&&data.session))}
+function cloudTryAutoConnect(){const cfg=cloudCfgLoad();if(cfg&&cfg.url&&cfg.key)cloudConnect(cfg.url,cfg.key)}
+function cloudDisconnectProject(){sb=null;cloudState={email:null,workspaces:[],activeWs:null,wsName:'',boards:[],activeBoard:null,role:null,members:[]};cloudCfgClear();cloudUiRefreshStep()}
+function cloudSignIn(){const email=$('cwEmail').value.trim();
+ if(!email){$('cwLoginMsg').textContent='Enter an email first.';return}
+ $('cwLoginMsg').textContent='Sending…';
+ sb.auth.signInWithOtp({email}).then(({error})=>{
+  $('cwLoginMsg').textContent=error?('Could not send the link — '+error.message):'Magic link sent — check your email, then come back to this tab.'})}
+function cloudSignOut(){if(sb)sb.auth.signOut();cloudState.email=null;cloudState.activeWs=null;cloudUiRefreshStep()}
+// A workspace can invite someone by email before they've ever logged in -- their
+// workspace_members row has no user_id yet. The first time they sign in, attach it (the RLS
+// policy only lets a row be claimed by its own matching email) so future lookups can use either.
+function cloudClaimInvites(){if(!sb)return;
+ sb.auth.getUser().then(({data})=>{const uid=data&&data.user?data.user.id:null;if(!uid)return;
+  sb.from('workspace_members').update({user_id:uid}).eq('email',cloudState.email).is('user_id',null).then(()=>{})})}
+function cloudRefreshWorkspaces(){if(!sb)return Promise.resolve();
+ return sb.from('workspaces').select('id,name').order('name').then(({data,error})=>{
+  cloudState.workspaces=error?[]:(data||[]);
+  const sel=$('cwWorkspace');sel.innerHTML=cloudState.workspaces.map(w=>`<option value="${w.id}">${escHtml(w.name)}</option>`).join('');
+  if(cloudState.workspaces.length){
+   if(!cloudState.activeWs||!cloudState.workspaces.some(w=>w.id===cloudState.activeWs))cloudState.activeWs=cloudState.workspaces[0].id;
+   sel.value=cloudState.activeWs;cloudSelectWorkspace(cloudState.activeWs)
+  }else{cloudState.activeWs=null;$('cwWorkspaceBody').style.display='none'}})}
+function cloudCreateWorkspace(){const name=$('cwNewWsName').value.trim();
+ if(!name){toast('Name the workspace first');return}
+ sb.from('workspaces').insert({name}).select('id,name').single().then(({data,error})=>{
+  if(error){toast('Could not create workspace — '+error.message,4000);return}
+  $('cwNewWsName').value='';
+  cloudRefreshWorkspaces().then(()=>{cloudState.activeWs=data.id;$('cwWorkspace').value=data.id;cloudSelectWorkspace(data.id)})})}
+function cloudSelectWorkspace(id){cloudState.activeWs=id;
+ const w=cloudState.workspaces.find(w=>w.id===id);cloudState.wsName=w?w.name:'';
+ $('cwWorkspaceBody').style.display=id?'block':'none';cloudStatusPill();
+ if(!id)return;
+ cloudRefreshMembers();cloudRefreshBoards()}
+function cloudRefreshMembers(){if(!sb||!cloudState.activeWs)return Promise.resolve();
+ return sb.from('workspace_members').select('email,role').eq('workspace_id',cloudState.activeWs).then(({data,error})=>{
+  cloudState.members=error?[]:(data||[]);
+  const mine=cloudState.members.find(m=>m.email===cloudState.email);
+  cloudState.role=mine?mine.role:null;
+  $('cwRoleTag').textContent=cloudState.role?`(you: ${cloudState.role})`:'';
+  $('cwMembers').innerHTML=cloudState.members.map(m=>`${escHtml(m.email)} — ${escHtml(m.role)}`).join('<br>')||'No members yet.';
+  const canManage=cloudState.role==='owner'||cloudState.role==='editor';
+  $('cwInviteRow').style.display=canManage?'flex':'none';
+  $('cwSaveBoard').disabled=!canManage;$('cwCreateBoard').disabled=!canManage})}
+function cloudRefreshBoards(){if(!sb||!cloudState.activeWs)return Promise.resolve();
+ return sb.from('boards').select('id,name,updated_at,updated_by').eq('workspace_id',cloudState.activeWs).order('updated_at',{ascending:false}).then(({data,error})=>{
+  cloudState.boards=error?[]:(data||[]);
+  const sel=$('cwBoard');sel.innerHTML=cloudState.boards.map(b=>`<option value="${b.id}">${escHtml(b.name)} — ${new Date(b.updated_at).toLocaleString()}</option>`).join('');
+  if(cloudState.boards.length){if(!cloudState.activeBoard||!cloudState.boards.some(b=>b.id===cloudState.activeBoard))cloudState.activeBoard=cloudState.boards[0].id;sel.value=cloudState.activeBoard}
+  else cloudState.activeBoard=null})}
+function cloudCreateBoard(){const name=$('cwNewBoardName').value.trim()||'Untitled board';
+ if(!cloudState.activeWs){toast('Pick a workspace first');return}
+ const data=JSON.parse(projectSnap());
+ sb.from('boards').insert({workspace_id:cloudState.activeWs,name,data,updated_by:cloudState.email}).select('id').single().then(({data:row,error})=>{
+  if(error){$('cwBoardMsg').textContent='Could not save — '+error.message;return}
+  $('cwNewBoardName').value='';cloudState.lastLoadedAt=new Date().toISOString();
+  cloudRefreshBoards().then(()=>{cloudState.activeBoard=row.id;$('cwBoard').value=row.id;$('cwBoardMsg').textContent='Saved as a new board.'})})}
+function cloudSaveBoard(){if(!cloudState.activeBoard){toast('Pick a board first, or Save as new');return}
+ const data=JSON.parse(projectSnap());
+ sb.from('boards').update({data,updated_by:cloudState.email,updated_at:new Date().toISOString()}).eq('id',cloudState.activeBoard).then(({error})=>{
+  $('cwBoardMsg').textContent=error?('Could not save — '+error.message):'Saved.';
+  if(!error){cloudState.lastLoadedAt=new Date().toISOString();cloudRefreshBoards()}})}
+function cloudLoadBoard(){const id=$('cwBoard').value;
+ if(!id){toast('No board to load');return}
+ sb.from('boards').select('data,updated_at').eq('id',id).single().then(({data,error})=>{
+  if(error){$('cwBoardMsg').textContent='Could not load — '+error.message;return}
+  loadProjectObj(data.data);cloudState.activeBoard=id;cloudState.lastLoadedAt=data.updated_at;
+  $('cwBoardMsg').textContent='Loaded.';closeCloudModal()})}
+function cloudCheckUpdates(){if(!cloudState.activeBoard)return;
+ sb.from('boards').select('updated_at,updated_by').eq('id',cloudState.activeBoard).single().then(({data,error})=>{
+  if(error)return;
+  if(cloudState.lastLoadedAt&&new Date(data.updated_at)>new Date(cloudState.lastLoadedAt))
+   $('cwBoardMsg').textContent=`${data.updated_by||'Someone'} saved a newer version — hit Load to pull it in.`;
+  else $('cwBoardMsg').textContent='You have the latest save.'})}
+function cloudInvite(){const email=$('cwInviteEmail').value.trim(),role=$('cwInviteRole').value;
+ if(!email||!/.+@.+\..+/.test(email)){$('cwInviteMsg').textContent='Enter a valid email.';return}
+ sb.from('workspace_members').insert({workspace_id:cloudState.activeWs,email,role}).then(({error})=>{
+  $('cwInviteMsg').textContent=error?('Could not invite — '+error.message):`Invited ${email} as ${role}.`;
+  if(!error){$('cwInviteEmail').value='';cloudRefreshMembers()}})}
+$('bCloud').onclick=openCloudModal;
+$('cwClose').onclick=closeCloudModal;
+$('cwConnect').onclick=()=>cloudConnect($('cwUrl').value.trim(),$('cwKey').value.trim());
+$('cwReconnect').onclick=e=>{e.preventDefault();cloudDisconnectProject()};
+$('cwReconnect2').onclick=e=>{e.preventDefault();cloudDisconnectProject()};
+$('cwSendLink').onclick=cloudSignIn;
+$('cwSignOut').onclick=e=>{e.preventDefault();cloudSignOut()};
+$('cwWorkspace').onchange=e=>cloudSelectWorkspace(e.target.value);
+$('cwCreateWs').onclick=cloudCreateWorkspace;
+$('cwBoard').onchange=e=>{cloudState.activeBoard=e.target.value};
+$('cwLoadBoard').onclick=cloudLoadBoard;
+$('cwSaveBoard').onclick=cloudSaveBoard;
+$('cwCreateBoard').onclick=cloudCreateBoard;
+$('cwCheckUpdates').onclick=cloudCheckUpdates;
+$('cwInviteBtn').onclick=cloudInvite;
+cloudTryAutoConnect(); // pick up an already-connected project + signed-in session, if any
 const W=$('cvw');['dragover'].forEach(v=>W.addEventListener(v,e=>e.preventDefault()));
 W.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(!f)return;if(/\.(csv|tsv|txt|xlsx|xls)$/i.test(f.name)){openImport();readProgFile(f)}else if(/\.json$/i.test(f.name))f.text().then(t=>loadProjectObj(JSON.parse(t)));else openPlan(f)});
 floors=[{name:'Level 1',data:snap()}];curFloor=0;
