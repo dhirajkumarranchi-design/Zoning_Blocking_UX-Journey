@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.2</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.3</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -279,7 +279,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}tr:hover td{backgro
 .bar{height:6px;background:#3a3a3a;border-radius:3px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--acc)}
 footer{grid-area:st;background:var(--panel);border-top:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:0 14px;font-size:11.5px;color:var(--mut)}
 /* modal */
-#modal,#vmodal,#scaleSetupModal,#settingsModal,#dayModal,#lightModal,#floorNameModal,#exportModal,#libModal,#wallifyScopeModal,#cloudModal,#ssJModal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:20}
+#modal,#vmodal,#scaleSetupModal,#settingsModal,#dayModal,#lightModal,#floorNameModal,#exportModal,#libModal,#wallifyScopeModal,#cloudModal,#ssJModal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:60} /* above the floating HUD (46) and Plan assistant (47) */
 /* Furniture library is a floating PALETTE, not a blocking modal -- it has to stay open and the
    canvas stay visible/clickable underneath it so pieces can be dragged straight onto the plan. */
 #furnLibModal{position:absolute;left:14px;top:60px;width:min(380px,92vw);max-height:min(76vh,620px);
@@ -306,6 +306,19 @@ footer{grid-area:st;background:var(--panel);border-top:1px solid var(--line);dis
 .paDot{flex:0 0 20px;height:20px;border-radius:50%;color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .paOk{color:#3fb950;margin-top:8px}
 #ssReady{font-size:12px;line-height:1.45}
+.cwCrumb{margin:10px 0 4px;padding:7px 10px;background:var(--panel2);border-radius:8px;font-size:12.5px}
+.cwLvl{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}.cwLvl h4{margin:0 0 6px;font-size:13px;color:var(--txt);text-transform:none;letter-spacing:0;display:flex;gap:8px;align-items:center}
+#cloudModal details{margin-top:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px}#cloudModal summary{cursor:pointer;font-size:12.5px}
+.cwMems{margin-top:6px}.cwMem{display:flex;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line);font-size:12.5px}.cwMem>span:first-child{flex:1;overflow:hidden;text-overflow:ellipsis}
+#cloudModal input:not([type=checkbox]),#cloudModal select{width:100%;padding:6px;font-size:12.5px;border:1px solid var(--border2);background:var(--inputbg);color:var(--txt);border-radius:5px;box-sizing:border-box}
+#cloudModal label{display:block;margin:0 0 3px;color:var(--mut);font-size:11px}
+#cloudModal label:has(input[type=checkbox]){display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt);margin:6px 0 0}
+#cloudModal .row>button{flex:0 0 auto;white-space:nowrap}#cloudModal .row>label{flex:0 0 auto}
+#cloudModal a{color:var(--acc)}
+#cwStatusPill{display:inline-block;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.cwMem select{width:auto!important;padding:2px 6px!important}.cwMem a{font-size:11.5px}
+.cwChip{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:9px;border:1px solid var(--line);color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.cwRole_owner{color:#e6a23c;border-color:#e6a23c}.cwRole_editor{color:#3fb950;border-color:#3fb950}.cwRole_commenter{color:#a78bfa;border-color:#a78bfa}.cwRole_viewer{color:#4a9eda;border-color:#4a9eda}
 .furnDragGhost{position:fixed;z-index:60;pointer-events:none;background:var(--panel2);border:1px solid var(--acc);color:var(--txt);
  padding:4px 10px;border-radius:6px;font-size:12px;box-shadow:0 4px 10px rgba(0,0,0,.4);transform:translate(-6px,-6px);white-space:nowrap}
 .furnDragGhost.over{border-color:#2ecc71;background:rgba(46,204,113,.18)}
@@ -341,7 +354,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.2</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.3</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -1024,59 +1037,85 @@ input[type=date],input[type=time]{color-scheme:dark}
  <div class="mb"><div class="sub" style="margin-bottom:8px">Each row is one more room deep from the entrance (bottom). Colour = integration. A tall, thin tree means a deep, segregated layout; a short, wide one with rings means a shallow, well-connected one.</div><div id="ssJBody" style="overflow:auto;max-height:66vh;background:#fff;border-radius:6px"></div></div>
  <div class="mf"><button id="bSsJDl">&#10515; Download SVG</button><button class="pri" id="bSsJClose">Close</button></div>
 </div></div>
-<div id="cloudModal"><div class="mdl" style="width:min(720px,94vw)">
- <h3>☁ Cloud workspace</h3>
+<div id="cloudModal"><div class="mdl" style="width:min(760px,94vw)">
+ <h3>☁ Cloud — workspaces, projects &amp; boards</h3>
  <div class="mb">
   <div id="cwConnectSec">
-   <div class="sub">This app has no backend of its own, so collaboration runs on a free <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a> project you create once (no card needed, ~2 minutes). Run the provided schema in its SQL editor, then paste the two values it gives you below — they're stored only in this browser (localStorage).</div>
+   <div class="sub"><b>Admin set-up — only the owner does this, once.</b> Collaboration runs on a free <a href="https://supabase.com" target="_blank" rel="noopener">Supabase</a> project: create it, run the provided <code>cloud_schema.sql</code> in its SQL editor, then paste its Project URL and <i>anon public</i> key here. Everyone else just signs in with their email — they never need a Supabase account.</div>
    <div class="row" style="margin-top:10px">
     <div><label>Supabase project URL</label><input id="cwUrl" placeholder="https://xxxx.supabase.co"></div>
     <div><label>Supabase anon/public key</label><input id="cwKey" placeholder="eyJ…" type="password"></div>
    </div>
-   <div class="sub" style="margin-top:4px">The anon key is meant to be public-facing (every Supabase frontend ships it) — real protection comes from the Row Level Security policies in the schema, not from hiding this key.</div>
+   <div class="sub" style="margin-top:4px">The anon key is meant to be public (every Supabase web app ships it) — the Row Level Security rules in the schema are what protect the data. Never paste the <i>service_role</i> key anywhere.</div>
    <button class="pri" id="cwConnect" style="width:100%;margin-top:10px">🔌 Connect</button>
    <div class="sub" id="cwConnectMsg" style="margin-top:6px;min-height:14px"></div>
   </div>
   <div id="cwLoginSec" style="display:none">
-   <div class="sub">Connected to <b id="cwConnectedHost"></b>. <a href="#" id="cwReconnect">Use a different project</a></div>
+   <div class="sub">Sign in with your email — no password, no account to set up. <span class="sub">(<span id="cwConnectedHost"></span><span id="cwAdminLinks"> · <a href="#" id="cwReconnect">admin: use a different project</a></span>)</span></div>
    <div class="row" style="margin-top:10px;align-items:flex-end">
-    <div style="flex:1"><label>Email</label><input id="cwEmail" placeholder="you@example.com" type="email"></div>
-    <button class="pri" id="cwSendLink">✉ Send magic link</button>
+    <div style="flex:1"><label>Email</label><input id="cwEmail" placeholder="you@example.com" type="email" autocomplete="email"></div>
+    <button class="pri" id="cwSendLink">✉ Email me a sign-in code</button>
+   </div>
+   <div class="row" id="cwCodeRow" style="display:none;margin-top:8px;align-items:flex-end">
+    <div style="flex:1"><label>6-digit code from the email</label><input id="cwCode" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" maxlength="10"></div>
+    <button class="pri" id="cwVerify">Sign in</button>
    </div>
    <div class="sub" id="cwLoginMsg" style="margin-top:6px;min-height:14px"></div>
   </div>
   <div id="cwAppSec" style="display:none">
-   <div class="sub">Signed in as <b id="cwWhoAmI"></b> on <b id="cwConnectedHost2"></b>. <a href="#" id="cwSignOut">Sign out</a> · <a href="#" id="cwReconnect2">Switch project</a></div>
-   <div style="border-top:1px solid var(--line);margin:14px 0"></div>
-   <h4 style="margin:0 0 6px;font-size:13px;color:var(--txt);text-transform:none;letter-spacing:0">Workspace</h4>
-   <div class="row" style="align-items:flex-end">
-    <div style="flex:1"><label>Your workspaces</label><select id="cwWorkspace"></select></div>
-    <div style="flex:1"><label>New workspace name</label><input id="cwNewWsName" placeholder="e.g. Acme HQ Fit-out"></div>
-    <button id="cwCreateWs">+ Create</button>
-   </div>
-   <div id="cwWorkspaceBody" style="display:none">
-    <div style="border-top:1px solid var(--line);margin:14px 0"></div>
-    <h4 style="margin:0 0 6px;font-size:13px;color:var(--txt);text-transform:none;letter-spacing:0">Board (this file's content, saved to the workspace)</h4>
+   <div class="sub">Signed in as <b id="cwWhoAmI"></b> · <a href="#" id="cwSignOut">Sign out</a><a href="#" id="cwReconnect2" style="display:none;margin-left:6px">· admin: switch Supabase project</a></div>
+   <div id="cwCrumb" class="cwCrumb"></div>
+   <div class="cwLvl"><h4>🏢 Workspace <span id="cwWsRole"></span></h4>
     <div class="row" style="align-items:flex-end">
-     <div style="flex:1"><label>Boards in this workspace</label><select id="cwBoard"></select></div>
-     <button id="cwLoadBoard">⬇ Load</button>
+     <div style="flex:1"><label>Your workspaces</label><select id="cwWorkspace"></select></div>
+     <div style="flex:1"><label>New workspace</label><input id="cwNewWsName" placeholder="e.g. Dhiraj Design Studio"></div>
+     <button id="cwCreateWs">+ Create</button>
+    </div>
+    <details id="cwWsShare"><summary>👥 Share workspace <span class="sub" id="cwWsCount"></span> — your team; sees every project here except private ones</summary>
+     <div id="cwWsMembers" class="cwMems"></div>
+     <div class="row" id="cwWsInviteRow" style="margin-top:8px;align-items:flex-end">
+      <div style="flex:1"><label>Invite by email</label><input id="cwWsInviteEmail" placeholder="teammate@example.com" type="email"></div>
+      <div><label>Role</label><select id="cwWsInviteRole"><option value="editor" selected>editor</option><option value="commenter">commenter</option><option value="viewer">viewer</option><option value="owner">owner</option></select></div>
+      <button id="cwWsInviteBtn">+ Invite</button>
+     </div>
+     <div class="sub" id="cwWsInviteMsg" style="margin-top:4px;min-height:14px"></div>
+    </details>
+   </div>
+   <div class="cwLvl" id="cwProjLvl"><h4>📁 Project <span id="cwProjRole"></span></h4>
+    <div class="row" style="align-items:flex-end">
+     <div style="flex:1"><label>Projects in this workspace</label><select id="cwProject"></select></div>
+    </div>
+    <div class="row" id="cwNewProjRow" style="margin-top:8px;align-items:flex-end">
+     <div style="flex:1"><label>New project</label><input id="cwNewProjName" placeholder="e.g. Acme HQ Fit-out"></div>
+     <label style="flex:0 0 auto;white-space:nowrap;margin-bottom:8px"><input type="checkbox" id="cwNewProjPrivate"> 🔒 Private</label>
+     <button id="cwCreateProj">+ Create</button>
+    </div>
+    <label id="cwPrivRow" style="margin-top:6px"><input type="checkbox" id="cwProjPrivate"> 🔒 Private — only people added to this project (and the workspace owner) can see it</label>
+    <details id="cwProjShare"><summary>👥 Share project <span class="sub" id="cwProjCount"></span> — add a client or consultant to just this job</summary>
+     <div id="cwProjMembers" class="cwMems"></div>
+     <div class="row" id="cwProjInviteRow" style="margin-top:8px;align-items:flex-end">
+      <div style="flex:1"><label>Invite by email</label><input id="cwProjInviteEmail" placeholder="client@example.com" type="email"></div>
+      <div><label>Role</label><select id="cwProjInviteRole"><option value="editor">editor</option><option value="commenter" selected>commenter</option><option value="viewer">viewer</option><option value="owner">owner</option></select></div>
+      <button id="cwProjInviteBtn">+ Invite</button>
+     </div>
+     <div class="sub" id="cwProjInviteMsg" style="margin-top:4px;min-height:14px"></div>
+    </details>
+   </div>
+   <div class="cwLvl" id="cwBoardLvl"><h4>📄 Boards in this project</h4>
+    <div class="row" style="align-items:flex-end">
+     <div style="flex:1"><label>Board</label><select id="cwBoard"></select></div>
+     <button id="cwLoadBoard">⬇ Open</button>
      <button id="cwSaveBoard" class="pri">💾 Save</button>
     </div>
-    <div class="row" style="margin-top:8px;align-items:flex-end">
-     <div style="flex:1"><label>Save current work as a NEW board</label><input id="cwNewBoardName" placeholder="e.g. Level 1 — working draft"></div>
+    <div class="row" id="cwNewBoardRow" style="margin-top:8px;align-items:flex-end">
+     <div style="flex:1"><label>Save the current plan as a new board</label><input id="cwNewBoardName" placeholder="e.g. Level 1 — Option B"></div>
      <button id="cwCreateBoard">+ Save as new</button>
     </div>
+    <label id="cwAutosaveRow" style="margin-top:8px"><input type="checkbox" id="cwAutosave" checked> Auto-save while I work (a few seconds after each change)</label>
+    <div id="cwViewOnly" class="sub" style="margin-top:6px"></div>
+    <button id="cwPostComments" style="width:100%;margin-top:6px;display:none">💬 Post my comments</button>
     <div class="sub" id="cwBoardMsg" style="margin-top:6px;min-height:14px"></div>
     <button id="cwCheckUpdates" style="width:100%;margin-top:4px">🔄 Check for a newer save from someone else</button>
-    <div style="border-top:1px solid var(--line);margin:14px 0"></div>
-    <h4 style="margin:0 0 6px;font-size:13px;color:var(--txt);text-transform:none;letter-spacing:0">Who has access <span style="color:#999;font-weight:400" id="cwRoleTag"></span></h4>
-    <div id="cwMembers" class="sub"></div>
-    <div class="row" id="cwInviteRow" style="margin-top:8px;align-items:flex-end">
-     <div style="flex:1"><label>Invite by email</label><input id="cwInviteEmail" placeholder="teammate@example.com" type="email"></div>
-     <div><label>Role</label><select id="cwInviteRole"><option value="editor" selected>Editor</option><option value="viewer">Viewer</option></select></div>
-     <button id="cwInviteBtn">+ Invite</button>
-    </div>
-    <div class="sub" id="cwInviteMsg" style="margin-top:6px;min-height:14px"></div>
    </div>
   </div>
  </div>
@@ -1633,7 +1672,7 @@ let LAYVIS={zone:true,wall:true,door:true,security:true,sketch:true,dim:true,com
 const sel=()=>sels[sels.length-1]||null;
 function toast(t,ms=3200){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',ms);try{clPush('log',t)}catch(_){}}
 const snap=()=>JSON.stringify(S);
-function push(){hist.push(snap());if(hist.length>150)hist.shift();fut=[];if(typeof rtScheduleBroadcast==='function')rtScheduleBroadcast()}
+function push(){hist.push(snap());if(hist.length>150)hist.shift();fut=[];if(typeof rtScheduleBroadcast==='function')rtScheduleBroadcast();if(typeof cloudScheduleAutosave==='function')cloudScheduleAutosave()}
 function restore(j){const p=S.plan;S=JSON.parse(j);if(!S.gridLines)S.gridLines=[];if(!S.columns)S.columns=[];if(S.plan!==p)setPlan(S.plan,false);sels=[];gcSel=[];sync()}
 function undo(){if(hist.length){fut.push(snap());restore(hist.pop())}}
 function redo(){if(fut.length){hist.push(snap());restore(fut.pop())}}
@@ -4428,7 +4467,7 @@ window.addEventListener('pointerup',e=>{if(e.pointerId===gizmoPointerId)gizmoDra
 $('iWallMat').onchange=$('iWallT').onchange=$('iWallC').onchange=$('iWallBow').onchange=()=>{const s=sel();if(!s||s.type!=='wall')return;push();s.mat=$('iWallMat').value;s.th=+$('iWallT').value||150;s.color=$('iWallC').value;s.bow=mPx(+$('iWallBow').value||0);sync()};
 $('iDoorType').onchange=$('iSwing').onchange=$('iDoorW').onchange=()=>{const s=sel();if(!s||s.type!=='door')return;push();s.dtype=$('iDoorType').value;s.swing=$('iSwing').value;s.wmm=+$('iDoorW').value||900;sync()};
 $('iEquip').onchange=$('iEquipLbl').onchange=()=>{const s=sel();if(!s||s.type!=='security')return;push();s.kind=$('iEquip').value;s.label=$('iEquipLbl').value;sync()};
-$('iCmTxt').onchange=$('iCmRes').onchange=()=>{const s=sel();if(!s||s.type!=='comment')return;push();s.text=$('iCmTxt').value;s.resolved=$('iCmRes').checked;sync()};
+$('iCmTxt').onchange=$('iCmRes').onchange=()=>{const s=sel();if(!s||s.type!=='comment')return;if(s.cid)s._cdirty=true;push();s.text=$('iCmTxt').value;s.resolved=$('iCmRes').checked;sync()};
 /* ---------- floor plan ---------- */
 function loadScript(src){return new Promise((r,j)=>{const s=document.createElement('script');s.src=src;s.onload=r;s.onerror=()=>j(new Error('PDF support needs internet. Export the plan as PNG/JPG instead.'));document.head.appendChild(s)})}
 async function openPlan(f){try{let url;
@@ -5386,133 +5425,240 @@ function loadProjectObj(obj){hist=[];fut=[];
 // else keeps using the app exactly as before, fully offline. See cloud_schema.sql for the
 // tables/policies this expects.
 // ========================================================================
-let sb=null,cloudState={email:null,workspaces:[],activeWs:null,wsName:'',boards:[],activeBoard:null,role:null,members:[],lastLoadedAt:null};
-function cloudCfgLoad(){try{return JSON.parse(localStorage.getItem('zoningCloudCfg')||'null')}catch(e){return null}}
+// ========================================================================
+// V15.3: Cloud -- Workspaces → Projects → Boards (Supabase: auth + Postgres + RLS)
+// Only the owner/admin ever touches Supabase (one project, set up once with cloud_schema.sql).
+// Everyone else just opens the app and signs in with their email: a link, or a 6-digit code
+// typed into the app (the code works inside Miro and on iPad, where a link opens in a separate
+// browser tab whose login the embedded app can't see). Sharing is at two levels: a workspace
+// (your team -- sees every non-private project in it) and a project (add a client/consultant to
+// just that job). Roles: owner · editor · commenter · viewer; a person's role on a project is
+// the higher of their direct project role and their workspace role. The real enforcement is
+// the Row Level Security in cloud_schema.sql; the UI gating here just mirrors it.
+// A board's payload is exactly what the local Save/Open-file feature writes (projectSnap), so
+// cloud boards and local files stay interchangeable. Nothing here runs until someone opens ☁.
+// ========================================================================
+// Filled in once the owner sends their Supabase Project URL + anon public key (both are meant
+// to be public -- RLS is what protects the data). Empty = the admin can still connect from the
+// panel, saved in this browser only.
+const CLOUD_BUILTIN={url:'',key:''};
+const CLOUD_ROLE_RANK={owner:4,editor:3,commenter:2,viewer:1};
+let sb=null,cloudState={email:null,workspaces:[],activeWs:null,wsName:'',wsRole:null,wsMembers:[],projects:[],activeProject:null,projName:'',projRole:null,projPrivate:false,projMembers:[],
+ boards:[],activeBoard:null,boardName:'',lastLoadedAt:null,codeFor:null,saving:false,savedAt:null,dirty:false};
+let cloudAutosaveTimer=null;
+function cloudRank(r){return CLOUD_ROLE_RANK[r]||0}
+function cloudCanEdit(){return cloudRank(cloudState.projRole)>=3}
+function cloudCanComment(){return cloudRank(cloudState.projRole)>=2}
+function cloudCanManageProj(){return cloudState.projRole==='owner'||cloudState.wsRole==='owner'}
+function cloudCanManageWs(){return cloudState.wsRole==='owner'}
+function cloudCfgLoad(){let c=null;try{c=JSON.parse(localStorage.getItem('zoningCloudCfg')||'null')}catch(e){}
+ if(c&&c.url&&c.key)return c;return CLOUD_BUILTIN.url&&CLOUD_BUILTIN.key?{url:CLOUD_BUILTIN.url,key:CLOUD_BUILTIN.key,builtin:true}:null}
 function cloudCfgSave(url,key){try{localStorage.setItem('zoningCloudCfg',JSON.stringify({url,key}))}catch(e){}}
 function cloudCfgClear(){try{localStorage.removeItem('zoningCloudCfg')}catch(e){}}
 function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function openCloudModal(){cloudUiRefreshStep();$('cloudModal').style.display='flex'}
 function closeCloudModal(){$('cloudModal').style.display='none'}
-function cloudStatusPill(){const el=$('cwStatusPill');
- if(!sb)el.textContent='';
- else if(!cloudState.email)el.textContent='☁ not signed in';
- else el.textContent=`☁ ${cloudState.email}${cloudState.activeWs?' · '+(cloudState.wsName||''):''}`}
-// Which of the three panel sections (connect a project / sign in / workspace+board) shows,
-// purely a function of current state -- no page reload needed moving between steps.
-function cloudUiRefreshStep(){
- cloudStatusPill();
- const cfg=cloudCfgLoad(),host=cfg?(()=>{try{return new URL(cfg.url).host}catch(e){return cfg.url}})():'';
- if(!sb){$('cwConnectSec').style.display='block';$('cwLoginSec').style.display='none';$('cwAppSec').style.display='none';return}
- if(!cloudState.email){$('cwConnectSec').style.display='none';$('cwLoginSec').style.display='block';$('cwAppSec').style.display='none';
-  $('cwConnectedHost').textContent=host;return}
- $('cwConnectSec').style.display='none';$('cwLoginSec').style.display='none';$('cwAppSec').style.display='block';
- $('cwWhoAmI').textContent=cloudState.email;$('cwConnectedHost2').textContent=host}
+function cloudStatusPill(){const el=$('cwStatusPill');if(!el)return;
+ if(!sb){el.textContent='';return}if(!cloudState.email){el.textContent='☁ not signed in';return}
+ const crumb=[cloudState.wsName,cloudState.projName,cloudState.boardName].filter(Boolean).join(' › ');
+ const save=cloudState.activeBoard?(cloudState.saving?' · saving…':cloudState.dirty&&cloudCanEdit()?' · unsaved':cloudState.savedAt?' · saved':''):'';
+ el.textContent=`☁ ${cloudState.email}${crumb?' · '+crumb:''}${save}`;el.title=el.textContent}
+function cloudResetState(keepEmail){const e=keepEmail?cloudState.email:null;
+ cloudState={email:e,workspaces:[],activeWs:null,wsName:'',wsRole:null,wsMembers:[],projects:[],activeProject:null,projName:'',projRole:null,projPrivate:false,projMembers:[],boards:[],activeBoard:null,boardName:'',lastLoadedAt:null,codeFor:null,saving:false,savedAt:null,dirty:false}}
+// which panel section shows: admin connect / sign in / workspace-project-board
+function cloudUiRefreshStep(){cloudStatusPill();
+ const cfg=cloudCfgLoad(),host=cfg?(()=>{try{return new URL(cfg.url).host}catch(e){return cfg.url}})():'',show=(id,on)=>{const el=$(id);if(el)el.style.display=on?'block':'none'};
+ show('cwConnectSec',!sb);show('cwLoginSec',!!sb&&!cloudState.email);show('cwAppSec',!!sb&&!!cloudState.email);
+ $('cwConnectedHost').textContent=host;$('cwAdminLinks').style.display=cfg&&cfg.builtin?'none':'inline';$('cwReconnect2').style.display=cfg&&cfg.builtin?'none':'inline';
+ if(!sb||!cloudState.email)return;
+ $('cwWhoAmI').textContent=cloudState.email;cloudRenderLevels()}
 function cloudConnect(url,key){
  if(!url||!key){$('cwConnectMsg').textContent='Both the project URL and the anon key are needed.';return}
  if(typeof window.supabase==='undefined'){$('cwConnectMsg').textContent="Couldn't load the Supabase library — check your internet connection and try again.";return}
  let client;try{client=window.supabase.createClient(url,key)}catch(e){$('cwConnectMsg').textContent='That URL/key pair looks invalid.';return}
- sb=client;cloudCfgSave(url,key);$('cwConnectMsg').textContent='Connected.';
- const onSession=session=>{cloudState.email=session&&session.user?session.user.email:null;
-  if(cloudState.email){cloudClaimInvites();cloudRefreshWorkspaces()}
+ sb=client;const cfg=cloudCfgLoad();if(!(cfg&&cfg.builtin&&cfg.url===url))cloudCfgSave(url,key);$('cwConnectMsg').textContent='Connected.';
+ const onSession=session=>{const was=cloudState.email;cloudState.email=session&&session.user&&session.user.email?String(session.user.email).toLowerCase():null;
+  if(cloudState.email&&cloudState.email!==was){cloudClaimInvites().then(()=>cloudRefreshWorkspaces())}
+  if(!cloudState.email)cloudResetState(false);
   cloudUiRefreshStep()};
  sb.auth.onAuthStateChange((_event,session)=>onSession(session));
  sb.auth.getSession().then(({data})=>onSession(data&&data.session))}
 function cloudTryAutoConnect(){const cfg=cloudCfgLoad();if(cfg&&cfg.url&&cfg.key)cloudConnect(cfg.url,cfg.key)}
-function cloudDisconnectProject(){if(typeof rtLeaveChannel==='function')rtLeaveChannel();sb=null;cloudState={email:null,workspaces:[],activeWs:null,wsName:'',boards:[],activeBoard:null,role:null,members:[]};cloudCfgClear();cloudUiRefreshStep()}
-function cloudSignIn(){const email=$('cwEmail').value.trim();
- if(!email){$('cwLoginMsg').textContent='Enter an email first.';return}
+function cloudDisconnectProject(){if(typeof rtLeaveChannel==='function')rtLeaveChannel();clearTimeout(cloudAutosaveTimer);sb=null;cloudResetState(false);cloudCfgClear();cloudUiRefreshStep()}
+// ---- sign in: link + 6-digit code ----
+function cloudSignIn(){const email=$('cwEmail').value.trim().toLowerCase();
+ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$('cwLoginMsg').textContent='Enter a valid email first.';return}
+ const web=/^https?:$/.test(location.protocol),opts=web?{emailRedirectTo:location.origin+location.pathname}:{};
  $('cwLoginMsg').textContent='Sending…';
- sb.auth.signInWithOtp({email}).then(({error})=>{
-  $('cwLoginMsg').textContent=error?('Could not send the link — '+error.message):'Magic link sent — check your email, then come back to this tab.'})}
-function cloudSignOut(){if(typeof rtLeaveChannel==='function')rtLeaveChannel();if(sb)sb.auth.signOut();cloudState.email=null;cloudState.activeWs=null;cloudUiRefreshStep()}
-// A workspace can invite someone by email before they've ever logged in -- their
-// workspace_members row has no user_id yet. The first time they sign in, attach it (the RLS
-// policy only lets a row be claimed by its own matching email) so future lookups can use either.
-function cloudClaimInvites(){if(!sb)return;
- sb.auth.getUser().then(({data})=>{const uid=data&&data.user?data.user.id:null;if(!uid)return;
-  sb.from('workspace_members').update({user_id:uid}).eq('email',cloudState.email).is('user_id',null).then(()=>{})})}
+ sb.auth.signInWithOtp({email,options:opts}).then(({error})=>{
+  if(error){$('cwLoginMsg').textContent='Could not send — '+error.message;return}
+  cloudState.codeFor=email;$('cwCodeRow').style.display='flex';
+  $('cwLoginMsg').innerHTML=`Sent to <b>${escHtml(email)}</b>. Type the 6-digit code from the email below${web?' — or click the link in it':''}.`+(web?'':' (The link only works from the web version of the app; the code works anywhere.)');
+  setTimeout(()=>{const c=$('cwCode');if(c&&c.focus)c.focus()},0)})}
+function cloudVerifyCode(){const email=cloudState.codeFor||$('cwEmail').value.trim().toLowerCase(),token=$('cwCode').value.replace(/\s+/g,'');
+ if(!/^\d{6,10}$/.test(token)){$('cwLoginMsg').textContent='Enter the code from the email (6 digits).';return}
+ $('cwLoginMsg').textContent='Checking…';
+ sb.auth.verifyOtp({email,token,type:'email'}).then(({error})=>{
+  if(error){$('cwLoginMsg').textContent='That code didn’t work — '+error.message+'. Codes expire after an hour; send a new one if needed.';return}
+  $('cwCode').value='';$('cwCodeRow').style.display='none';$('cwLoginMsg').textContent=''})}
+function cloudSignOut(){if(typeof rtLeaveChannel==='function')rtLeaveChannel();clearTimeout(cloudAutosaveTimer);if(sb)sb.auth.signOut();cloudResetState(false);cloudUiRefreshStep()}
+function cloudClaimInvites(){if(!sb||typeof sb.rpc!=='function')return Promise.resolve();return sb.rpc('claim_invites').then(()=>{},()=>{})}
+// ---- workspaces ----
 function cloudRefreshWorkspaces(){if(!sb)return Promise.resolve();
- return sb.from('workspaces').select('id,name').order('name').then(({data,error})=>{
-  cloudState.workspaces=error?[]:(data||[]);
-  const sel=$('cwWorkspace');sel.innerHTML=cloudState.workspaces.map(w=>`<option value="${w.id}">${escHtml(w.name)}</option>`).join('');
-  if(cloudState.workspaces.length){
-   if(!cloudState.activeWs||!cloudState.workspaces.some(w=>w.id===cloudState.activeWs))cloudState.activeWs=cloudState.workspaces[0].id;
-   sel.value=cloudState.activeWs;cloudSelectWorkspace(cloudState.activeWs)
-  }else{cloudState.activeWs=null;$('cwWorkspaceBody').style.display='none'}})}
-function cloudCreateWorkspace(){const name=$('cwNewWsName').value.trim();
- if(!name){toast('Name the workspace first');return}
- sb.from('workspaces').insert({name}).select('id,name').single().then(({data,error})=>{
+ return sb.from('workspaces').select('id,name').order('name').then(({data,error})=>{cloudState.workspaces=error?[]:(data||[]);
+  if(cloudState.workspaces.length){if(!cloudState.workspaces.some(w=>w.id===cloudState.activeWs))cloudState.activeWs=cloudState.workspaces[0].id;return cloudSelectWorkspace(cloudState.activeWs)}
+  cloudState.activeWs=null;cloudState.wsName='';cloudState.wsRole=null;cloudState.projects=[];cloudState.activeProject=null;cloudRenderLevels()})}
+function cloudCreateWorkspace(){const name=$('cwNewWsName').value.trim();if(!name){toast('Name the workspace first');return Promise.resolve()}
+ return sb.from('workspaces').insert({name}).select('id,name').single().then(({data,error})=>{
   if(error){toast('Could not create workspace — '+error.message,4000);return}
-  $('cwNewWsName').value='';
-  cloudRefreshWorkspaces().then(()=>{cloudState.activeWs=data.id;$('cwWorkspace').value=data.id;cloudSelectWorkspace(data.id)})})}
-function cloudSelectWorkspace(id){cloudState.activeWs=id;
- const w=cloudState.workspaces.find(w=>w.id===id);cloudState.wsName=w?w.name:'';
- $('cwWorkspaceBody').style.display=id?'block':'none';cloudStatusPill();
- if(!id)return;
- cloudRefreshMembers();cloudRefreshBoards()}
-function cloudRefreshMembers(){if(!sb||!cloudState.activeWs)return Promise.resolve();
- return sb.from('workspace_members').select('email,role').eq('workspace_id',cloudState.activeWs).then(({data,error})=>{
-  cloudState.members=error?[]:(data||[]);
-  const mine=cloudState.members.find(m=>m.email===cloudState.email);
-  cloudState.role=mine?mine.role:null;
-  $('cwRoleTag').textContent=cloudState.role?`(you: ${cloudState.role})`:'';
-  $('cwMembers').innerHTML=cloudState.members.map(m=>`${escHtml(m.email)} — ${escHtml(m.role)}`).join('<br>')||'No members yet.';
-  const canManage=cloudState.role==='owner'||cloudState.role==='editor';
-  $('cwInviteRow').style.display=canManage?'flex':'none';
-  $('cwSaveBoard').disabled=!canManage;$('cwCreateBoard').disabled=!canManage})}
-function cloudRefreshBoards(){if(!sb||!cloudState.activeWs)return Promise.resolve();
- return sb.from('boards').select('id,name,updated_at,updated_by').eq('workspace_id',cloudState.activeWs).order('updated_at',{ascending:false}).then(({data,error})=>{
+  $('cwNewWsName').value='';cloudState.activeWs=data.id;return cloudRefreshWorkspaces().then(()=>toast(`Workspace “${name}” created — you're its owner`))})}
+function cloudSelectWorkspace(id){cloudState.activeWs=id;const w=cloudState.workspaces.find(w=>w.id===id);cloudState.wsName=w?w.name:'';
+ return Promise.all([
+  sb.rpc('ws_role',{ws:id}).then(({data})=>{cloudState.wsRole=data||null}),
+  cloudRefreshMembers('ws')
+ ]).then(()=>cloudRefreshProjects())}
+// ---- projects ----
+function cloudRefreshProjects(){if(!sb||!cloudState.activeWs)return Promise.resolve();
+ return sb.from('projects').select('id,name,private').eq('workspace_id',cloudState.activeWs).order('name').then(({data,error})=>{cloudState.projects=error?[]:(data||[]);
+  if(cloudState.projects.length){if(!cloudState.projects.some(p=>p.id===cloudState.activeProject))cloudState.activeProject=cloudState.projects[0].id;return cloudSelectProject(cloudState.activeProject)}
+  cloudState.activeProject=null;cloudState.projName='';cloudState.projRole=null;cloudState.boards=[];cloudState.activeBoard=null;cloudRenderLevels()})}
+function cloudCreateProject(){const name=$('cwNewProjName').value.trim();if(!name){toast('Name the project first');return Promise.resolve()}
+ if(!cloudState.activeWs){toast('Create or pick a workspace first');return Promise.resolve()}
+ return sb.from('projects').insert({workspace_id:cloudState.activeWs,name,private:$('cwNewProjPrivate').checked}).select('id,name').single().then(({data,error})=>{
+  if(error){toast('Could not create project — '+error.message,4000);return}
+  $('cwNewProjName').value='';$('cwNewProjPrivate').checked=false;cloudState.activeProject=data.id;return cloudRefreshProjects().then(()=>toast(`Project “${name}” created`))})}
+function cloudSelectProject(id){if(cloudState.activeProject!==id&&typeof rtLeaveChannel==='function'){rtLeaveChannel();cloudState.activeBoard=null;cloudState.boardName=''}
+ cloudState.activeProject=id;const p=cloudState.projects.find(p=>p.id===id);cloudState.projName=p?p.name:'';cloudState.projPrivate=!!(p&&p.private);
+ return Promise.all([sb.rpc('project_role',{p:id}).then(({data})=>{cloudState.projRole=data||null}),cloudRefreshMembers('proj')]).then(()=>cloudRefreshBoards())}
+function cloudSetPrivate(on){if(!cloudCanManageProj())return Promise.resolve();
+ return sb.from('projects').update({private:on}).eq('id',cloudState.activeProject).then(({error})=>{if(error){toast('Could not change — '+error.message);return}
+  const p=cloudState.projects.find(p=>p.id===cloudState.activeProject);if(p)p.private=on;cloudState.projPrivate=on;cloudRenderLevels();toast(on?'Project is now private':'Project is visible to the whole workspace')})}
+// ---- members (scope 'ws' | 'proj') ----
+function cloudMemberTable(scope){return scope==='ws'?['workspace_members','workspace_id',cloudState.activeWs]:['project_members','project_id',cloudState.activeProject]}
+function cloudRefreshMembers(scope){const [t,col,id]=cloudMemberTable(scope);if(!sb||!id)return Promise.resolve();
+ return sb.from(t).select('email,role').eq(col,id).order('email').then(({data,error})=>{cloudState[scope==='ws'?'wsMembers':'projMembers']=error?[]:(data||[]);cloudRenderLevels()})}
+function cloudInvite(scope){scope=scope||'proj';const P=scope==='ws'?'cwWs':'cwProj',email=$(P+'InviteEmail').value.trim().toLowerCase(),role=$(P+'InviteRole').value,[t,col,id]=cloudMemberTable(scope);
+ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$(P+'InviteMsg').textContent='Enter a valid email.';return Promise.resolve()}
+ return sb.from(t).insert({[col]:id,email,role,invited_by:cloudState.email}).then(({error})=>{
+  $(P+'InviteMsg').textContent=error?('Could not invite — '+(/duplicate|unique/i.test(error.message)?'already a member':error.message)):`Invited ${email} as ${role}. They sign in with that email — no account setup needed.`;
+  if(!error){$(P+'InviteEmail').value='';return cloudRefreshMembers(scope)}})}
+function cloudSetMemberRole(scope,email,role){const [t,col,id]=cloudMemberTable(scope);
+ return sb.from(t).update({role}).eq(col,id).eq('email',email).then(({error})=>{if(error)toast('Could not change role — '+error.message);return cloudRefreshMembers(scope)})}
+function cloudRemoveMember(scope,email){const [t,col,id]=cloudMemberTable(scope),self=email===cloudState.email;
+ if(!confirm(self?`Leave this ${scope==='ws'?'workspace':'project'}?`:`Remove ${email}?`))return Promise.resolve();
+ return sb.from(t).delete().eq(col,id).eq('email',email).then(({error})=>{if(error){toast('Could not remove — '+error.message);return}
+  return self?cloudRefreshWorkspaces():cloudRefreshMembers(scope)})}
+// ---- boards ----
+function cloudRefreshBoards(){if(!sb||!cloudState.activeProject){cloudRenderLevels();return Promise.resolve()}
+ return sb.from('boards').select('id,name,updated_at,updated_by').eq('project_id',cloudState.activeProject).order('updated_at',{ascending:false}).then(({data,error})=>{
   cloudState.boards=error?[]:(data||[]);
-  const sel=$('cwBoard');sel.innerHTML=cloudState.boards.map(b=>`<option value="${b.id}">${escHtml(b.name)} — ${new Date(b.updated_at).toLocaleString()}</option>`).join('');
-  if(cloudState.boards.length){if(!cloudState.activeBoard||!cloudState.boards.some(b=>b.id===cloudState.activeBoard))cloudState.activeBoard=cloudState.boards[0].id;sel.value=cloudState.activeBoard}
-  else cloudState.activeBoard=null})}
+  if(cloudState.activeBoard&&!cloudState.boards.some(b=>b.id===cloudState.activeBoard)){cloudState.activeBoard=null;cloudState.boardName=''}
+  cloudRenderLevels()})}
+// board payload: the project file, minus comments that live in board_comments
+function cloudBoardPayload(){const d=JSON.parse(projectSnap());
+ const strip=s=>{if(s&&Array.isArray(s.objs))s.objs=s.objs.filter(o=>!(o.type==='comment'&&o.cid))};
+ (d.floors||[]).forEach(f=>{if(typeof f.data==='string'){try{const s=JSON.parse(f.data);strip(s);f.data=JSON.stringify(s)}catch(e){}}else strip(f.data)});
+ return d}
 function cloudCreateBoard(){const name=$('cwNewBoardName').value.trim()||'Untitled board';
- if(!cloudState.activeWs){toast('Pick a workspace first');return}
- const data=JSON.parse(projectSnap());
- sb.from('boards').insert({workspace_id:cloudState.activeWs,name,data,updated_by:cloudState.email}).select('id').single().then(({data:row,error})=>{
+ if(!cloudState.activeProject){toast('Pick a project first');return Promise.resolve()}
+ return sb.from('boards').insert({project_id:cloudState.activeProject,name,data:cloudBoardPayload(),updated_by:cloudState.email}).select('id').single().then(({data:row,error})=>{
   if(error){$('cwBoardMsg').textContent='Could not save — '+error.message;return}
-  $('cwNewBoardName').value='';cloudState.lastLoadedAt=new Date().toISOString();
+  $('cwNewBoardName').value='';cloudState.lastLoadedAt=new Date().toISOString();cloudState.activeBoard=row.id;cloudState.boardName=name;cloudState.dirty=false;cloudState.savedAt=Date.now();
   if(typeof rtJoinBoard==='function')rtJoinBoard(row.id);
-  cloudRefreshBoards().then(()=>{cloudState.activeBoard=row.id;$('cwBoard').value=row.id;$('cwBoardMsg').textContent='Saved as a new board.'})})}
-function cloudSaveBoard(){if(!cloudState.activeBoard){toast('Pick a board first, or Save as new');return}
- const data=JSON.parse(projectSnap());
- sb.from('boards').update({data,updated_by:cloudState.email,updated_at:new Date().toISOString()}).eq('id',cloudState.activeBoard).then(({error})=>{
-  $('cwBoardMsg').textContent=error?('Could not save — '+error.message):'Saved.';
-  if(!error){cloudState.lastLoadedAt=new Date().toISOString();cloudRefreshBoards()}})}
-function cloudLoadBoard(){const id=$('cwBoard').value;
- if(!id){toast('No board to load');return}
- sb.from('boards').select('data,updated_at').eq('id',id).single().then(({data,error})=>{
-  if(error){$('cwBoardMsg').textContent='Could not load — '+error.message;return}
-  loadProjectObj(data.data);cloudState.activeBoard=id;cloudState.lastLoadedAt=data.updated_at;
+  return cloudRefreshBoards().then(()=>{$('cwBoardMsg').textContent=`Saved as “${name}”. Others on this project can open it now.`})})}
+function cloudSaveBoard(silent){if(!cloudState.activeBoard){if(!silent)toast('Open a board first, or save as a new one');return Promise.resolve()}
+ if(!cloudCanEdit()){if(cloudCanComment())return cloudPostComments(silent);if(!silent)toast('View only — you can’t save this board');return Promise.resolve()}
+ cloudState.saving=true;cloudStatusPill();
+ return sb.from('boards').update({data:cloudBoardPayload(),updated_by:cloudState.email,updated_at:new Date().toISOString()}).eq('id',cloudState.activeBoard).then(({error})=>{
+  cloudState.saving=false;
+  if(error){$('cwBoardMsg').textContent='Could not save — '+error.message;cloudStatusPill();return}
+  cloudState.dirty=false;cloudState.savedAt=Date.now();cloudState.lastLoadedAt=new Date().toISOString();
+  if(!silent)$('cwBoardMsg').textContent='Saved.';cloudStatusPill();return cloudPostComments(true)})}
+function cloudLoadBoard(){const id=$('cwBoard').value;if(!id){toast('No board to open');return Promise.resolve()}
+ return sb.from('boards').select('data,updated_at,name').eq('id',id).single().then(({data,error})=>{
+  if(error){$('cwBoardMsg').textContent='Could not open — '+error.message;return}
+  loadProjectObj(data.data);cloudState.activeBoard=id;cloudState.boardName=data.name||'';cloudState.lastLoadedAt=data.updated_at;cloudState.dirty=false;cloudState.savedAt=Date.now();
   if(typeof rtJoinBoard==='function')rtJoinBoard(id);
-  $('cwBoardMsg').textContent='Loaded.';closeCloudModal()})}
-function cloudCheckUpdates(){if(!cloudState.activeBoard)return;
- sb.from('boards').select('updated_at,updated_by').eq('id',cloudState.activeBoard).single().then(({data,error})=>{
-  if(error)return;
-  if(cloudState.lastLoadedAt&&new Date(data.updated_at)>new Date(cloudState.lastLoadedAt))
-   $('cwBoardMsg').textContent=`${data.updated_by||'Someone'} saved a newer version — hit Load to pull it in.`;
+  return cloudLoadComments().then(()=>{$('cwBoardMsg').textContent='Opened.';cloudStatusPill();closeCloudModal()})})}
+function cloudCheckUpdates(){if(!cloudState.activeBoard)return Promise.resolve();
+ return sb.from('boards').select('updated_at,updated_by').eq('id',cloudState.activeBoard).single().then(({data,error})=>{if(error)return;
+  if(cloudState.lastLoadedAt&&new Date(data.updated_at)>new Date(cloudState.lastLoadedAt)&&data.updated_by!==cloudState.email)
+   $('cwBoardMsg').textContent=`${data.updated_by||'Someone'} saved a newer version — hit Open to pull it in.`;
   else $('cwBoardMsg').textContent='You have the latest save.'})}
-function cloudInvite(){const email=$('cwInviteEmail').value.trim(),role=$('cwInviteRole').value;
- if(!email||!/.+@.+\..+/.test(email)){$('cwInviteMsg').textContent='Enter a valid email.';return}
- sb.from('workspace_members').insert({workspace_id:cloudState.activeWs,email,role}).then(({error})=>{
-  $('cwInviteMsg').textContent=error?('Could not invite — '+error.message):`Invited ${email} as ${role}.`;
-  if(!error){$('cwInviteEmail').value='';cloudRefreshMembers()}})}
+// ---- comments (stored per board, so commenters can post without edit rights) ----
+function cloudLoadComments(){if(!sb||!cloudState.activeBoard)return Promise.resolve();
+ return sb.from('board_comments').select('id,floor,x,y,text,author,resolved,created_at').eq('board_id',cloudState.activeBoard).then(({data,error})=>{if(error)return;
+  S.objs=S.objs.filter(o=>!(o.type==='comment'&&o.cid));
+  (data||[]).filter(c=>(c.floor||0)===curFloor).forEach(c=>S.objs.push({type:'comment',id:nextId(),cid:c.id,x:c.x,y:c.y,text:c.text,author:c.author,resolved:!!c.resolved,ts:Date.parse(c.created_at)||Date.now()}));
+  sync()})}
+function cloudPostComments(silent){if(!sb||!cloudState.activeBoard||!cloudCanComment())return Promise.resolve();
+ const fresh=S.objs.filter(o=>o.type==='comment'&&!o.cid&&o.text),edits=S.objs.filter(o=>o.type==='comment'&&o.cid&&o._cdirty);
+ const ins=fresh.map(o=>sb.from('board_comments').insert({board_id:cloudState.activeBoard,floor:curFloor,x:o.x,y:o.y,text:String(o.text).slice(0,4000),resolved:!!o.resolved}).select('id,author').single().then(({data,error})=>{if(!error&&data){o.cid=data.id;o.author=data.author}}));
+ const upd=edits.map(o=>sb.from('board_comments').update({resolved:!!o.resolved,text:o.text}).eq('id',o.cid).then(()=>{delete o._cdirty}));
+ return Promise.all([...ins,...upd]).then(()=>{if(!silent&&(fresh.length||edits.length))$('cwBoardMsg').textContent=`Posted ${fresh.length} comment${fresh.length===1?'':'s'}.`})}
+// ---- auto-save: a few seconds after the last edit (wired into push() alongside live sync) ----
+function cloudScheduleAutosave(){if(!sb||!cloudState.activeBoard||!cloudState.email)return;cloudState.dirty=true;cloudStatusPill();
+ if(!$('cwAutosave').checked)return;clearTimeout(cloudAutosaveTimer);cloudAutosaveTimer=setTimeout(()=>{cloudSaveBoard(true)},4000)}
+// ---- rendering ----
+function cloudRoleChip(r){return r?`<span class="cwChip cwRole_${r}">${r}</span>`:'<span class="cwChip">no access</span>'}
+function cloudMembersHtml(scope){const list=cloudState[scope==='ws'?'wsMembers':'projMembers'],manage=scope==='ws'?cloudCanManageWs():cloudCanManageProj();
+ if(!list.length)return'<div class="sub">'+(scope==='ws'&&!cloudState.wsRole?'You’re a guest on a project here, so the workspace member list is private.':'No members yet.')+'</div>';
+ return list.map(m=>{const me=m.email===cloudState.email;
+  const roleCtl=manage&&!me?`<select data-role="${escHtml(m.email)}">${['owner','editor','commenter','viewer'].map(r=>`<option${r===m.role?' selected':''}>${r}</option>`).join('')}</select>`:cloudRoleChip(m.role);
+  const rm=(manage&&!me)||(me&&m.role!=='owner')?`<a href="#" data-rm="${escHtml(m.email)}">${me?'Leave':'Remove'}</a>`:'';
+  return`<div class="cwMem"><span>${escHtml(m.email)}${me?' <span class="sub">(you)</span>':''}</span>${roleCtl}${rm}</div>`}).join('')}
+function cloudRenderLevels(){if(!$('cwAppSec'))return;cloudStatusPill();const st=cloudState,opt=(list,cur,lab)=>list.map(x=>`<option value="${escHtml(x.id)}"${x.id===cur?' selected':''}>${escHtml(lab(x))}</option>`).join('');
+ $('cwCrumb').innerHTML=[st.wsName&&('🏢 '+escHtml(st.wsName)),st.projName&&('📁 '+escHtml(st.projName)+(st.projPrivate?' 🔒':'')),st.boardName&&('📄 '+escHtml(st.boardName))].filter(Boolean).join(' <span class="sub">›</span> ')||'<span class="sub">Create a workspace to get started.</span>';
+ // workspace
+ $('cwWorkspace').innerHTML=st.workspaces.length?opt(st.workspaces,st.activeWs,w=>w.name):'<option value="">— none yet —</option>';
+ $('cwWsRole').innerHTML=st.activeWs?cloudRoleChip(st.wsRole||'guest'):'';
+ $('cwWsShare').style.display=st.activeWs?'block':'none';$('cwWsCount').textContent=st.wsMembers.length?`${st.wsMembers.length} member${st.wsMembers.length>1?'s':''}`:'';
+ $('cwWsMembers').innerHTML=st.activeWs?cloudMembersHtml('ws'):'';$('cwWsInviteRow').style.display=cloudCanManageWs()?'flex':'none';
+ // project
+ $('cwProjLvl').style.display=st.activeWs?'block':'none';
+ $('cwProject').innerHTML=st.projects.length?opt(st.projects,st.activeProject,p=>p.name+(p.private?' 🔒':'')):'<option value="">— none yet —</option>';
+ $('cwNewProjRow').style.display=cloudRank(st.wsRole)>=3?'flex':'none';
+ $('cwProjRole').innerHTML=st.activeProject?cloudRoleChip(st.projRole):'';
+ $('cwPrivRow').style.display=st.activeProject&&cloudCanManageProj()?'block':'none';$('cwProjPrivate').checked=!!st.projPrivate;
+ $('cwProjShare').style.display=st.activeProject?'block':'none';$('cwProjCount').textContent=st.projMembers.length?`${st.projMembers.length} direct member${st.projMembers.length>1?'s':''}`:'';
+ $('cwProjMembers').innerHTML=st.activeProject?cloudMembersHtml('proj'):'';$('cwProjInviteRow').style.display=cloudCanManageProj()?'flex':'none';
+ // board
+ $('cwBoardLvl').style.display=st.activeProject?'block':'none';
+ $('cwBoard').innerHTML=st.boards.length?opt(st.boards,st.activeBoard,b=>`${b.name} — ${new Date(b.updated_at).toLocaleString()}${b.updated_by?' · '+b.updated_by:''}`):'<option value="">— no boards yet —</option>';
+ const ed=cloudCanEdit(),cm=cloudCanComment();
+ $('cwSaveBoard').style.display=ed?'':'none';$('cwNewBoardRow').style.display=ed?'flex':'none';$('cwAutosaveRow').style.display=ed||cm?'block':'none';
+ $('cwPostComments').style.display=!ed&&cm?'block':'none';
+ $('cwViewOnly').innerHTML=st.activeProject&&!ed?(cm?'💬 <b>Commenter</b> — you can look and add comments (Comment tool), not change the plan.':'👁 <b>View only</b> — changes you make here aren’t saved or shared.'):'';
+ // wire per-row controls
+ [['ws','cwWsMembers'],['proj','cwProjMembers']].forEach(([sc,id])=>{const box=$(id);if(!box)return;
+  box.querySelectorAll('[data-role]').forEach(s=>s.onchange=()=>cloudSetMemberRole(sc,s.dataset.role,s.value));
+  box.querySelectorAll('[data-rm]').forEach(a=>a.onclick=e=>{e.preventDefault();cloudRemoveMember(sc,a.dataset.rm)})})}
 $('bCloud').onclick=openCloudModal;
 $('cwClose').onclick=closeCloudModal;
 $('cwConnect').onclick=()=>cloudConnect($('cwUrl').value.trim(),$('cwKey').value.trim());
 $('cwReconnect').onclick=e=>{e.preventDefault();cloudDisconnectProject()};
 $('cwReconnect2').onclick=e=>{e.preventDefault();cloudDisconnectProject()};
 $('cwSendLink').onclick=cloudSignIn;
+$('cwVerify').onclick=cloudVerifyCode;
+$('cwCode').onkeydown=e=>{if(e.key==='Enter')cloudVerifyCode()};
 $('cwSignOut').onclick=e=>{e.preventDefault();cloudSignOut()};
-$('cwWorkspace').onchange=e=>cloudSelectWorkspace(e.target.value);
+$('cwWorkspace').onchange=e=>{if(e.target.value){if(typeof rtLeaveChannel==='function')rtLeaveChannel();cloudState.activeProject=null;cloudState.activeBoard=null;cloudState.boardName='';cloudSelectWorkspace(e.target.value)}};
 $('cwCreateWs').onclick=cloudCreateWorkspace;
-$('cwBoard').onchange=e=>{cloudState.activeBoard=e.target.value};
+$('cwProject').onchange=e=>{if(e.target.value)cloudSelectProject(e.target.value)};
+$('cwCreateProj').onclick=cloudCreateProject;
+$('cwProjPrivate').onchange=e=>cloudSetPrivate(e.target.checked);
+$('cwWsInviteBtn').onclick=()=>cloudInvite('ws');
+$('cwProjInviteBtn').onclick=()=>cloudInvite('proj');
+$('cwBoard').onchange=()=>{};
 $('cwLoadBoard').onclick=cloudLoadBoard;
-$('cwSaveBoard').onclick=cloudSaveBoard;
+$('cwSaveBoard').onclick=()=>cloudSaveBoard(false);
 $('cwCreateBoard').onclick=cloudCreateBoard;
+$('cwPostComments').onclick=()=>cloudPostComments(false);
 $('cwCheckUpdates').onclick=cloudCheckUpdates;
-$('cwInviteBtn').onclick=cloudInvite;
-cloudTryAutoConnect(); // pick up an already-connected project + signed-in session, if any
+try{const a=localStorage.getItem('zoningAutosave');if(a!==null)$('cwAutosave').checked=a==='1'}catch(e){}
+$('cwAutosave').onchange=e=>{try{localStorage.setItem('zoningAutosave',e.target.checked?'1':'0')}catch(_){}};
+cloudTryAutoConnect(); // pick up the built-in / previously connected project + signed-in session, if any
+
 
 // ========================================================================
 // Cloud Stage 2: live sync -- while signed in with a board joined, every
@@ -5557,7 +5703,7 @@ function rtBroadcastNow(){
  const ts=Date.now();
  S.objs.forEach(o=>{o.rtTs=ts});
  rtChannel.send({type:'broadcast',event:'edit',payload:{actor:rtActorId,floorIdx:curFloor,ts,objs:S.objs}})}
-function rtScheduleBroadcast(){if(!rtChannel)return;clearTimeout(rtDirtyTimer);rtDirtyTimer=setTimeout(rtBroadcastNow,RT_DEBOUNCE_MS)}
+function rtScheduleBroadcast(){if(!rtChannel||(typeof cloudCanEdit==='function'&&!cloudCanEdit()))return;clearTimeout(rtDirtyTimer);rtDirtyTimer=setTimeout(rtBroadcastNow,RT_DEBOUNCE_MS)}
 // Merge an incoming floor snapshot from another peer into our own objects for the floor
 // you're both currently looking at. Per object: newer rtTs wins outright; an object we have
 // that's missing from the incoming snapshot is dropped only if it's OLDER than that snapshot
