@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v14.4</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.0</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -279,7 +279,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}tr:hover td{backgro
 .bar{height:6px;background:#3a3a3a;border-radius:3px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--acc)}
 footer{grid-area:st;background:var(--panel);border-top:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:0 14px;font-size:11.5px;color:var(--mut)}
 /* modal */
-#modal,#vmodal,#scaleSetupModal,#settingsModal,#dayModal,#lightModal,#floorNameModal,#exportModal,#libModal,#wallifyScopeModal,#cloudModal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:20}
+#modal,#vmodal,#scaleSetupModal,#settingsModal,#dayModal,#lightModal,#floorNameModal,#exportModal,#libModal,#wallifyScopeModal,#cloudModal,#ssJModal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:20}
 /* Furniture library is a floating PALETTE, not a blocking modal -- it has to stay open and the
    canvas stay visible/clickable underneath it so pieces can be dragged straight onto the plan. */
 #furnLibModal{position:absolute;left:14px;top:60px;width:min(380px,92vw);max-height:min(76vh,620px);
@@ -324,7 +324,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v14.4</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.0</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -544,7 +544,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <aside>
  <div id="dragSide" class="floatHandle" title="Drag to move (while floating)"><button id="bCollapseSide" class="tog" title="Collapse the property pane">▶</button><span>⠿ Properties</span><button id="bFloatSide" class="tog" title="Float the property pane">⧉</button></div>
- <div class="tabs"><div data-p="pP" class="on">Program</div><div data-p="pZ">Zones</div><div data-p="pF">Flow</div><div data-p="pS">Properties</div><div data-p="pC">Comments</div></div>
+ <div class="tabs"><div data-p="pP" class="on">Program</div><div data-p="pZ">Zones</div><div data-p="pF">Flow</div><div data-p="pSyn" title="Space syntax: room-graph integration and visibility (VGA) analysis">Syntax</div><div data-p="pS">Properties</div><div data-p="pC">Comments</div></div>
  <div class="pane on" id="pP">
   <div class="box" id="progEmpty"><h4>Space program</h4>Import a CSV / Excel file or paste rows straight from Excel.<br><br><button class="pri" onclick="openImport()" style="width:100%">Import space program</button>
    <button id="bLibrary1" onclick="openLibrary()" style="width:100%;margin-top:6px">📚 Add from Library (Residential / Office)</button>
@@ -588,6 +588,31 @@ input[type=date],input[type=time]{color-scheme:dark}
    <button id="bExportFlow" style="width:100%;margin-top:6px">⤓ Export flow diagram (SVG)</button>
    <div class="sub" style="margin-top:6px">Arrange moves existing zones to cluster strongly-connected spaces together; it does not resize them.</div>
   </div>
+ </div>
+ <div class="pane" id="pSyn">
+  <div class="box"><h4>Space syntax · room graph</h4>
+   <div class="sub">Works out which zones actually connect &mdash; through doors, or along shared edges with no wall between &mdash; then scores every zone. <b>Integration</b>: how easy it is to reach from everywhere else (red = most integrated, blue = most segregated). <b>Depth</b>: how many rooms deep from the entrance.</div>
+   <div class="row" style="margin-top:8px"><div><label>Entrance zone</label><select id="ssEntry"></select></div></div>
+   <label><input type="checkbox" id="ssOpenEdges" checked> Touching zones with no wall between count as connected (open plan)</label>
+   <button class="pri" id="bSsRun" style="width:100%;margin-top:8px">&#9654; Analyse room graph</button>
+   <div class="row" style="margin-top:8px"><div><label>Colour zones by</label><select id="ssMetric">
+    <option value="integ">Integration (HH)</option><option value="depth">Step depth from entrance</option><option value="conn">Connectivity</option><option value="choice">Choice (through-movement)</option><option value="control">Control</option></select></div></div>
+   <label><input type="checkbox" id="ssShowGraph" checked> Show graph on the plan</label>
+   <div id="ssMsg" class="sub" style="margin-top:6px"></div>
+   <div class="row" style="margin-top:6px"><button id="bSsJgraph" style="flex:1">&#127795; Justified graph</button><button id="bSsCsv" style="flex:1">&#10515; CSV</button></div>
+  </div>
+  <div class="scroll"><table><thead><tr><th>Zone</th><th class="n">Conn</th><th class="n">Depth</th><th class="n">Integ.</th><th class="n">Choice</th></tr></thead><tbody id="tSs"></tbody></table></div>
+  <div class="box"><h4>Space syntax · visibility (VGA)</h4>
+   <div class="sub">Lays a grid over every zone and works out which spots can see which, with walls blocking sight (doors left open). Shows how visible and connected each spot on the floor is &mdash; the classic depthmap heatmap.</div>
+   <div class="row" style="margin-top:8px"><div><label>Grid cell</label><select id="vgaCell"><option value=".5">0.5 m</option><option value=".75" selected>0.75 m</option><option value="1">1 m</option><option value="1.5">1.5 m</option></select></div>
+    <div><label>Show</label><select id="vgaMetric"><option value="integ">Visual integration</option><option value="conn">Visual connectivity</option><option value="depth">Visual depth from entrance</option></select></div></div>
+   <label><input type="checkbox" id="vgaFurn"> Furniture blocks sight (knee level)</label>
+   <button class="pri" id="bVgaRun" style="width:100%;margin-top:8px">&#9654; Run visibility analysis</button>
+   <div id="vgaProgWrap" style="display:none;margin-top:8px;height:6px;border-radius:3px;background:var(--panel2);overflow:hidden"><div id="vgaProg" style="height:100%;width:0;background:var(--acc)"></div></div>
+   <label><input type="checkbox" id="vgaShow" checked> Show heatmap on the plan</label>
+   <div id="vgaMsg" class="sub" style="margin-top:6px"></div>
+  </div>
+  <div class="box"><div id="ssLegend"></div><button id="bSsClear" style="width:100%;margin-top:8px">Clear analysis</button></div>
  </div>
  <div class="pane" id="pS">
   <div class="pgroup" id="pgTransform"><div class="pgroupHdr" onclick="togglePGroup('pgTransform')"><span class="car">▾</span>Transform</div><div class="pgroupBody">
@@ -941,6 +966,11 @@ input[type=date],input[type=time]{color-scheme:dark}
      save/load of the board, on top of Supabase (auth+Postgres+RLS). The app stays fully usable
      solo/offline with no login at all; this is an opt-in add-on reachable from the ☁ Cloud
      button, not a gate in front of the editor. -->
+<div id="ssJModal"><div class="mdl" style="width:min(960px,94vw)">
+ <h3>&#127795; Justified graph</h3>
+ <div class="mb"><div class="sub" style="margin-bottom:8px">Each row is one more room deep from the entrance (bottom). Colour = integration. A tall, thin tree means a deep, segregated layout; a short, wide one with rings means a shallow, well-connected one.</div><div id="ssJBody" style="overflow:auto;max-height:66vh;background:#fff;border-radius:6px"></div></div>
+ <div class="mf"><button id="bSsJDl">&#10515; Download SVG</button><button class="pri" id="bSsJClose">Close</button></div>
+</div></div>
 <div id="cloudModal"><div class="mdl" style="width:min(720px,94vw)">
  <h3>☁ Cloud workspace</h3>
  <div class="mb">
@@ -2920,7 +2950,7 @@ function draw(){if(mode3D){const b=$('multiSelBar');if(b)b.classList.remove('sho
  drawColGrid(ctx,view.k);
  drawGridLines(ctx,view.k);
  drawCircRings(ctx,view.k);
- S.objs.forEach(o=>{if(layerVisible(o))drawObj(o,ctx,view.k)});drawUnits(ctx,view.k);drawTouchingSeams(ctx,view.k);drawMergeSplash(ctx,view.k);drawColumns(ctx,view.k);drawBound(ctx,view.k);drawFlows(ctx,view.k);drawDayShadows(ctx,view.k);drawEnvelope(ctx,view.k);
+ S.objs.forEach(o=>{if(layerVisible(o))drawObj(o,ctx,view.k)});drawUnits(ctx,view.k);if(typeof drawSyntax==='function')drawSyntax(ctx,view.k);drawTouchingSeams(ctx,view.k);drawMergeSplash(ctx,view.k);drawColumns(ctx,view.k);drawBound(ctx,view.k);drawFlows(ctx,view.k);drawDayShadows(ctx,view.k);drawEnvelope(ctx,view.k);
  sels.forEach((o,i)=>{const b=bbox(o),pd=4/view.k;ctx.setLineDash([6/view.k,4/view.k]);ctx.strokeStyle=i===sels.length-1?'#d35400':'#f0b27a';ctx.lineWidth=2/view.k;ctx.strokeRect(b.x-pd,b.y-pd,b.w+2*pd,b.h+2*pd);ctx.setLineDash([]);
   // Task #127: 8 Photoshop-style handles (corners + edge midpoints) instead of the old lone
   // tl corner square -- small squares on corners, small diamonds on edge midpoints.
@@ -3036,6 +3066,7 @@ function syncMultiSelBar(){
 /* ---------- panels ---------- */
 function sync(){
  ensureWallIds();
+ if(typeof ssOnSync==='function')ssOnSync();
  renderMetricsPanel();
  $('iScale').value=+S.scale.toFixed(3);
  const sp=$('scalePill');sp.className='pill '+(S.verified?'ok':'bad');sp.textContent=S.verified?`✓ Scale 1 px = ${S.scale.toFixed(2)} mm`:'⚠ Scale not verified — click to set';
@@ -3990,7 +4021,7 @@ $('bCopy').onclick=dup;$('bDel').onclick=del;$('bUndo').onclick=undo;$('bRedo').
 $('bFurnClose').onclick=closeFurnitureLibrary;
 setupFloatDrag($('furnLibHandle'),'#furnLibModal');
 window.addEventListener('pointermove',furnDragMove);window.addEventListener('pointerup',furnDragEnd);
-window.onkeydown=e=>{if($('modal').style.display==='flex'||$('vmodal').style.display==='flex'||$('settingsModal').style.display==='flex'||$('scaleSetupModal').style.display==='flex'||$('lightModal').style.display==='flex'||$('floorNameModal').style.display==='flex'||$('exportModal').style.display==='flex'||$('furnLibModal').style.display==='flex'||$('wallifyScopeModal').style.display==='flex'||$('cloudModal').style.display==='flex')return;
+window.onkeydown=e=>{if($('modal').style.display==='flex'||$('vmodal').style.display==='flex'||$('settingsModal').style.display==='flex'||$('scaleSetupModal').style.display==='flex'||$('lightModal').style.display==='flex'||$('floorNameModal').style.display==='flex'||$('exportModal').style.display==='flex'||$('furnLibModal').style.display==='flex'||$('wallifyScopeModal').style.display==='flex'||$('cloudModal').style.display==='flex'||$('ssJModal').style.display==='flex')return;
  if($('dayModal').style.display==='flex'){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'){e.preventDefault();closeDayModal()}return}
  if((e.target.tagName==='INPUT'&&!['range','checkbox','color'].includes(e.target.type))||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA')return;
  const k=e.key.toLowerCase();
@@ -5505,6 +5536,290 @@ function drawRemoteCursors(g){
   g.fillStyle='#fff';g.fillText(label,sx+12,sy-2);
   g.restore()})}
 cv.addEventListener('mousemove',e=>{if(!rtChannel)return;rtTrackCursor(toW(e.offsetX,e.offsetY))});
+
+// ========================================================================
+// V15: Space syntax -- (A) room/convex-space graph and (B) visibility graph analysis (VGA).
+// (A) Nodes are the visible zones. Two zones are connected if a door opens between them (each
+//     door is probed a short step out on both sides of its wall, and whichever zone sits there
+//     is that side's room), or -- optionally, for open plans -- if they share an edge run of
+//     at least 0.6 m that no wall covers (door gaps already removed from the walls), or if
+//     they overlap. A door with a zone on only one side is an exterior door: its zone is the
+//     default entrance. Standard Hillier & Hanson measures per zone: connectivity, step depth
+//     from the entrance, mean depth, RA, RRA (diamond-normalised D-value), integration = 1/RRA,
+//     control, and choice (Brandes betweenness).
+// (B) A grid over the zones (cells inside furniture removed when "furniture blocks sight" is
+//     on). Two cells see each other if the straight line between their centres stays on floor
+//     cells and crosses no solid wall (doors open, windows solid). Each cell gets visual
+//     connectivity, visual mean depth -> visual integration (HH), and visual step depth from
+//     the entrance. Integration needs a breadth-first search from every cell, which is too much
+//     for a browser on big plans, so above a work budget it's estimated from evenly spread
+//     sample cells (depth is symmetric, so each sample's search updates every cell's estimate);
+//     the panel says when that happened. Work is chunked so the page never freezes.
+// Results live outside S (not saved/synced -- they're derived); a plan signature marks them
+// out of date when anything they depend on changes. Only the chosen entrance (S.ssEntryId) is
+// saved with the plan.
+// ========================================================================
+var ssGraph=null,ssVga=null,ssVgaTok=0,ssStale={graph:false,vga:false};
+const SS_PAL=Array.from({length:33},(_,i)=>`hsl(${Math.round(240*(1-i/32))},85%,52%)`);
+function ssColor(t){if(!(t>=0))t=0;if(t>1)t=1;return SS_PAL[Math.round(t*32)]}
+function ssZones(){return S.objs.filter(o=>isZone(o)&&layerVisible(o))}
+function ssZoneLabel(o){return ((o.num?o.num+' ':'')+(o.name||'Zone')).trim()}
+function ssSig(){return curFloor+'|'+JSON.stringify(S.objs.filter(o=>isZone(o)||o.type==='wall'||o.type==='door'||o.type==='furniture')
+ .map(o=>[o.type,o.id||'',o.x,o.y,o.w,o.h,o.r,o.rot,o.pts,o.a,o.b,o.th,o.bow,o.wmm,o.ang,o.n,o.rad,o.wid,o.t,layerVisible(o)]))}
+function ssBBox(p){let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;p.forEach(q=>{if(q.x<x0)x0=q.x;if(q.y<y0)y0=q.y;if(q.x>x1)x1=q.x;if(q.y>y1)y1=q.y});return{x0,y0,x1,y1}}
+// Solid wall pieces with door openings cut out (windows stay solid). {a,b,ht} -- ht = half thickness.
+function ssWallSolids(){const out=[];
+ S.objs.forEach(o=>{if(o.type!=='wall'||!layerVisible(o))return;
+  const dx=o.b.x-o.a.x,dy=o.b.y-o.a.y,L=Math.hypot(dx,dy);if(L<1e-6)return;
+  const dirx=dx/L,diry=dy/L,ux=-diry,uy=dirx,ht=mPx((o.th||150)/1000)/2,gaps=[];
+  S.objs.forEach(d=>{if(d.type!=='door')return;let c;
+   if(d.wid&&d.wid===o.id&&d.t!=null)c=d.t*L;
+   else{if(o.bow)return;const rx=d.x-o.a.x,ry=d.y-o.a.y,perp=rx*ux+ry*uy;if(Math.abs(perp)>ht+mPx(.05))return;
+    c=rx*dirx+ry*diry;if(c<-mPx(.3)||c>L+mPx(.3))return}
+   const hw=mPx((d.wmm||900)/1000)/2;gaps.push([Math.max(0,c-hw),Math.min(L,c+hw)])});
+  gaps.sort((a,b)=>a[0]-b[0]);let cur=0;const sol=[];
+  gaps.forEach(g=>{if(g[0]>cur)sol.push([cur,g[0]]);cur=Math.max(cur,g[1])});if(cur<L)sol.push([cur,L]);
+  sol.forEach(([s0,s1])=>{if(s1-s0<1e-6)return;const n=o.bow?Math.max(1,Math.ceil((s1-s0)/L*12)):1;
+   for(let i=0;i<n;i++){out.push({a:wallPtAt(o,(s0+(s1-s0)*i/n)/L),b:wallPtAt(o,(s0+(s1-s0)*(i+1)/n)/L),ht})}})});
+ return out}
+// ---- (A) room graph ----
+function ssBuildGraph(openEdges){
+ const zs=ssZones();zs.forEach(o=>{if(!o.id)o.id=nextId()});
+ const polys=zs.map(o=>pts(o)),areas=polys.map(areaPx),bbs=polys.map(ssBBox);
+ const zoneAt=p=>{let best=-1,ba=Infinity;for(let i=0;i<zs.length;i++){const b=bbs[i];
+  if(p.x<b.x0||p.x>b.x1||p.y<b.y0||p.y>b.y1)continue;if(areas[i]<ba&&inPoly(p,polys[i])){best=i;ba=areas[i]}}return best};
+ const edges=new Map(),ext=[],rank={door:3,open:2,overlap:1};
+ const addE=(i,j,kind,p)=>{if(i===j)return;const a=Math.min(i,j),b=Math.max(i,j),key=a+','+b,e=edges.get(key);
+  if(!e||rank[kind]>rank[e.kind])edges.set(key,{i:a,j:b,kind,p})};
+ S.objs.forEach(d=>{if(d.type!=='door')return;
+  const w=d.wid?wallById(d.wid):null,ht=w?mPx((w.th||150)/1000)/2:mPx(.075),off=ht+mPx(.35);
+  const hx=Math.cos(d.ang||0),hy=Math.sin(d.ang||0),nx=-hy,ny=hx,wpx=mPx((d.wmm||900)/1000);
+  let A=-1,B=-1;for(const s of [0,-.3,.3]){const cx=d.x+hx*wpx*s,cy=d.y+hy*wpx*s;
+   if(A<0)A=zoneAt({x:cx+nx*off,y:cy+ny*off});if(B<0)B=zoneAt({x:cx-nx*off,y:cy-ny*off})}
+  if(A>=0&&B>=0&&A!==B)addE(A,B,'door',{x:d.x,y:d.y});
+  else if((A>=0)!==(B>=0))ext.push({i:A>=0?A:B,door:d,side:A>=0?1:-1})});
+ const solids=ssWallSolids(),eps=mPx(.12),minOpen=mPx(.6);
+ for(let i=0;i<zs.length;i++)for(let j=i+1;j<zs.length;j++){const bi=bbs[i],bj=bbs[j];
+  if(bi.x1+eps<bj.x0||bj.x1+eps<bi.x0||bi.y1+eps<bj.y0||bj.y1+eps<bi.y0)continue;
+  if(polyIntersectArea(polys[i],polys[j])>mPx(.5)*mPx(.5)){const ci=centroid(polys[i]),cj=centroid(polys[j]);addE(i,j,'overlap',{x:(ci.x+cj.x)/2,y:(ci.y+cj.y)/2});continue}
+  if(!openEdges)continue;
+  const pa=polys[i],pb=polys[j];let best=0,bestP=null;
+  for(let a=0;a<pa.length;a++){const a0=pa[a],a1=pa[(a+1)%pa.length];
+   for(let b=0;b<pb.length;b++){const iv=edgeOverlapInterval(a0,a1,pb[b],pb[(b+1)%pb.length],eps);if(!iv)continue;
+    const ux=(a1.x-a0.x)/iv.len,uy=(a1.y-a0.y)/iv.len,cov=[];
+    solids.forEach(s=>{const tol=s.ht+eps,pp=p=>Math.abs((p.x-a0.x)*(-uy)+(p.y-a0.y)*ux);if(pp(s.a)>tol||pp(s.b)>tol)return;
+     let t0=(s.a.x-a0.x)*ux+(s.a.y-a0.y)*uy,t1=(s.b.x-a0.x)*ux+(s.b.y-a0.y)*uy;if(t0>t1){const tmp=t0;t0=t1;t1=tmp}
+     t0=Math.max(t0,iv.lo);t1=Math.min(t1,iv.hi);if(t1>t0)cov.push([t0,t1])});
+    cov.sort((p,q)=>p[0]-q[0]);let cur=iv.lo;const gapAt=(g0,g1)=>{if(g1-g0>best){best=g1-g0;const m=(g0+g1)/2;bestP={x:a0.x+ux*m,y:a0.y+uy*m}}};
+    cov.forEach(c=>{if(c[0]>cur)gapAt(cur,c[0]);cur=Math.max(cur,c[1])});if(iv.hi>cur)gapAt(cur,iv.hi)}}
+  if(best>=minOpen)addE(i,j,'open',bestP)}
+ const E=[...edges.values()],adj=zs.map(()=>[]);E.forEach(e=>{adj[e.i].push(e.j);adj[e.j].push(e.i)});
+ return{zs,polys,areas,edges:E,adj,ext,solids:solids.length}}
+function ssDk(n){return n>2?2*(n*(Math.log2((n+2)/3)-1)+1)/((n-1)*(n-2)):null}
+function ssBfs(adj,s){const d=new Array(adj.length).fill(-1),q=[s];d[s]=0;for(let h=0;h<q.length;h++){const v=q[h];for(const w of adj[v])if(d[w]<0){d[w]=d[v]+1;q.push(w)}}return d}
+function ssGraphMetrics(adj,entry){const k=adj.length,out=[];
+ for(let s=0;s<k;s++){const d=ssBfs(adj,s);let td=0,r=0;d.forEach(x=>{if(x>0){td+=x;r++}});const reach=r+1;
+  const md=reach>1?td/(reach-1):null,ra=(md!=null&&reach>2)?2*(md-1)/(reach-2):null,dk=ssDk(reach),rra=(ra!=null&&dk)?ra/dk:null;
+  out.push({conn:adj[s].length,md,ra,rra,integ:rra!=null?1/Math.max(rra,.01):null,reach})}
+ // control: share of each neighbour's attention this node gets
+ for(let s=0;s<k;s++)out[s].control=adj[s].reduce((a,w)=>a+1/(adj[w].length||1),0);
+ // choice: Brandes betweenness, undirected (pairs counted once)
+ const CB=new Array(k).fill(0);
+ for(let s=0;s<k;s++){const st=[],P=adj.map(()=>[]),sig=new Array(k).fill(0),d=new Array(k).fill(-1);sig[s]=1;d[s]=0;const q=[s];
+  for(let h=0;h<q.length;h++){const v=q[h];st.push(v);for(const w of adj[v]){if(d[w]<0){d[w]=d[v]+1;q.push(w)}if(d[w]===d[v]+1){sig[w]+=sig[v];P[w].push(v)}}}
+  const dl=new Array(k).fill(0);while(st.length){const w=st.pop();for(const v of P[w])dl[v]+=sig[v]/sig[w]*(1+dl[w]);if(w!==s)CB[w]+=dl[w]}}
+ for(let s=0;s<k;s++)out[s].choice=CB[s]/2;
+ const de=entry>=0?ssBfs(adj,entry):new Array(k).fill(-1);for(let s=0;s<k;s++)out[s].depth=de[s]>=0?de[s]:null;
+ return out}
+function ssPickEntry(G){
+ const want=S.ssEntryId;if(want){const i=G.zs.findIndex(o=>o.id===want);if(i>=0)return{i,src:'chosen'}}
+ if(G.ext.length){let best=G.ext[0];G.ext.forEach(e=>{if(G.areas[e.i]>G.areas[best.i])best=e});return{i:best.i,src:'exterior door'}}
+ let bi=0;G.areas.forEach((a,i)=>{if(a>G.areas[bi])bi=i});return{i:bi,src:'largest zone (no exterior door found)'}}
+function ssRunGraph(){
+ const zs=ssZones();if(zs.length<2){ssGraph=null;ssSetMsg('ssMsg','Need at least 2 visible zones to analyse.');ssRenderPanel();draw();return null}
+ const G=ssBuildGraph($('ssOpenEdges').checked),en=ssPickEntry(G),M=ssGraphMetrics(G.adj,en.i);
+ ssGraph={ids:G.zs.map(o=>o.id),names:G.zs.map(ssZoneLabel),areas:G.areas,edges:G.edges,adj:G.adj,m:M,entry:en.i,entrySrc:en.src,ext:G.ext.map(e=>({i:e.i,x:e.door.x,y:e.door.y})),
+  walls:G.solids,sig:ssSig(),floor:curFloor};
+ ssStale.graph=false;ssRenderPanel();draw();return ssGraph}
+// ---- (B) visibility graph ----
+function ssYield(){return new Promise(r=>setTimeout(r,0))}
+async function ssRunVga(){const tok=++ssVgaTok,t0=performance.now();
+ const zs=ssZones();if(!zs.length){ssVga=null;ssSetMsg('vgaMsg','Draw some zones first.');ssRenderPanel();draw();return null}
+ const furnBlocks=$('vgaFurn').checked,polys=zs.map(o=>pts(o)),bbs=polys.map(ssBBox);
+ const furn=furnBlocks?S.objs.filter(o=>o.type==='furniture'&&layerVisible(o)).map(o=>{const p=pts(o);return{p,b:ssBBox(p)}}):[];
+ let X0=Infinity,Y0=Infinity,X1=-Infinity,Y1=-Infinity;bbs.forEach(b=>{X0=Math.min(X0,b.x0);Y0=Math.min(Y0,b.y0);X1=Math.max(X1,b.x1);Y1=Math.max(Y1,b.y1)});
+ let cellM=+$('vgaCell').value||.75,c,cols,rows,floor,cells,coarsened=false;const MAXC=3500;
+ for(let tries=0;tries<12;tries++){c=mPx(cellM);cols=Math.max(1,Math.ceil((X1-X0)/c));rows=Math.max(1,Math.ceil((Y1-Y0)/c));
+  if(cols*rows>600000){cellM*=1.4;coarsened=true;continue}
+  floor=new Int32Array(cols*rows).fill(-1);cells=[];
+  for(let gy=0;gy<rows;gy++)for(let gx=0;gx<cols;gx++){const p={x:X0+(gx+.5)*c,y:Y0+(gy+.5)*c};let inside=false;
+   for(let i=0;i<polys.length&&!inside;i++){const b=bbs[i];if(p.x>=b.x0&&p.x<=b.x1&&p.y>=b.y0&&p.y<=b.y1&&inPoly(p,polys[i]))inside=true}
+   if(inside)for(const f of furn){if(p.x>=f.b.x0&&p.x<=f.b.x1&&p.y>=f.b.y0&&p.y<=f.b.y1&&inPoly(p,f.p)){inside=false;break}}
+   if(inside){floor[gy*cols+gx]=cells.length;cells.push(gx,gy)}}
+  if(cells.length/2>MAXC){cellM*=1.25;coarsened=true;continue}break}
+ const n=cells.length/2;if(n<2){ssVga=null;ssSetMsg('vgaMsg','Not enough floor area at this grid size.');ssRenderPanel();draw();return null}
+ // wall pieces, binned per grid cell they can touch
+ const segs=ssWallSolids(),ns=segs.length,sx0=new Float64Array(ns),sy0=new Float64Array(ns),sx1=new Float64Array(ns),sy1=new Float64Array(ns),bins=new Array(cols*rows);
+ segs.forEach((s,i)=>{sx0[i]=s.a.x;sy0[i]=s.a.y;sx1[i]=s.b.x;sy1[i]=s.b.y;
+  const gx0=Math.max(0,Math.floor((Math.min(s.a.x,s.b.x)-X0)/c)-0),gx1=Math.min(cols-1,Math.floor((Math.max(s.a.x,s.b.x)-X0)/c)),
+   gy0=Math.max(0,Math.floor((Math.min(s.a.y,s.b.y)-Y0)/c)),gy1=Math.min(rows-1,Math.floor((Math.max(s.a.y,s.b.y)-Y0)/c));
+  for(let gy=gy0;gy<=gy1;gy++)for(let gx=gx0;gx<=gx1;gx++){const k=gy*cols+gx;(bins[k]||(bins[k]=[])).push(i)}});
+ const stamp=new Int32Array(ns);let sid=0;
+ const blocked=(ax,ay,bx,by,k)=>{const L=bins[k];if(!L)return false;
+  const d1x=bx-ax,d1y=by-ay;for(let q=0;q<L.length;q++){const s=L[q];if(stamp[s]===sid)continue;stamp[s]=sid;
+   const d2x=sx1[s]-sx0[s],d2y=sy1[s]-sy0[s],den=d1x*d2y-d1y*d2x;if(den>-1e-12&&den<1e-12)continue;
+   const ex=sx0[s]-ax,ey=sy0[s]-ay,t=(ex*d2y-ey*d2x)/den,u=(ex*d1y-ey*d1x)/den;
+   if(t>1e-9&&t<1-1e-9&&u>=-1e-9&&u<=1+1e-9)return true}return false};
+ // grid walk (Amanatides-Woo) between two cell centres: every cell crossed must be floor and
+ // no wall piece binned in it may cut the sight line
+ const visible=(i,j)=>{sid++;let gx=cells[2*i],gy=cells[2*i+1];const tx=cells[2*j],ty=cells[2*j+1];
+  const ax=X0+(gx+.5)*c,ay=Y0+(gy+.5)*c,bx=X0+(tx+.5)*c,by=Y0+(ty+.5)*c,dx=tx-gx,dy=ty-gy;
+  const stx=dx>0?1:dx<0?-1:0,sty=dy>0?1:dy<0?-1:0,tdx=stx?Math.abs(1/dx):Infinity,tdy=sty?Math.abs(1/dy):Infinity;
+  let tmx=stx?.5*tdx:Infinity,tmy=sty?.5*tdy:Infinity;
+  for(let guard=0;guard<cols+rows+4;guard++){const k=gy*cols+gx;if(floor[k]<0)return false;if(blocked(ax,ay,bx,by,k))return false;
+   if(gx===tx&&gy===ty)return true;
+   if(Math.abs(tmx-tmy)<1e-12){ // passing exactly through a grid corner: both side cells must be clear too
+    const k1=gy*cols+(gx+stx),k2=(gy+sty)*cols+gx;if(floor[k1]<0||floor[k2]<0)return false;if(blocked(ax,ay,bx,by,k1)||blocked(ax,ay,bx,by,k2))return false;
+    gx+=stx;gy+=sty;tmx+=tdx;tmy+=tdy}
+   else if(tmx<tmy){gx+=stx;tmx+=tdx}else{gy+=sty;tmy+=tdy}}
+  return false};
+ const nb=Array.from({length:n},()=>[]),totalPairs=n*(n-1)/2;let done=0,last=performance.now();
+ ssProgress(0);
+ for(let i=0;i<n;i++){for(let j=i+1;j<n;j++)if(visible(i,j)){nb[i].push(j);nb[j].push(i)}
+  done+=n-1-i;if(performance.now()-last>30){ssProgress(.7*done/totalPairs);await ssYield();last=performance.now();if(tok!==ssVgaTok)return null}}
+ // CSR + components
+ const off=new Int32Array(n+1);for(let i=0;i<n;i++)off[i+1]=off[i]+nb[i].length;const adj=new Int32Array(off[n]);
+ for(let i=0;i<n;i++)adj.set(nb[i],off[i]);
+ const comp=new Int32Array(n).fill(-1),compSize=[],queue=new Int32Array(n);
+ for(let s=0;s<n;s++){if(comp[s]>=0)continue;const id=compSize.length;let h=0,t=0;queue[t++]=s;comp[s]=id;
+  while(h<t){const v=queue[h++];for(let e=off[v];e<off[v+1];e++){const w=adj[e];if(comp[w]<0){comp[w]=id;queue[t++]=w}}}compSize.push(t)}
+ const conn=new Float64Array(n);for(let i=0;i<n;i++)conn[i]=off[i+1]-off[i];
+ // mean depth: exact BFS from every cell, or from evenly spread samples above the budget
+ const BUDGET=2.5e8,perBfs=off[n]+n,m=n*perBfs<=BUDGET?n:Math.max(48,Math.min(n,Math.floor(BUDGET/perBfs)));
+ const sumD=new Float64Array(n),cnt=new Float64Array(n),dist=new Int32Array(n);
+ for(let q=0;q<m;q++){const s=m===n?q:Math.floor((q+.5)*n/m);dist.fill(-1);dist[s]=0;let h=0,t=0;queue[t++]=s;
+  while(h<t){const v=queue[h++];for(let e=off[v];e<off[v+1];e++){const w=adj[e];if(dist[w]<0){dist[w]=dist[v]+1;queue[t++]=w}}}
+  for(let k=0;k<t;k++){const v=queue[k];if(v!==s){sumD[v]+=dist[v];cnt[v]++}}
+  if(performance.now()-last>30){ssProgress(.7+.3*(q+1)/m);await ssYield();last=performance.now();if(tok!==ssVgaTok)return null}}
+ const md=new Float64Array(n),integ=new Float64Array(n);
+ for(let v=0;v<n;v++){const K=compSize[comp[v]];if(!cnt[v]||K<3){md[v]=NaN;integ[v]=NaN;continue}
+  md[v]=sumD[v]/cnt[v];const ra=2*(md[v]-1)/(K-2),dk=ssDk(K);integ[v]=1/Math.max(ra/dk,.01)}
+ // visual step depth from the entrance (just inside its exterior door, else its centre)
+ let ep=null;if(ssGraph&&ssGraph.floor===curFloor&&ssGraph.entry>=0){const ex=ssGraph.ext.find(e=>e.i===ssGraph.entry);
+  const z=S.objs.find(o=>o.id===ssGraph.ids[ssGraph.entry]);ep=ex?{x:ex.x,y:ex.y}:z?centerOf(z):null}
+ if(!ep){const G=ssBuildGraph(true),en=ssPickEntry(G),ex=G.ext.find(e=>e.i===en.i);ep=ex?{x:ex.door.x,y:ex.door.y}:centerOf(G.zs[en.i])}
+ let src=0,bd=Infinity;for(let i=0;i<n;i++){const d=Math.hypot(X0+(cells[2*i]+.5)*c-ep.x,Y0+(cells[2*i+1]+.5)*c-ep.y);if(d<bd){bd=d;src=i}}
+ const depth=new Float64Array(n).fill(NaN);dist.fill(-1);dist[src]=0;{let h=0,t=0;queue[t++]=src;
+  while(h<t){const v=queue[h++];depth[v]=dist[v];for(let e=off[v];e<off[v+1];e++){const w=adj[e];if(dist[w]<0){dist[w]=dist[v]+1;queue[t++]=w}}}}
+ ssVga={x0:X0,y0:Y0,c,cols,rows,cells,n,conn,md,integ,depth,src,sampled:m<n?m:0,cellM,coarsened,furnBlocks,walls:ns,comps:compSize.length,
+  secs:(performance.now()-t0)/1000,sig:ssSig(),floor:curFloor};
+ ssStale.vga=false;ssProgress(null);ssRenderPanel();draw();return ssVga}
+function ssProgress(f){const w=$('vgaProgWrap');if(!w)return;if(f==null){w.style.display='none';return}w.style.display='block';$('vgaProg').style.width=Math.round(f*100)+'%'}
+// ---- shared: ranges, drawing, panel ----
+function ssRange(arr){let lo=Infinity,hi=-Infinity;for(const v of arr){if(v==null||!isFinite(v))continue;if(v<lo)lo=v;if(v>hi)hi=v}return lo<=hi?[lo,hi]:[0,1]}
+// depth: shallow (near the entrance) is red/"hot", deep is blue -- everything else: high = red
+const ssInvert=met=>met==='depth';
+function ssGraphVals(met){return ssGraph.m.map(r=>met==='depth'?r.depth:met==='conn'?r.conn:met==='choice'?r.choice:met==='control'?r.control:r.integ)}
+function ssVgaVals(met){return met==='conn'?ssVga.conn:met==='depth'?ssVga.depth:ssVga.integ}
+function drawSyntax(g,k){
+ const showV=!!(ssVga&&ssVga.floor===curFloor&&$('vgaShow').checked),showG=!!(ssGraph&&ssGraph.floor===curFloor&&$('ssShowGraph').checked);
+ if(!showV&&!showG)return;
+ const byId=new Map(S.objs.filter(isZone).map(o=>[o.id,o]));g.save();
+ if(showV){const met=$('vgaMetric').value,arr=ssVgaVals(met),[lo,hi]=ssRange(arr),inv=ssInvert(met),V=ssVga,pad=.6/k;g.globalAlpha=.8;
+  for(let i=0;i<V.n;i++){const v=arr[i];g.fillStyle=isFinite(v)?ssColor(inv?1-(v-lo)/((hi-lo)||1):(v-lo)/((hi-lo)||1)):'#6b6b6b';
+   g.fillRect(V.x0+V.cells[2*i]*V.c,V.y0+V.cells[2*i+1]*V.c,V.c+pad,V.c+pad)}}
+ else{const met=$('ssMetric').value,vals=ssGraphVals(met),[lo,hi]=ssRange(vals),inv=ssInvert(met);g.globalAlpha=.45;
+  ssGraph.ids.forEach((id,i)=>{const o=byId.get(id);if(!o)return;const v=vals[i];
+   g.fillStyle=v==null?'#6b6b6b':ssColor(inv?1-(v-lo)/((hi-lo)||1):(v-lo)/((hi-lo)||1));const p=pts(o);
+   g.beginPath();p.forEach((q,j)=>j?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y));g.closePath();g.fill()})}
+ g.globalAlpha=1;
+ // keep walls/doors crisp on top of the colour wash
+ S.objs.forEach(o=>{if((o.type==='wall'||o.type==='door'||o.type==='window')&&layerVisible(o))drawObj(o,g,k)});
+ if(showG){const C=ssGraph.ids.map(id=>{const o=byId.get(id);return o?centerOf(o):null});
+  ssGraph.edges.forEach(e=>{const a=C[e.i],b=C[e.j];if(!a||!b)return;const p=e.p||{x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+   g.setLineDash(e.kind==='door'?[]:e.kind==='open'?[7/k,5/k]:[2/k,4/k]);
+   g.strokeStyle='rgba(20,20,20,.75)';g.lineWidth=4.5/k;g.beginPath();g.moveTo(a.x,a.y);g.lineTo(p.x,p.y);g.lineTo(b.x,b.y);g.stroke();
+   g.strokeStyle='#fff';g.lineWidth=2/k;g.stroke();
+   g.setLineDash([]);g.fillStyle='#fff';g.beginPath();g.arc(p.x,p.y,3/k,0,Math.PI*2);g.fill()});
+  g.setLineDash([]);const met=$('ssMetric').value,vals=ssGraphVals(met),[lo,hi]=ssRange(vals),inv=ssInvert(met),r=12/k;
+  C.forEach((c0,i)=>{if(!c0)return;const v=vals[i],m=ssGraph.m[i];
+   g.fillStyle=v==null?'#6b6b6b':ssColor(inv?1-(v-lo)/((hi-lo)||1):(v-lo)/((hi-lo)||1));g.strokeStyle='#fff';g.lineWidth=2/k;
+   g.beginPath();g.arc(c0.x,c0.y,r,0,Math.PI*2);g.fill();g.stroke();
+   if(i===ssGraph.entry){g.strokeStyle='#111';g.lineWidth=2.5/k;g.beginPath();g.arc(c0.x,c0.y,r+4/k,0,Math.PI*2);g.stroke()}
+   g.fillStyle='#fff';g.font=`700 ${11/k}px Segoe UI`;g.textAlign='center';g.textBaseline='middle';
+   g.fillText(i===ssGraph.entry?'IN':m.depth==null?'×':String(m.depth),c0.x,c0.y+.5/k)});
+  g.textBaseline='alphabetic'}
+ g.restore()}
+function ssSetMsg(id,t){const e=$(id);if(e)e.innerHTML=t}
+function ssFmt(v,d){return v==null||!isFinite(v)?'–':(+v).toFixed(d)}
+function ssRenderEntry(){const sel=$('ssEntry');if(!sel)return;const zs=ssZones(),cur=S.ssEntryId||'';
+ sel.innerHTML='<option value="">Auto (exterior door, else largest zone)</option>'+zs.map(o=>`<option value="${esc(o.id||'')}">${esc(ssZoneLabel(o))}</option>`).join('');
+ sel.value=zs.some(o=>o.id===cur)?cur:''}
+function ssRenderPanel(){if(!$('pSyn'))return;ssRenderEntry();
+ const tb=$('tSs');tb.innerHTML='';
+ if(ssGraph){const G=ssGraph,nDoor=G.edges.filter(e=>e.kind==='door').length,nOpen=G.edges.filter(e=>e.kind==='open').length,nOv=G.edges.filter(e=>e.kind==='overlap').length,
+   unreach=G.m.filter((r,i)=>r.depth==null&&i!==G.entry).length,iso=G.m.filter(r=>r.conn===0).length;
+  ssSetMsg('ssMsg',(ssStale.graph?'<b style="color:#e5534b">⚠ Plan changed since this ran — re-run to update.</b><br>':'')+
+   `${G.ids.length} zones · ${G.edges.length} connections (${nDoor} door, ${nOpen} open, ${nOv} overlap). Entrance: <b>${esc(G.names[G.entry]||'–')}</b> <span class="sub">(${G.entrySrc})</span>.`+
+   (G.walls===0?'<br>No walls drawn, so every touching zone counts as connected.':'')+
+   (unreach?`<br><b>${unreach} zone(s) can't be reached from the entrance</b> (shown ×) — missing door or opening?`:'')+
+   (iso?`<br>${iso} zone(s) connect to nothing at all.`:''));
+  const rows=G.m.map((r,i)=>({r,i})).sort((a,b)=>(b.r.integ||0)-(a.r.integ||0));
+  rows.forEach(({r,i})=>{const tr=document.createElement('tr');tr.style.cursor='pointer';
+   tr.innerHTML=`<td>${esc(G.names[i])}${i===G.entry?' <span class="sub">(in)</span>':''}</td><td class="n">${r.conn}</td><td class="n">${r.depth==null?'×':r.depth}</td><td class="n">${ssFmt(r.integ,2)}</td><td class="n">${ssFmt(r.choice,1)}</td>`;
+   tr.onclick=()=>{const o=S.objs.find(x=>x.id===G.ids[i]);if(o){sels=[o];loadSel();draw()}};tb.appendChild(tr)})}
+ if(ssVga){const V=ssVga;ssSetMsg('vgaMsg',(ssStale.vga?'<b style="color:#e5534b">⚠ Plan changed since this ran — re-run to update.</b><br>':'')+
+   `${V.n.toLocaleString()} grid points at ${V.cellM.toFixed(2)} m${V.coarsened?' (grid made coarser to fit)':''} · ${V.walls} wall pieces${V.furnBlocks?' + furniture':''} · ${V.secs.toFixed(1)} s.<br>`+
+   (V.sampled?`Integration estimated from ${V.sampled.toLocaleString()} evenly spread sample points (plan too big for every-point exact).`:'Integration exact (every point).')+
+   (V.comps>1?`<br>${V.comps} separate visible regions — some areas can't see into each other at all.`:'')+
+   (!S.verified?'<br><b>Scale not verified</b> — grid size in metres may be off.':''))}
+ ssRenderLegend()}
+function ssRenderLegend(){const el=$('ssLegend');if(!el)return;
+ const useV=ssVga&&$('vgaShow').checked,useG=!useV&&ssGraph&&$('ssShowGraph').checked;
+ if(!useV&&!useG){el.innerHTML='<div class="sub">Run an analysis to see the colour key.</div>';return}
+ const met=useV?$('vgaMetric').value:$('ssMetric').value,vals=useV?ssVgaVals(met):ssGraphVals(met),[lo,hi]=ssRange(vals),inv=ssInvert(met);
+ const name=useV?$('vgaMetric').selectedOptions[0].textContent:$('ssMetric').selectedOptions[0].textContent;
+ const d=met==='depth'||met==='conn'?0:2;
+ el.innerHTML=`<div class="sub" style="margin-bottom:4px">${esc(name)}${useV?' (heatmap)':''}</div><div style="height:10px;border-radius:5px;background:linear-gradient(90deg,${SS_PAL[0]},${SS_PAL[8]},${SS_PAL[16]},${SS_PAL[24]},${SS_PAL[32]})"></div>`+
+  `<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-top:3px"><span>${inv?ssFmt(hi,d)+' (deep)':ssFmt(lo,d)+' (low)'}</span><span>${inv?ssFmt(lo,d)+' (shallow)':ssFmt(hi,d)+' (high)'}</span></div>`}
+function ssOnSync(){if(!$('pSyn'))return;if($('pSyn').classList.contains('on'))ssRenderEntry();
+ if(!ssGraph&&!ssVga)return;const sig=ssSig(),g0=ssStale.graph,v0=ssStale.vga;
+ if(ssGraph)ssStale.graph=ssGraph.sig!==sig;if(ssVga)ssStale.vga=ssVga.sig!==sig;
+ if(g0!==ssStale.graph||v0!==ssStale.vga)ssRenderPanel()}
+function ssJustifiedSVG(){if(!ssGraph)return null;const G=ssGraph,k=G.ids.length,met=$('ssMetric').value==='depth'?'integ':$('ssMetric').value;
+ const vals=ssGraphVals(met),[lo,hi]=ssRange(vals),lv={};G.m.forEach((r,i)=>{const L=r.depth==null?-1:r.depth;(lv[L]=lv[L]||[]).push(i)});
+ const levels=Object.keys(lv).map(Number).filter(L=>L>=0).sort((a,b)=>a-b),maxL=levels.length?levels[levels.length-1]:0,hasU=!!lv[-1];
+ const pos=new Array(k);levels.forEach(L=>{let row=lv[L];
+  if(L>0)row=row.map(i=>{const ps=G.adj[i].filter(j=>G.m[j].depth===L-1&&pos[j]);return{i,b:ps.length?ps.reduce((a,j)=>a+pos[j].x,0)/ps.length:1e9}}).sort((a,b)=>a.b-b.b).map(o=>o.i);
+  lv[L]=row});
+ const widest=Math.max(1,...Object.values(lv).map(r=>r.length)),W=Math.max(420,widest*110+80),rowsN=maxL+1+(hasU?1:0),H=rowsN*100+90;
+ Object.keys(lv).map(Number).forEach(L=>{const row=lv[L],y=L<0?60:H-60-L*100;row.forEach((i,j)=>{pos[i]={x:W/2+(j-(row.length-1)/2)*110,y}})});
+ const P=[`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Segoe UI, Arial, sans-serif">`,`<rect width="${W}" height="${H}" fill="#fff"/>`,
+  `<text x="14" y="24" font-size="15" font-weight="700" fill="#222">Justified graph — entrance: ${esc(G.names[G.entry]||'')}</text>`];
+ levels.forEach(L=>P.push(`<text x="12" y="${H-56-L*100}" font-size="11" fill="#888">depth ${L}</text>`));
+ if(hasU)P.push(`<text x="12" y="64" font-size="11" fill="#c0392b">not reachable</text>`);
+ G.edges.forEach(e=>{const a=pos[e.i],b=pos[e.j];if(!a||!b)return;P.push(`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#555" stroke-width="1.6"${e.kind==='door'?'':e.kind==='open'?' stroke-dasharray="6 4"':' stroke-dasharray="2 4"'}/>`)});
+ G.ids.forEach((id,i)=>{const p=pos[i];if(!p)return;const v=vals[i],fill=v==null?'#999':ssColor((v-lo)/((hi-lo)||1)),m=G.m[i];
+  P.push(`<g><title>${esc(G.names[i])} — connectivity ${m.conn}, depth ${m.depth==null?'unreachable':m.depth}, integration ${ssFmt(m.integ,2)}, choice ${ssFmt(m.choice,1)}</title>`+
+   `<circle cx="${p.x}" cy="${p.y}" r="18" fill="${fill}" stroke="${i===G.entry?'#111':'#fff'}" stroke-width="${i===G.entry?3:2}"/>`+
+   `<text x="${p.x}" y="${p.y+4}" font-size="11" font-weight="700" fill="#fff" text-anchor="middle">${i===G.entry?'IN':esc(String(m.conn))}</text>`+
+   `<text x="${p.x}" y="${p.y+34}" font-size="10.5" fill="#333" text-anchor="middle">${esc(G.names[i].length>16?G.names[i].slice(0,15)+'…':G.names[i])}</text></g>`)});
+ P.push('</svg>');return P.join('')}
+function ssCsv(){if(!ssGraph)return null;const G=ssGraph,q=s=>`"${String(s).replace(/"/g,'""')}"`;
+ const L=[['Zone','Area m2','Connectivity','Step depth from entrance','Mean depth','RA','RRA','Integration (HH)','Choice','Control','Entrance'].join(',')];
+ G.m.forEach((r,i)=>L.push([q(G.names[i]),pxToM2(G.areas[i]).toFixed(2),r.conn,r.depth==null?'':r.depth,ssFmt(r.md,3),ssFmt(r.ra,4),ssFmt(r.rra,4),ssFmt(r.integ,3),ssFmt(r.choice,2),ssFmt(r.control,3),i===G.entry?'yes':''].join(',')));
+ return L.join('\n')}
+$('bSsRun').onclick=()=>ssRunGraph();
+$('bVgaRun').onclick=()=>{ssRunVga().catch(e=>{ssProgress(null);ssSetMsg('vgaMsg','Analysis failed: '+esc(e.message))})};
+$('ssEntry').onchange=e=>{S.ssEntryId=e.target.value||null;if(ssGraph)ssRunGraph()};
+$('ssOpenEdges').onchange=()=>{if(ssGraph)ssRunGraph()};
+['ssMetric','ssShowGraph','vgaMetric','vgaShow'].forEach(id=>$(id).onchange=()=>{ssRenderLegend();draw()});
+$('bSsClear').onclick=()=>{ssVgaTok++;ssGraph=null;ssVga=null;ssStale={graph:false,vga:false};ssProgress(null);ssSetMsg('ssMsg','');ssSetMsg('vgaMsg','');ssRenderPanel();draw()};
+$('bSsCsv').onclick=()=>{const c=ssCsv();if(!c){toast('Run the room-graph analysis first');return}dl('space_syntax.csv',URL.createObjectURL(new Blob([c],{type:'text/csv'})))};
+$('bSsJgraph').onclick=()=>{const s=ssJustifiedSVG();if(!s){toast('Run the room-graph analysis first');return}$('ssJBody').innerHTML=s;$('ssJModal').style.display='flex'};
+$('bSsJClose').onclick=()=>{$('ssJModal').style.display='none'};
+$('bSsJDl').onclick=()=>{const s=ssJustifiedSVG();if(s)dl('justified_graph.svg',URL.createObjectURL(new Blob([s],{type:'image/svg+xml'})))};
+document.querySelector('[data-p="pSyn"]').addEventListener('click',ssRenderPanel);
 
 const W=$('cvw');['dragover'].forEach(v=>W.addEventListener(v,e=>e.preventDefault()));
 W.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(!f)return;if(/\.(csv|tsv|txt|xlsx|xls)$/i.test(f.name)){openImport();readProgFile(f)}else if(/\.json$/i.test(f.name))f.text().then(t=>loadProjectObj(JSON.parse(t)));else openPlan(f)});
