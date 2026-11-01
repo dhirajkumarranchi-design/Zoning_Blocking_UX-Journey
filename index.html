@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.1</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.2</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -295,7 +295,7 @@ footer{grid-area:st;background:var(--panel);border-top:1px solid var(--line);dis
 #paHandle{cursor:move}
 #paPanel .box h4{margin:0 0 6px}
 #paPanel label{display:block}
-#paPanel button.pri,#paPanel #bPaUntrace,#paPanel #bPaCheck{width:100%;margin-top:8px}
+#paPanel button.pri,#paPanel #bPaUntrace,#paPanel #bPaCheck,#paPanel #bPaAiNames{width:100%;margin-top:8px}
 #paProgWrap{display:none;margin-top:8px;height:6px;border-radius:3px;background:var(--panel2);overflow:hidden}#paProg{height:100%;width:0;background:var(--acc)}
 .paChip{display:inline-block;border:1px solid;border-radius:10px;padding:1px 8px;font-size:11.5px;margin:6px 4px 0 0}
 .paCard{border:1px solid var(--line);border-left:4px solid;border-radius:8px;padding:8px 10px;margin-top:8px;background:var(--panel2)}
@@ -341,7 +341,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.1</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.2</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -492,6 +492,13 @@ input[type=date],input[type=time]{color-scheme:dark}
     <div id="paProgWrap"><div id="paProg"></div></div>
     <div id="paTraceMsg" class="sub" style="margin-top:6px"></div>
     <button id="bPaUntrace">Remove traced elements</button>
+   </div>
+   <div class="box"><h4>1b · AI review <span class="sub">· optional second layer</span></h4>
+    <div class="sub">Shows an AI the plan and your trace, and asks only for what code can't know: room names written on the drawing, what each gap really is, walls or doors the trace missed, stairs &amp; furniture, the north arrow, and a dimension to cross-check the scale. Every answer comes back as a suggestion in the check list to accept or reject — nothing is changed on its own. Nothing is sent until you click.</div>
+    <div class="sub" id="paAiStatus" style="margin-top:6px"></div>
+    <button class="pri" id="bPaAi">🤖 Ask AI to review the trace</button>
+    <div id="paAiMsg" class="sub" style="margin-top:6px"></div>
+    <button id="bPaAiNames" style="display:none">Accept all suggested room names</button>
    </div>
    <div class="box"><h4>2 · Check the plan &amp; fill the gaps</h4>
     <div class="sub">Finds what's missing or broken — scale, north, heights, untraced walls, rooms with no door, unnamed rooms, gaps — and asks you about each one, one at a time.</div>
@@ -3369,7 +3376,7 @@ function extractJson(text){try{return JSON.parse(text)}catch(e){}
 async function callDigitizeAI(provider,model,key,mediaType,b64,prompt){
  if(provider==='anthropic'){
   const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-   body:JSON.stringify({model:model||'claude-3-5-sonnet-latest',max_tokens:4096,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mediaType,data:b64}},{type:'text',text:prompt}]}]})});
+   body:JSON.stringify({model:model||'claude-sonnet-5',max_tokens:4096,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mediaType,data:b64}},{type:'text',text:prompt}]}]})});
   const j=await r.json();if(!r.ok)throw new Error((j.error&&j.error.message)||r.statusText);
   return (j.content&&j.content[0]&&j.content[0].text)||''}
  if(provider==='openai'){
@@ -3378,7 +3385,7 @@ async function callDigitizeAI(provider,model,key,mediaType,b64,prompt){
   const j=await r.json();if(!r.ok)throw new Error((j.error&&j.error.message)||r.statusText);
   return (j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content)||''}
  if(provider==='google'){
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model||'gemini-1.5-flash')+':generateContent?key='+encodeURIComponent(key),
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model||'gemini-2.5-flash')+':generateContent?key='+encodeURIComponent(key),
    {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt},{inline_data:{mime_type:mediaType,data:b64}}]}]})});
   const j=await r.json();if(!r.ok)throw new Error((j.error&&j.error.message)||r.statusText);
   return (j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts.map(p=>p.text||'').join(''))||''}
@@ -5207,7 +5214,7 @@ $('iUSF').onchange=()=>{draw();renderMetricsPanel()};
 async function callTextAI(provider,model,key,prompt){
  if(provider==='anthropic'){
   const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-   body:JSON.stringify({model:model||'claude-3-5-sonnet-latest',max_tokens:1024,messages:[{role:'user',content:prompt}]})});
+   body:JSON.stringify({model:model||'claude-sonnet-5',max_tokens:1024,messages:[{role:'user',content:prompt}]})});
   const j=await r.json();if(!r.ok)throw new Error((j.error&&j.error.message)||r.statusText);
   return (j.content&&j.content[0]&&j.content[0].text)||''}
  if(provider==='openai'){
@@ -5216,7 +5223,7 @@ async function callTextAI(provider,model,key,prompt){
   const j=await r.json();if(!r.ok)throw new Error((j.error&&j.error.message)||r.statusText);
   return (j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content)||''}
  if(provider==='google'){
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model||'gemini-1.5-flash')+':generateContent?key='+encodeURIComponent(key),
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model||'gemini-2.5-flash')+':generateContent?key='+encodeURIComponent(key),
    {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})});
   const j=await r.json();if(!r.ok)throw new Error((j.error&&j.error.message)||r.statusText);
   return (j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts.map(p=>p.text||'').join(''))||''}
@@ -6181,6 +6188,7 @@ function paRunCheck(){const iss=[],ign=new Set(S.paIgnored||[]),add=o=>{if(!ign.
    const a={x:p.a.x*f,y:p.a.y*f},b={x:p.b.x*f,y:p.b.y*f},th=Math.max(50,Math.round(p.t*f*S.scale/10)*10);
    add({key:'ink:'+Math.round((a.x+b.x)/2)+','+Math.round((a.y+b.y)/2),sev:'should',title:'Possible wall not traced',detail:`A ${pxM(Math.hypot(b.x-a.x,b.y-a.y)).toFixed(2)} m thick line in the plan image (~${th} mm) has no wall on it.`,at:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},seg:[a,b],fixes:[
     {l:'Add wall',fn:()=>{push();S.objs.push({type:'wall',id:nextId(),a,b,mat:'opaque',th,color:'#cfcfcf',bow:0,traced:1,conf:'high'});sync()}}]})})}}
+ if(typeof paAiIssues==='function')paAiIssues(add);
  const rank={must:0,should:1,info:2};iss.sort((a,b)=>rank[a.sev]-rank[b.sev]);
  paIssues=iss;paFocus=iss.length?0:-1;
  S.planCheck={at:Date.now(),must:iss.filter(i=>i.sev==='must').length,should:iss.filter(i=>i.sev==='should').length,info:iss.filter(i=>i.sev==='info').length,sig:ssSig()};
@@ -6208,12 +6216,14 @@ function paRender(){if(!$('paPanel'))return;
  const st=[];st.push(img&&img.width?'Plan image loaded':'<b>No plan image</b> — upload one with 📂 Floor plan');st.push(S.verified?`scale set (1 px = ${(+S.scale).toFixed(2)} mm)`:'<b style="color:#e5534b">scale not set</b>');
  paMsg('paTraceStatus',st.join(' · '));
  const pc=S.planCheck;
+ if(typeof paAiRenderStatus==='function')paAiRenderStatus();
  if(!paIssues.length){paMsg('paSummary',pc?'<div class="paOk">✔ No open issues — the plan is ready for the advanced runs.</div>':'');paMsg('paCard','');paMsg('paList','');paRenderReady();return}
  const cnt=s=>paIssues.filter(i=>i.sev===s).length;
  paMsg('paSummary',['must','should','info'].filter(s=>cnt(s)).map(s=>`<span class="paChip" style="border-color:${PA_SEV[s].c};color:${PA_SEV[s].c}">${cnt(s)} ${PA_SEV[s].l}</span>`).join(' ')+
   `<span class="sub" style="margin-left:6px">Tap an item to zoom to it.</span>`);
  const is=paIssues[paFocus];
- if(is){$('paCard').innerHTML=`<div class="paCard" style="border-left-color:${PA_SEV[is.sev].c}"><div class="sub">${paFocus+1} of ${paIssues.length} · ${PA_SEV[is.sev].l}</div><div class="paT">${esc(is.title)}</div><div class="sub">${esc(is.detail||'')}</div>${paInputHtml(is)}`+
+ if(typeof paAiRenderStatus==='function')paAiRenderStatus();
+ if(is){$('paCard').innerHTML=`<div class="paCard" style="border-left-color:${PA_SEV[is.sev].c}"><div class="sub">${paFocus+1} of ${paIssues.length} · ${PA_SEV[is.sev].l}${is.ai?' · <b style="color:#a78bfa">AI suggestion</b>':''}</div><div class="paT">${esc(is.title)}</div><div class="sub">${esc(is.detail||'')}</div>${paInputHtml(is)}`+
   `<div class="paBtns">${(is.fixes||[]).map((f,i)=>`<button class="pri" data-fix="${i}">${esc(f.l)}</button>`).join('')}<button data-pa="ignore" title="Mark as intentional — it won't be raised again">Ignore</button><button data-pa="prev">◀</button><button data-pa="next">Next ▶</button></div></div>`;
   $('paCard').querySelectorAll('[data-fix]').forEach(b=>b.onclick=()=>{const r=is.fixes[+b.dataset.fix].fn();if(r&&r.then)r.then(paAfterFix);else paAfterFix()});
   $('paCard').querySelectorAll('[data-pa]').forEach(b=>b.onclick=()=>{const k=b.dataset.pa;
@@ -6254,6 +6264,143 @@ $('bPaCheck').onclick=()=>{paRunCheck();if(paFocus>=0)paZoomTo(paIssues[paFocus]
 $('bPaSyntax').onclick=()=>{switchTab('pSyn');ssRenderPanel();ssRunGraph()};
 $('bPaDaylight').onclick=()=>{paClosePanel();openDayModal()};
 setupFloatDrag($('paHandle'),'#paPanel');
+
+// ========================================================================
+// V15.2: AI review -- the optional SECOND layer of the Plan assistant. The code trace does the
+// geometry; the AI is shown two images (the plan, and the plan with the current model drawn on
+// it with numbered labels R1/D1/W1) and only asked for what code can't know: the room names
+// written on the drawing, what a gap really is, walls/doors the trace missed, symbols (stairs,
+// furniture...), and the north arrow / a dimension to cross-check scale. Nothing it says is
+// applied directly: every answer becomes an "AI suggestion" item in the plan-check list with
+// Accept / Reject, exactly like the code's own findings. Nothing is sent unless the user
+// clicks the button; the call goes straight from the browser to the provider with the user's
+// own key from Settings (no backend), same as the existing digitizer.
+// ========================================================================
+var paAiSugs=[],paAiMap=null,paAiBusy=false;
+// current defaults (the old digitizer still pointed at a retired 2024 model); Settings can override
+const PA_AI_DEFAULT={anthropic:'claude-sonnet-5',openai:'gpt-4o',google:'gemini-2.5-flash'};
+function paAiCfg(){let s={};try{s=JSON.parse(localStorage.getItem('zsSettings')||'{}')}catch(e){}
+ return{provider:s.aiProvider||'anthropic',model:(s.aiModel||'').trim(),key:(s.aiKey||'').trim()}}
+// one call, several images (plan + annotated copy), JSON back
+async function paCallVision(cfg,images,prompt,maxTokens){const mt=maxTokens||8000,P=cfg.provider,model=cfg.model,key=cfg.key;
+ if(P==='anthropic'){const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+  body:JSON.stringify({model:model||PA_AI_DEFAULT.anthropic,max_tokens:mt,messages:[{role:'user',content:[...images.map(im=>({type:'image',source:{type:'base64',media_type:im.mediaType,data:im.b64}})),{type:'text',text:prompt}]}]})});
+  const j=await r.json();if(!r.ok)throw new Error((j.error&&j.error.message)||r.statusText);return(j.content||[]).map(c=>c.text||'').join('')}
+ if(P==='openai'){const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','Authorization':'Bearer '+key},
+  body:JSON.stringify({model:model||PA_AI_DEFAULT.openai,max_tokens:mt,messages:[{role:'user',content:[{type:'text',text:prompt},...images.map(im=>({type:'image_url',image_url:{url:'data:'+im.mediaType+';base64,'+im.b64}}))]}]})});
+  const j=await r.json();if(!r.ok)throw new Error((j.error&&j.error.message)||r.statusText);return(j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content)||''}
+ if(P==='google'){const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model||PA_AI_DEFAULT.google)+':generateContent?key='+encodeURIComponent(key),
+  {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:prompt},...images.map(im=>({inline_data:{mime_type:im.mediaType,data:im.b64}}))]}]})});
+  const j=await r.json();if(!r.ok)throw new Error((j.error&&j.error.message)||r.statusText);
+  return(j.candidates&&j.candidates[0]&&j.candidates[0].content&&(j.candidates[0].content.parts||[]).map(p=>p.text||'').join(''))||''}
+ throw new Error('The AI review supports Anthropic, OpenAI or Google — pick one in Settings.')}
+// The two images, at most 1568 px on the long side (what vision models actually look at), plus
+// the id map so answers can be tied back to objects. Tests replace this.
+function paAiImages(){if(!(img&&img.width>0))return null;
+ const W0=img.naturalWidth||img.width,H0=img.naturalHeight||img.height,sc=Math.min(1,1568/Math.max(W0,H0)),w=Math.round(W0*sc),h=Math.round(H0*sc),f=W0/w;
+ const c1=document.createElement('canvas');c1.width=w;c1.height=h;const g1=c1.getContext('2d');g1.fillStyle='#fff';g1.fillRect(0,0,w,h);g1.drawImage(img,0,0,w,h);
+ const c2=document.createElement('canvas');c2.width=w;c2.height=h;const g2=c2.getContext('2d');g2.fillStyle='#fff';g2.fillRect(0,0,w,h);g2.globalAlpha=.4;g2.drawImage(img,0,0,w,h);g2.globalAlpha=1;
+ const map=paAiBuildMap(),X=p=>p.x/f,Y=p=>p.y/f;
+ g2.lineCap='round';
+ S.objs.filter(o=>o.type==='wall').forEach(o=>{g2.strokeStyle='rgba(220,40,40,.85)';g2.lineWidth=Math.max(2,mPx((o.th||150)/1000)/f);g2.beginPath();g2.moveTo(X(o.a),Y(o.a));g2.lineTo(X(o.b),Y(o.b));g2.stroke()});
+ const tag=(t,x,y,col)=>{g2.font='bold 13px sans-serif';const tw=g2.measureText(t).width+6;g2.fillStyle=col;g2.fillRect(x-tw/2,y-9,tw,18);g2.fillStyle='#fff';g2.textAlign='center';g2.textBaseline='middle';g2.fillText(t,x,y)};
+ map.rooms.forEach(r=>{const o=S.objs.find(z=>z.id===r.objId);if(!o)return;const p=pts(o);g2.strokeStyle='rgba(30,120,220,.9)';g2.lineWidth=2;g2.setLineDash([6,4]);g2.beginPath();p.forEach((q,i)=>i?g2.lineTo(X(q),Y(q)):g2.moveTo(X(q),Y(q)));g2.closePath();g2.stroke();g2.setLineDash([]);const c=centerOf(o);tag(r.id,X(c),Y(c),'#1e78dc')});
+ map.openings.forEach(d=>{const o=S.objs.find(z=>z.id===d.objId);if(o)tag(d.id,X(o),Y(o),o.type==='window'?'#2f6f8f':'#1a8a3a')});
+ const part=c=>{const p=dataUrlParts(c.toDataURL('image/jpeg',.85));return p&&{mediaType:p.mediaType,b64:p.b64}};
+ return{images:[part(c1),part(c2)],w,h,f,map}}
+function paAiBuildMap(){const rooms=[],openings=[];let r=0,d=0,wn=0;
+ S.objs.forEach(o=>{if((isZone(o)||o.type==='door'||o.type==='window')&&!o.id)o.id=nextId();
+  if(isZone(o)&&layerVisible(o))rooms.push({id:'R'+(++r),objId:o.id});
+  else if(o.type==='door')openings.push({id:'D'+(++d),objId:o.id});
+  else if(o.type==='window')openings.push({id:'W'+(++wn),objId:o.id})});
+ return{rooms,openings}}
+function paAiPrompt(A){const cats=Object.keys(CATS),kinds=Object.entries(FURNITURE_KINDS).map(([k,v])=>`${k} (${v.label})`).join(', ');
+ const roomLines=A.map.rooms.map(r=>{const o=S.objs.find(z=>z.id===r.objId),c=centerOf(o);return`${r.id}: centre (${Math.round(c.x/A.f)},${Math.round(c.y/A.f)}), ${pxToM2(areaPx(pts(o))).toFixed(1)} m2, current name "${o.name||''}"`}).join('\n');
+ const opLines=A.map.openings.map(d=>{const o=S.objs.find(z=>z.id===d.objId);return`${d.id}: ${o.type==='window'?'window':o.dtype==='opening'?'open gap (no leaf)':'door'} at (${Math.round(o.x/A.f)},${Math.round(o.y/A.f)}), ${(o.wmm/1000).toFixed(2)} m wide`}).join('\n');
+ return`You are checking an automatic trace of an architectural floor plan. Image 1 is the original plan (${A.w} x ${A.h} px, origin top-left). Image 2 is the same plan with the traced model drawn on it: red lines = walls, blue dashed outlines with labels R1, R2... = rooms, green labels D1... = doors/open gaps, teal labels W1... = windows.
+The drawing scale is 1 px (in these images) = ${(S.scale*A.f).toFixed(2)} mm${S.verified?'':' (NOT yet verified by the user)'}.
+
+Traced rooms:
+${roomLines||'(none)'}
+Traced doors/windows/gaps:
+${opLines||'(none)'}
+
+Only report what code cannot know or got wrong. Do not repeat things that are already right. Reply with ONLY raw JSON (no code fences, no commentary), exactly this shape (use [] / null when nothing applies):
+{"rooms":[{"id":"R1","name":"text written in that room on the drawing, or a sensible name from its fixtures","category":"one of: ${cats.join(' | ')}","confidence":0.0}],
+ "openings":[{"id":"D1","should_be":"door | window | open gap | solid wall","confidence":0.0}],
+ "missing_walls":[{"x1":0,"y1":0,"x2":0,"y2":0,"thickness_mm":150,"confidence":0.0}],
+ "missing_openings":[{"kind":"door | window | open gap","x":0,"y":0,"width_mm":900,"confidence":0.0}],
+ "symbols":[{"kind":"stairs | furniture","furniture_kind":"one of the keys below, for furniture","x":0,"y":0,"w":0,"h":0,"confidence":0.0}],
+ "north":{"angle_deg":0,"confidence":0.0},
+ "dimension":{"value_mm":0,"x1":0,"y1":0,"x2":0,"y2":0,"confidence":0.0},
+ "notes":"one or two sentences on anything else that looks wrong"}
+Rules: coordinates are pixels in these images. "rooms": only rooms whose name you can read or confidently infer. "openings": only where the traced type is wrong. "north": angle of the drawing's north arrow, degrees clockwise from straight up, or null if there is no north arrow. "dimension": one clear, long dimension line with its written value and the two end points of what it measures, or null. Furniture keys: ${kinds}.`}
+// answer -> suggestions (kept until accepted or rejected; shown in the plan-check list)
+function paAiToSuggestions(data,A){const out=[],fx=v=>(+v||0)*A.f,cf=v=>Math.max(0,Math.min(1,+v||0)),objOf=(list,id)=>{const m=list.find(x=>x.id===id);return m?S.objs.find(o=>o.id===m.objId):null};
+ (data.rooms||[]).forEach(r=>{const o=objOf(A.map.rooms,r.id);if(!o||!r.name)return;const cat=CATS[r.category]?r.category:o.cat||'Other';
+  if(String(r.name).trim()===String(o.name||'').trim()&&cat===o.cat)return;
+  out.push({kind:'name',objId:o.id,name:String(r.name).trim().slice(0,60),cat,conf:cf(r.confidence)})});
+ (data.openings||[]).forEach(r=>{const o=objOf(A.map.openings,r.id);if(!o)return;const want=String(r.should_be||'').toLowerCase();
+  const cur=o.type==='window'?'window':o.dtype==='opening'?'open gap':'door';if(!want||want===cur)return;
+  if(!['door','window','open gap','solid wall'].includes(want))return;out.push({kind:'retype',objId:o.id,want,from:cur,conf:cf(r.confidence)})});
+ (data.missing_walls||[]).forEach(r=>{const a={x:fx(r.x1),y:fx(r.y1)},b={x:fx(r.x2),y:fx(r.y2)};if(Math.hypot(b.x-a.x,b.y-a.y)<mPx(.3))return;
+  out.push({kind:'wall',a,b,th:Math.max(50,Math.min(600,+r.thickness_mm||150)),conf:cf(r.confidence)})});
+ (data.missing_openings||[]).forEach(r=>{const k=String(r.kind||'door').toLowerCase();out.push({kind:'opening',want:['window','open gap'].includes(k)?k:'door',at:{x:fx(r.x),y:fx(r.y)},wmm:Math.max(500,Math.min(3000,+r.width_mm||900)),conf:cf(r.confidence)})});
+ (data.symbols||[]).forEach(r=>{const k=String(r.kind||'').toLowerCase(),box={x:fx(r.x),y:fx(r.y),w:fx(r.w),h:fx(r.h)};if(!(box.w>0&&box.h>0))return;
+  if(k==='stairs')out.push({kind:'stairs',box,conf:cf(r.confidence)});
+  else if(k==='furniture'&&FURNITURE_KINDS[r.furniture_kind])out.push({kind:'furniture',fk:r.furniture_kind,box,conf:cf(r.confidence)})});
+ if(data.north&&Number.isFinite(+data.north.angle_deg)){const a=((+data.north.angle_deg%360)+360)%360;if(Math.abs(a-(+$('iNorthA').value||0))>2||!S.northOk)out.push({kind:'north',angle:Math.round(a),conf:cf(data.north.confidence)})}
+ const dm=data.dimension;if(dm&&+dm.value_mm>0){const L=Math.hypot(fx(dm.x2)-fx(dm.x1),fx(dm.y2)-fx(dm.y1));
+  if(L>20){const sc=(+dm.value_mm)/L,diff=Math.abs(sc-S.scale)/S.scale;if(!S.verified||diff>.03)out.push({kind:'scale',scale:sc,value:+dm.value_mm,a:{x:fx(dm.x1),y:fx(dm.y1)},b:{x:fx(dm.x2),y:fx(dm.y2)},diff,conf:cf(dm.confidence)})}}
+ out.forEach((s,i)=>{s.sid='ai'+Date.now().toString(36)+i;s.status='pending'});
+ return{sugs:out,notes:typeof data.notes==='string'?data.notes.slice(0,400):''}}
+async function paAiReview(){if(paAiBusy)return null;const cfg=paAiCfg();
+ if(!cfg.key){paMsg('paAiMsg','Add an API key first: ☰ → ⚙ API keys &amp; AI model. <a href="#" id="paAiSet">Open settings</a>');const l=$('paAiSet');if(l)l.onclick=e=>{e.preventDefault();openSettingsModal()};return null}
+ const A=paAiImages();if(!A){paMsg('paAiMsg','Upload a floor plan image first.');return null}
+ paAiBusy=true;$('bPaAi').disabled=true;paMsg('paAiMsg',`Asking ${esc(cfg.provider)}… (sends the plan image and a copy with the trace drawn on it)`);
+ try{const txt=await paCallVision(cfg,A.images,paAiPrompt(A),8000),data=extractJson(txt),R=paAiToSuggestions(data,A);
+  paAiSugs=paAiSugs.filter(s=>s.status!=='pending').concat(R.sugs);paAiMap=A.map;
+  const n=R.sugs.length,names=R.sugs.filter(s=>s.kind==='name').length;
+  paMsg('paAiMsg',n?`<b>${n}</b> AI suggestion${n>1?'s':''} added to the check list below (marked 🤖) — accept or reject each.`+(R.notes?`<br><i>${esc(R.notes)}</i>`:''):'The AI found nothing to add — the trace looks complete to it.'+(R.notes?`<br><i>${esc(R.notes)}</i>`:''));
+  $('bPaAiNames').style.display=names>1?'block':'none';
+  paRunCheck();const first=paIssues.findIndex(i=>i.ai);if(first>=0){paFocus=first;paRender();paZoomTo(paIssues[first])}
+  return R}
+ catch(e){paMsg('paAiMsg','AI review failed: '+esc(e.message));return null}
+ finally{paAiBusy=false;$('bPaAi').disabled=false}}
+// suggestions -> plan-check issues (called from paRunCheck)
+function paAiIssues(add){const pct=c=>c?` · ${Math.round(c*100)}% sure`:'',done=(s,st)=>{s.status=st};
+ paAiSugs.filter(s=>s.status==='pending').forEach(s=>{const base={ai:true,key:'ai:'+s.sid,sev:'should'},rej={l:'Reject',fn:()=>done(s,'rejected')};
+  if(s.kind==='name'){const o=S.objs.find(z=>z.id===s.objId);if(!o){done(s,'stale');return}
+   add({...base,title:`🤖 Room looks like “${s.name}”`,detail:`Category ${s.cat}${pct(s.conf)}. Currently “${o.name||'unnamed'}”.`,at:centerOf(o),fixes:[{l:'Accept',fn:()=>{push();o.name=s.name;if(s.cat!==o.cat&&CATS[s.cat]){o.cat=s.cat;o.fill=CATS[s.cat].fill;o.stroke=CATS[s.cat].stroke;o.num=nextRoomNum(s.cat)}done(s,'accepted');sync()}},rej]})}
+  else if(s.kind==='retype'){const o=S.objs.find(z=>z.id===s.objId);if(!o){done(s,'stale');return}
+   add({...base,title:`🤖 This ${s.from} looks like ${s.want==='solid wall'?'a solid wall':'a '+s.want}`,detail:`${(o.wmm/1000).toFixed(2)} m wide${pct(s.conf)}.`,at:{x:o.x,y:o.y},fixes:[{l:'Accept',fn:()=>{push();paAiRetype(o,s.want);done(s,'accepted');sync()}},rej]})}
+  else if(s.kind==='wall')add({...base,title:'🤖 Missing wall',detail:`${pxM(Math.hypot(s.b.x-s.a.x,s.b.y-s.a.y)).toFixed(2)} m, ~${s.th} mm thick${pct(s.conf)}. Ends snap onto nearby walls.`,at:{x:(s.a.x+s.b.x)/2,y:(s.a.y+s.b.y)/2},seg:[s.a,s.b],fixes:[{l:'Add wall',fn:()=>{push();paAiAddWall(s);done(s,'accepted');sync()}},rej]});
+  else if(s.kind==='opening')add({...base,title:`🤖 Missing ${s.want}`,detail:`About ${(s.wmm/1000).toFixed(2)} m wide${pct(s.conf)}. Goes on the nearest wall.`,at:s.at,fixes:[{l:'Add',fn:()=>{const ok=paAiAddOpening(s);if(ok)done(s,'accepted')}},rej]});
+  else if(s.kind==='stairs')add({...base,title:'🤖 Stairs here',detail:`${pxM(s.box.w).toFixed(1)} × ${pxM(s.box.h).toFixed(1)} m${pct(s.conf)}.`,at:{x:s.box.x+s.box.w/2,y:s.box.y+s.box.h/2},fixes:[{l:'Add stairs',fn:()=>{push();S.objs.push({type:'stairs',id:nextId(),x:s.box.x,y:s.box.y,w:s.box.w,h:s.box.h,dir:'up',rot:0,treads:12,stroke:'#555',fill:'#eee',traced:1,conf:'ai'});done(s,'accepted');sync()}},rej]});
+  else if(s.kind==='furniture'){const K=FURNITURE_KINDS[s.fk]||{};add({...base,sev:'info',title:`🤖 ${K.label||s.fk}`,detail:`Furniture symbol in the drawing${pct(s.conf)} — adding it gives the 3D view and the visibility analysis its real height.`,at:{x:s.box.x+s.box.w/2,y:s.box.y+s.box.h/2},
+   fixes:[{l:'Add',fn:()=>{push();S.objs.push({type:'furniture',id:nextId(),x:s.box.x,y:s.box.y,w:s.box.w,h:s.box.h,rot:0,kind:s.fk,name:K.label||s.fk,fill:'#d9c6ad',stroke:'#555555',traced:1,conf:'ai'});done(s,'accepted');sync()}},rej]})}
+  else if(s.kind==='north')add({...base,title:`🤖 North arrow reads ${s.angle}°`,detail:`From the drawing's north symbol${pct(s.conf)}. Currently ${+$('iNorthA').value||0}°.`,fixes:[{l:'Use '+s.angle+'°',fn:()=>{$('iNorthA').value=s.angle;if($('iNorthA').onchange)$('iNorthA').onchange();S.northOk=true;done(s,'accepted')}},rej]});
+  else if(s.kind==='scale')add({...base,sev:s.diff>.1||!S.verified?'should':'info',title:`🤖 Dimension “${s.value}” suggests a different scale`,detail:`It reads 1 px = ${s.scale.toFixed(3)} mm; the plan is set to ${(+S.scale).toFixed(3)} mm (${Math.round(s.diff*100)}% apart)${pct(s.conf)}. Check before accepting — every size changes.`,at:{x:(s.a.x+s.b.x)/2,y:(s.a.y+s.b.y)/2},seg:[s.a,s.b],
+   fixes:[{l:'Use this scale',fn:()=>{setScale(s.scale,`Scale set from the dimension “${s.value}” (AI-read)`);S.verified=true;done(s,'accepted');sync()}},rej]})})}
+function paAiRetype(o,want){
+ if(want==='solid wall'){S.objs=S.objs.filter(x=>x!==o);return}
+ if(want==='window'&&o.type==='door'){const w={type:'window',id:o.id,x:o.x,y:o.y,ang:o.ang,wmm:o.wmm,sillH:Math.round(((S.assume&&+S.assume.sillH)||.9)*1000),stroke:'#2f6f8f',wid:o.wid,t:o.t,traced:o.traced,conf:'ai'};S.objs[S.objs.indexOf(o)]=w;return}
+ if(o.type==='window'){const d={type:'door',id:o.id,x:o.x,y:o.y,ang:o.ang,wmm:o.wmm,dtype:want==='open gap'?'opening':'single',swing:want==='open gap'?'na':'li',stroke:'#8a5a2a',wid:o.wid,t:o.t,traced:o.traced,conf:'ai'};S.objs[S.objs.indexOf(o)]=d;return}
+ o.dtype=want==='open gap'?'opening':'single';o.swing=want==='open gap'?'na':(o.swing&&o.swing!=='na'?o.swing:'li');o.conf='ai'}
+function paAiAddWall(s){const walls=S.objs.filter(o=>o.type==='wall'),snap=p=>{let best=null,bd=mPx(.3);walls.forEach(w=>{const q=paClosestOnWall(p,w),d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;best=q}});return best||p};
+ S.objs.push({type:'wall',id:nextId(),a:snap(s.a),b:snap(s.b),mat:'opaque',th:Math.round(s.th/10)*10,color:'#cfcfcf',bow:0,traced:1,conf:'ai'})}
+function paAiAddOpening(s){const host=nearestWall(s.at,mPx(1));if(!host){toast('No wall within 1 m of that spot — draw the wall first');return false}push();
+ const base={x:s.at.x,y:s.at.y,ang:0,wmm:Math.round(s.wmm/10)*10,wid:host.id,t:wallProjT(host,s.at),traced:1,conf:'ai',id:nextId()};
+ const o=s.want==='window'?{type:'window',...base,sillH:Math.round(((S.assume&&+S.assume.sillH)||.9)*1000),stroke:'#2f6f8f'}:{type:'door',...base,dtype:s.want==='open gap'?'opening':'single',swing:s.want==='open gap'?'na':'li',stroke:'#8a5a2a'};
+ snapOpeningToWall(o);S.objs.push(o);sync();return true}
+function paAiAcceptAllNames(){const list=paAiSugs.filter(s=>s.status==='pending'&&s.kind==='name');if(!list.length)return;push();
+ list.forEach(s=>{const o=S.objs.find(z=>z.id===s.objId);if(!o){s.status='stale';return}o.name=s.name;if(s.cat!==o.cat&&CATS[s.cat]){o.cat=s.cat;o.fill=CATS[s.cat].fill;o.stroke=CATS[s.cat].stroke;o.num=nextRoomNum(s.cat)}s.status='accepted'});
+ sync();$('bPaAiNames').style.display='none';paAfterFix();toast(`Applied ${list.length} room names`)}
+function paAiRenderStatus(){const el=$('paAiStatus');if(!el)return;const c=paAiCfg(),name={anthropic:'Anthropic (Claude)',openai:'OpenAI',google:'Google (Gemini)'}[c.provider]||c.provider;
+ el.innerHTML=c.key?`Uses <b>${esc(name)}</b> · model ${esc(c.model||PA_AI_DEFAULT[c.provider]||'default')} · your key from Settings. <a href="#" id="paAiSet2">Change</a>`:`No AI key set — the code trace and check work without one. <a href="#" id="paAiSet2">Add a key</a>`;
+ $('paAiSet2').onclick=e=>{e.preventDefault();openSettingsModal()}}
+$('bPaAi').onclick=()=>paAiReview();
+$('bPaAiNames').onclick=paAiAcceptAllNames;
 
 const W=$('cvw');['dragover'].forEach(v=>W.addEventListener(v,e=>e.preventDefault()));
 W.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(!f)return;if(/\.(csv|tsv|txt|xlsx|xls)$/i.test(f.name)){openImport();readProgFile(f)}else if(/\.json$/i.test(f.name))f.text().then(t=>loadProjectObj(JSON.parse(t)));else openPlan(f)});
