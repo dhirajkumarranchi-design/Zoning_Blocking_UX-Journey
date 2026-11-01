@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.0</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.1</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -289,6 +289,23 @@ footer{grid-area:st;background:var(--panel);border-top:1px solid var(--line);dis
 #furnLibModal .mdl{background:transparent;width:100%;max-height:none;box-shadow:none}
 #furnLibModal .mb{overflow:auto;flex:1}
 #furnLibHandle{cursor:move}
+#paPanel{position:fixed;right:calc(var(--sidew) + 14px);top:130px;width:min(400px,92vw);max-height:min(78vh,720px);display:none;flex-direction:column;z-index:47;
+ background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.55);overflow:hidden}
+#paPanel .paBody{overflow:auto;flex:1;padding:0 2px 8px}
+#paHandle{cursor:move}
+#paPanel .box h4{margin:0 0 6px}
+#paPanel label{display:block}
+#paPanel button.pri,#paPanel #bPaUntrace,#paPanel #bPaCheck{width:100%;margin-top:8px}
+#paProgWrap{display:none;margin-top:8px;height:6px;border-radius:3px;background:var(--panel2);overflow:hidden}#paProg{height:100%;width:0;background:var(--acc)}
+.paChip{display:inline-block;border:1px solid;border-radius:10px;padding:1px 8px;font-size:11.5px;margin:6px 4px 0 0}
+.paCard{border:1px solid var(--line);border-left:4px solid;border-radius:8px;padding:8px 10px;margin-top:8px;background:var(--panel2)}
+.paCard .paT{font-weight:600;margin:2px 0 3px}
+.paBtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.paBtns button{width:auto!important;margin:0!important;flex:1 1 auto}
+#paList{margin-top:8px;max-height:30vh;overflow:auto}
+.paRow{display:flex;gap:8px;align-items:center;padding:5px 6px;border-radius:6px;cursor:pointer;font-size:12.5px}.paRow:hover,.paRow.on{background:var(--panel2)}
+.paDot{flex:0 0 20px;height:20px;border-radius:50%;color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.paOk{color:#3fb950;margin-top:8px}
+#ssReady{font-size:12px;line-height:1.45}
 .furnDragGhost{position:fixed;z-index:60;pointer-events:none;background:var(--panel2);border:1px solid var(--acc);color:var(--txt);
  padding:4px 10px;border-radius:6px;font-size:12px;box-shadow:0 4px 10px rgba(0,0,0,.4);transform:translate(-6px,-6px);white-space:nowrap}
 .furnDragGhost.over{border-color:#2ecc71;background:rgba(46,204,113,.18)}
@@ -324,7 +341,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.0</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.1</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -352,6 +369,7 @@ input[type=date],input[type=time]{color-scheme:dark}
    </div>
    <div class="hamSep"></div>
    <div class="hamSec">Advanced</div>
+   <button id="hmPlanAssist">🧭 Plan assistant — trace, check &amp; fill gaps</button>
    <button id="hmDaylight">☀ Daylight / natural-light analysis</button>
    <button id="hmLighting">🔆 Natural lighting analysis (envelope)</button>
    <div class="hamSep"></div>
@@ -459,6 +477,33 @@ input[type=date],input[type=time]{color-scheme:dark}
   </div>
   <div class="mf"><button onclick="closeFurnitureLibrary()">Close</button><button class="pri" id="bFurnImport">Add ticked to plan</button></div>
  </div></div>
+ <div id="paPanel" class="floating">
+  <div id="paHandle" class="floatHandle" title="Drag to move"><span>⠿ 🧭 Plan assistant <span class="sub">· advanced</span></span><button id="bPaClose" class="tog" title="Close">✕</button></div>
+  <div class="paBody">
+   <div class="box"><h4>1 · Trace the plan</h4>
+    <div class="sub" id="paTraceStatus"></div>
+    <div class="sub" style="margin-top:4px">Reads walls, doors, windows and rooms straight from the plan image — plain image processing, no AI, nothing leaves your device. Works best on a clean plan at a known scale.</div>
+    <div class="row" style="margin-top:8px"><div><label>Thinnest wall (mm)</label><input type="number" id="paMinW" value="80" min="20" step="10"></div><div><label>Thickest wall (mm)</label><input type="number" id="paMaxW" value="600" min="100" step="50"></div></div>
+    <div class="row"><div><label>Walls are drawn as</label><select id="paStyle"><option value="auto">Auto-detect</option><option value="solid">Filled (solid black / grey)</option><option value="hollow">Outlines (two thin lines)</option></select></div></div>
+    <label><input type="checkbox" id="paDoors" checked> Find doors, windows &amp; openings</label>
+    <label><input type="checkbox" id="paRooms" checked> Make rooms (zones) from enclosed spaces</label>
+    <label><input type="checkbox" id="paReplace" checked> Replace the previous trace</label>
+    <button class="pri" id="bPaTrace">🔍 Trace walls, doors &amp; rooms</button>
+    <div id="paProgWrap"><div id="paProg"></div></div>
+    <div id="paTraceMsg" class="sub" style="margin-top:6px"></div>
+    <button id="bPaUntrace">Remove traced elements</button>
+   </div>
+   <div class="box"><h4>2 · Check the plan &amp; fill the gaps</h4>
+    <div class="sub">Finds what's missing or broken — scale, north, heights, untraced walls, rooms with no door, unnamed rooms, gaps — and asks you about each one, one at a time.</div>
+    <button class="pri" id="bPaCheck">✔ Run plan check</button>
+    <div id="paSummary"></div><div id="paCard"></div><div id="paList"></div>
+   </div>
+   <div class="box"><h4>3 · Advanced runs</h4>
+    <div id="paReady" class="sub"></div>
+    <div class="row" style="margin-top:8px"><button id="bPaSyntax" style="flex:1">🕸 Space syntax ▸</button><button id="bPaDaylight" style="flex:1">☀ Daylight ▸</button></div>
+   </div>
+  </div>
+ </div>
  <div id="zonePop">
   <label>Zone name</label><input id="zpName" placeholder="e.g. Departure Lounge">
   <label>Category</label><select id="zpCat"></select>
@@ -590,6 +635,7 @@ input[type=date],input[type=time]{color-scheme:dark}
   </div>
  </div>
  <div class="pane" id="pSyn">
+  <div class="box" id="ssReady" style="display:none"></div>
   <div class="box"><h4>Space syntax · room graph</h4>
    <div class="sub">Works out which zones actually connect &mdash; through doors, or along shared edges with no wall between &mdash; then scores every zone. <b>Integration</b>: how easy it is to reach from everywhere else (red = most integrated, blue = most segregated). <b>Depth</b>: how many rooms deep from the entrance.</div>
    <div class="row" style="margin-top:8px"><div><label>Entrance zone</label><select id="ssEntry"></select></div></div>
@@ -1031,6 +1077,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div></div>
 <div id="dayModal"><div class="mdl" style="width:min(640px,94vw)">
  <h3>☀ Daylight / Solar Analysis</h3>
+ <div id="dayReady" class="sub" style="display:none;margin:0 16px 8px"></div>
  <div class="mb">
   <div class="row" style="align-items:flex-end">
    <div style="flex:2"><label>Site address <span class="sub">(searches like Google Maps, using the key set in Settings)</span></label><input id="dayAddr" placeholder="Search an address or place…"></div>
@@ -2470,7 +2517,7 @@ function drawBound(g,k){if(!S.bound)return;const b=S.bound;g.save();g.setLineDas
    glazed pane for windows), furniture is extruded to real heights (seating gets a backrest
    sliver for a bit more shape than a plain box), stairs render as an ascending set of step
    boxes, and an optional flat roof can be capped over the traced boundary. */
-const WALLH_M=2.7; // fixed wall/storey height used for every extruded wall, door header and window head, in meters
+let WALLH_M=2.7; // wall/storey height (V15.1: the Plan assistant's confirmed height when set, else 2.7) used for every extruded wall, door header and window head, in meters
 const FURNITURE_HEIGHT={sofa3:.85,sofa2:.85,armchair:.85,coffeeTable:.42,diningTable:.75,diningChair:.9,
  chairTask:.9,deskOffice:.74,meetingTableRect:.74,meetingTableRound:.74,bed:.55,nightstand:.5,wardrobe:2,
  tvUnit:.5,kitchenCounter:.9,fridge:1.8,bathtub:.55,toilet:.4,sinkBath:.85,bookshelf:1.8,filingCabinet:1.3,
@@ -2546,7 +2593,7 @@ function buildScene3D(){const faces=[],toM=p=>({x:pxM(p.x),y:pxM(p.y)});
      {x:info.ea.x+info.dirx*s0+info.ux*info.t,y:info.ea.y+info.diry*s0+info.uy*info.t}].map(toM);
    info.solids.forEach(([s0,s1])=>{if(s1>s0)pushPrism3D(faces,quad(s0,s1),0,WALLH_M,wcol,'#222222')});
    info.items.forEach(it=>{if(it.s1<=it.s0)return;
-    if(it.type==='door'){const doorH=2.05;if(WALLH_M>doorH)pushPrism3D(faces,quad(it.s0,it.s1),doorH,WALLH_M,wcol,'#222222')}
+    if(it.type==='door'){const doorH=(S.assume&&+S.assume.doorH)||2.05;if(WALLH_M>doorH)pushPrism3D(faces,quad(it.s0,it.s1),doorH,WALLH_M,wcol,'#222222')}
     else{if(it.sillM>0)pushPrism3D(faces,quad(it.s0,it.s1),0,it.sillM,wcol,'#222222');
      if(WALLH_M>it.headM)pushPrism3D(faces,quad(it.s0,it.s1),it.headM,WALLH_M,wcol,'#222222');
      if(it.headM>it.sillM)pushPrism3D(faces,quad(it.s0,it.s1),it.sillM,Math.min(it.headM,WALLH_M),'rgba(140,200,230,.4)','rgba(111,168,200,.7)','glass')}})}
@@ -2566,7 +2613,7 @@ function buildScene3D(){const faces=[],toM=p=>({x:pxM(p.x),y:pxM(p.y)});
 // Paints the built scene with a simple painter's algorithm (back-to-front by average camera-
 // space depth) plus flat directional shading from a fixed light, so top faces read brighter than
 // sides without a real lighting model. Runs on every draw3D() call since the scene is small.
-function draw3D(){const W=cv3d.width,H=cv3d.height;ctx3d.setTransform(1,0,0,1,0,0);
+function draw3D(){WALLH_M=(S.assume&&+S.assume.wallH)||2.7;const W=cv3d.width,H=cv3d.height;ctx3d.setTransform(1,0,0,1,0,0);
  ctx3d.fillStyle='#1b2430';ctx3d.fillRect(0,0,W,H);
  if(!cam3D)cam3D=defaultCam3D();
  const basis=cam3DBasis(),faces=buildScene3D(),projected=[];
@@ -2824,7 +2871,7 @@ function applySmartDefaultsIfEmpty(){const lat=+$('iDayLat').value,lon=+$('iDayL
  if(!$('iDayDate').value)$('iDayDate').value=d.date;if(!$('iDayTime').value)$('iDayTime').value=d.time;
  $('iDayUTC').value=d.utcOff;
  $('dayDefaultNote').textContent=`Defaults filled in: winter solstice (worst-case sun angle) at solar noon, timezone estimated from longitude (UTC${d.utcOff>=0?'+':''}${d.utcOff}) — standard practice for a first-pass study. Change any field to override.`}
-function openDayModal(){$('iDayOn').checked=true;$('dayNorth').value=$('iNorthA').value||0;
+function openDayModal(){if(typeof paDayReady==='function')paDayReady();$('iDayOn').checked=true;$('dayNorth').value=$('iNorthA').value||0;
  applySmartDefaultsIfEmpty();
  if(!$('dayDefaultNote').textContent&&!($('iDayLat').value&&$('iDayLon').value))$('dayDefaultNote').textContent='Search an address or use your location below, then a sensible default date/time fills in automatically.';
  $('dayModal').style.display='flex';refreshDaylight()}
@@ -2950,7 +2997,7 @@ function draw(){if(mode3D){const b=$('multiSelBar');if(b)b.classList.remove('sho
  drawColGrid(ctx,view.k);
  drawGridLines(ctx,view.k);
  drawCircRings(ctx,view.k);
- S.objs.forEach(o=>{if(layerVisible(o))drawObj(o,ctx,view.k)});drawUnits(ctx,view.k);if(typeof drawSyntax==='function')drawSyntax(ctx,view.k);drawTouchingSeams(ctx,view.k);drawMergeSplash(ctx,view.k);drawColumns(ctx,view.k);drawBound(ctx,view.k);drawFlows(ctx,view.k);drawDayShadows(ctx,view.k);drawEnvelope(ctx,view.k);
+ S.objs.forEach(o=>{if(layerVisible(o))drawObj(o,ctx,view.k)});drawUnits(ctx,view.k);if(typeof drawSyntax==='function')drawSyntax(ctx,view.k);if(typeof drawPlanIssues==='function')drawPlanIssues(ctx,view.k);drawTouchingSeams(ctx,view.k);drawMergeSplash(ctx,view.k);drawColumns(ctx,view.k);drawBound(ctx,view.k);drawFlows(ctx,view.k);drawDayShadows(ctx,view.k);drawEnvelope(ctx,view.k);
  sels.forEach((o,i)=>{const b=bbox(o),pd=4/view.k;ctx.setLineDash([6/view.k,4/view.k]);ctx.strokeStyle=i===sels.length-1?'#d35400':'#f0b27a';ctx.lineWidth=2/view.k;ctx.strokeRect(b.x-pd,b.y-pd,b.w+2*pd,b.h+2*pd);ctx.setLineDash([]);
   // Task #127: 8 Photoshop-style handles (corners + edge midpoints) instead of the old lone
   // tl corner square -- small squares on corners, small diamonds on edge midpoints.
@@ -5773,7 +5820,7 @@ function ssRenderPanel(){if(!$('pSyn'))return;ssRenderEntry();
    (V.sampled?`Integration estimated from ${V.sampled.toLocaleString()} evenly spread sample points (plan too big for every-point exact).`:'Integration exact (every point).')+
    (V.comps>1?`<br>${V.comps} separate visible regions — some areas can't see into each other at all.`:'')+
    (!S.verified?'<br><b>Scale not verified</b> — grid size in metres may be off.':''))}
- ssRenderLegend()}
+ ssRenderLegend();if(typeof ssRenderReady==='function')ssRenderReady()}
 function ssRenderLegend(){const el=$('ssLegend');if(!el)return;
  const useV=ssVga&&$('vgaShow').checked,useG=!useV&&ssGraph&&$('ssShowGraph').checked;
  if(!useV&&!useG){el.innerHTML='<div class="sub">Run an analysis to see the colour key.</div>';return}
@@ -5820,6 +5867,393 @@ $('bSsJgraph').onclick=()=>{const s=ssJustifiedSVG();if(!s){toast('Run the room-
 $('bSsJClose').onclick=()=>{$('ssJModal').style.display='none'};
 $('bSsJDl').onclick=()=>{const s=ssJustifiedSVG();if(s)dl('justified_graph.svg',URL.createObjectURL(new Blob([s],{type:'image/svg+xml'})))};
 document.querySelector('[data-p="pSyn"]').addEventListener('click',ssRenderPanel);
+
+// ========================================================================
+// V15.1: Plan assistant (Advanced) -- trace the plan image with plain image processing (no AI),
+// check the drawn model for gaps, ask for what's missing, then hand over to the advanced runs
+// (space syntax, daylight). Everything here is opt-in from the ☰ menu's Advanced section;
+// nothing runs on its own, and the normal draw-by-hand workflow is untouched.
+//
+// Tracing pipeline, on the plan image at a working resolution (world px = work px * f):
+//  1. ink mask: luminance below an Otsu threshold.
+//  2. wall mask: morphological opening by the minimum wall thickness (via chamfer distance
+//     transforms) -- drops text, dimension lines, hatching, furniture and door arcs, keeps
+//     thick strokes. Walls drawn as two thin outlines get a closing pass first ("hollow"
+//     style; "auto" tries both and keeps whichever finds more wall).
+//  3. walls: horizontal and vertical runs stacked into bands -> centreline + thickness.
+//     Anything left over that's long and thin (diagonal walls) is fitted by PCA.
+//  4. clean-up: collinear pieces merged; gaps 0.55-2.4 m between collinear pieces become
+//     openings, classified from the thin ink around them (quarter-circle swing arc = door,
+//     >=2 thin parallel lines across the gap = window, else "opening" for the user to confirm);
+//     wall ends snapped onto the walls they meet.
+//  5. rooms: the walls are rasterised and the free space flood-filled; every enclosed region
+//     of at least 1 m2 becomes a zone along the walls' inner faces (net area).
+// Every traced object is tagged traced:1 (and conf:'high'|'medium'|'low') so it can be reviewed,
+// highlighted, or removed as a group; the whole trace is one undo step.
+// ========================================================================
+var paIssues=[],paFocus=-1,paLast=null,paBusy=false,paOpen=false;
+const PA_SEV={must:{c:'#e5534b',l:'Must fix'},should:{c:'#e6a23c',l:'Should fix'},info:{c:'#4a9eda',l:'Info'}};
+function paYield(){return new Promise(r=>setTimeout(r,0))}
+function paMsg(id,h){const e=$(id);if(e)e.innerHTML=h}
+function paProg(f,txt){const w=$('paProgWrap');if(!w)return;if(f==null){w.style.display='none';return}w.style.display='block';$('paProg').style.width=Math.round(f*100)+'%';if(txt)paMsg('paTraceMsg',esc(txt))}
+// ---- raster helpers ----
+// Plan image pixels at a working resolution fine enough that the thinnest wall is >=3 px.
+// (Tests replace this with a synthetic image.)
+function paPlanPixels(minWallMM){if(!(img&&img.width>0))return null;
+ const W0=img.naturalWidth||img.width,H0=img.naturalHeight||img.height,minW=(minWallMM||100)/S.scale;
+ const fMax=Math.max(1,minW/3),f=Math.max(Math.max(W0,H0)/3200,Math.min(fMax,Math.max(W0,H0)/1600),1);
+ const w=Math.max(1,Math.round(W0/f)),h=Math.max(1,Math.round(H0/f)),c=document.createElement('canvas');c.width=w;c.height=h;
+ const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(img,0,0,w,h);
+ return{w,h,data:g.getImageData(0,0,w,h).data,f:W0/w}}
+function paInk(P){const n=P.w*P.h,lum=new Uint8Array(n),hist=new Float64Array(256),d=P.data;
+ for(let i=0;i<n;i++){const a=d[4*i+3],L=a<20?255:Math.round(.299*d[4*i]+.587*d[4*i+1]+.114*d[4*i+2]);lum[i]=L;hist[L]++}
+ let sum=0;for(let t=0;t<256;t++)sum+=t*hist[t];let sB=0,wB=0,best=0,thr=128;
+ for(let t=0;t<256;t++){wB+=hist[t];if(!wB)continue;const wF=n-wB;if(!wF)break;sB+=t*hist[t];const mB=sB/wB,mF=(sum-sB)/wF,v=wB*wF*(mB-mF)*(mB-mF);if(v>best){best=v;thr=t}}
+ thr=Math.max(60,Math.min(200,thr));const ink=new Uint8Array(n);for(let i=0;i<n;i++)ink[i]=lum[i]<=thr?1:0;return ink}
+// chamfer (3,4) distance from every mask pixel to the nearest non-mask pixel, x3. edgeBg: the
+// area outside the image counts as background (true) or as infinitely far (false).
+function paDT(m,W,H,edgeBg){const d=new Uint16Array(W*H),INF=65000;for(let i=0;i<W*H;i++)d[i]=m[i]?INF:0;
+ const E=edgeBg===false?INF:0;
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x;if(!d[i])continue;let v=d[i];
+  const l=x>0?d[i-1]:E,u=y>0?d[i-W]:E,ul=x>0&&y>0?d[i-W-1]:E,ur=x<W-1&&y>0?d[i-W+1]:E;
+  if(l+3<v)v=l+3;if(u+3<v)v=u+3;if(ul+4<v)v=ul+4;if(ur+4<v)v=ur+4;d[i]=v}
+ for(let y=H-1;y>=0;y--)for(let x=W-1;x>=0;x--){const i=y*W+x;if(!d[i])continue;let v=d[i];
+  const r=x<W-1?d[i+1]:E,dn=y<H-1?d[i+W]:E,dr=x<W-1&&y<H-1?d[i+W+1]:E,dl=x>0&&y<H-1?d[i+W-1]:E;
+  if(r+3<v)v=r+3;if(dn+3<v)v=dn+3;if(dr+4<v)v=dr+4;if(dl+4<v)v=dl+4;d[i]=v}
+ return d}
+function paOpenMask(m,W,H,r){const dt=paDT(m,W,H,true),n=W*H,core=new Uint8Array(n),thr=Math.max(3,Math.round(r*3*.8));
+ for(let i=0;i<n;i++)core[i]=dt[i]>=thr?0:1; // inverted: core pixels are 0 for the next DT
+ const dc=paDT(core,W,H,false),lim=Math.round((r+1.2)*3),out=new Uint8Array(n);
+ for(let i=0;i<n;i++)out[i]=m[i]&&dc[i]<=lim?1:0;return out}
+function paCloseMask(m,W,H,g){const n=W*H,inv=new Uint8Array(n);for(let i=0;i<n;i++)inv[i]=m[i]?0:1;
+ const d=paDT(inv,W,H,false),lim=Math.round(g*3),dil=new Uint8Array(n);for(let i=0;i<n;i++)dil[i]=m[i]||d[i]<=lim?1:0;
+ const de=paDT(dil,W,H,true),out=new Uint8Array(n);for(let i=0;i<n;i++)out[i]=dil[i]&&de[i]>lim?1:0;
+ for(let i=0;i<n;i++)if(m[i])out[i]=1;return out}
+function paBands(M,W,H,horiz,Lmin,tol,minT,maxT){const segs=[],closed=[],A=horiz?H:W,B=horiz?W:H;let active=[];
+ for(let a=0;a<=A;a++){const runs=[];
+  if(a<A){let b=0;while(b<B){const on=horiz?M[a*W+b]:M[b*W+a];if(on){const s=b;while(b<B&&(horiz?M[a*W+b]:M[b*W+a]))b++;if(b-s>=Lmin)runs.push([s,b-1])}else b++}}
+  const next=[],used=new Set();
+  for(const r of runs){let hit=null;for(const bd of active){if(used.has(bd))continue;if(Math.abs(r[0]-bd.l0)<=tol&&Math.abs(r[1]-bd.l1)<=tol){hit=bd;break}}
+   if(hit){used.add(hit);hit.a1=a;hit.l0=r[0];hit.l1=r[1];hit.s0+=r[0];hit.s1+=r[1];hit.n++;next.push(hit)}
+   else next.push({a0:a,a1:a,l0:r[0],l1:r[1],s0:r[0],s1:r[1],n:1})}
+  for(const bd of active)if(!used.has(bd))closed.push({a0:bd.a0,a1:bd.a1,s0:bd.s0/bd.n,s1:bd.s1/bd.n+1});
+  active=next}
+ // strips stacked directly on each other (a window or a hatch line splitting one wall's rows)
+ // are one wall: merge when they touch across rows and overlap >= half the shorter one
+ let changed=true;while(changed){changed=false;
+  for(let i=0;i<closed.length&&!changed;i++)for(let j=i+1;j<closed.length;j++){const A=closed[i],B=closed[j];
+   if(B.a0>A.a1+1||A.a0>B.a1+1)continue;const ov=Math.min(A.s1,B.s1)-Math.max(A.s0,B.s0);if(ov<.5*Math.min(A.s1-A.s0,B.s1-B.s0)||ov<.3*Math.max(A.s1-A.s0,B.s1-B.s0))continue;
+   // only wall-shaped strips (longer than thick, not already over-thick) and only if the result is still a wall
+   const tA=A.a1-A.a0+1,tB=B.a1-B.a0+1;if(tA>maxT||tB>maxT||A.s1-A.s0<1.2*tA||B.s1-B.s0<1.2*tB||Math.max(A.a1,B.a1)-Math.min(A.a0,B.a0)+1>maxT)continue;
+   A.a0=Math.min(A.a0,B.a0);A.a1=Math.max(A.a1,B.a1);A.s0=Math.min(A.s0,B.s0);A.s1=Math.max(A.s1,B.s1);closed.splice(j,1);changed=true;break}}
+ closed.forEach(bd=>{const t=bd.a1-bd.a0+1;if(t>=minT&&t<=maxT)segs.push({h:horiz,c:(bd.a0+bd.a1+1)/2,s0:bd.s0,s1:bd.s1,t})});
+ return segs}
+// connected components (4- or 8-connected) of a mask: {lab:Int32Array, comps:[{n,minx,miny,maxx,maxy,edge}]}
+function paComponents(M,W,H,eight){const lab=new Int32Array(W*H).fill(-1),comps=[],q=new Int32Array(W*H);
+ for(let s=0;s<W*H;s++){if(!M[s]||lab[s]>=0)continue;const id=comps.length,c={n:0,minx:W,miny:H,maxx:0,maxy:0,edge:false};let h=0,t=0;q[t++]=s;lab[s]=id;
+  while(h<t){const p=q[h++],x=p%W,y=(p-x)/W;c.n++;if(x<c.minx)c.minx=x;if(x>c.maxx)c.maxx=x;if(y<c.miny)c.miny=y;if(y>c.maxy)c.maxy=y;if(!x||!y||x===W-1||y===H-1)c.edge=true;
+   const nb=eight?[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]]:[[-1,0],[1,0],[0,-1],[0,1]];
+   for(const [dx,dy] of nb){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=W||ny>=H)continue;const k=ny*W+nx;if(M[k]&&lab[k]<0){lab[k]=id;q[t++]=k}}}
+  comps.push(c)}
+ return{lab,comps}}
+// outline of one labelled region, as pixel-corner loops (interior on the left); largest returned
+function paRegionLoop(lab,W,H,id,c){const edges=new Map(),add=(ax,ay,bx,by)=>{const k=ay*(W+1)+ax;(edges.get(k)||edges.set(k,[]).get(k)).push([bx,by])};
+ const inR=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&lab[y*W+x]===id;
+ for(let y=c.miny;y<=c.maxy;y++)for(let x=c.minx;x<=c.maxx;x++){if(!inR(x,y))continue;
+  if(!inR(x,y-1))add(x,y,x+1,y);if(!inR(x+1,y))add(x+1,y,x+1,y+1);if(!inR(x,y+1))add(x+1,y+1,x,y+1);if(!inR(x-1,y))add(x,y+1,x,y)}
+ const loops=[];
+ for(const [k,list] of edges){while(list.length){const sx=k%(W+1),sy=(k-sx)/(W+1);let [cx,cy]=list.pop();const loop=[[sx,sy]];let guard=0;
+   while(!(cx===sx&&cy===sy)&&guard++<4*W*H){loop.push([cx,cy]);const L=edges.get(cy*(W+1)+cx);if(!L||!L.length)break;const nxt=L.pop();cx=nxt[0];cy=nxt[1]}
+   if(loop.length>=4)loops.push(loop)}}
+ let best=null,ba=0;loops.forEach(l=>{const a=Math.abs(signedArea(l.map(p=>({x:p[0],y:p[1]}))));if(a>ba){ba=a;best=l}});
+ return best?paSimplify(best.map(p=>({x:p[0],y:p[1]})),1.1):null}
+function paSimplify(p,eps){ // collinear removal + closed Douglas-Peucker
+ const dp=(pts,a,b,out)=>{let md=0,mi=-1;const A=pts[a],B=pts[b];for(let i=a+1;i<b;i++){const d=distToSeg(pts[i],A,B);if(d>md){md=d;mi=i}}
+  if(md>eps){dp(pts,a,mi,out);dp(pts,mi,b,out)}else out.push(A)};
+ if(p.length<4)return p;let far=0,fd=0;for(let i=1;i<p.length;i++){const d=Math.hypot(p[i].x-p[0].x,p[i].y-p[0].y);if(d>fd){fd=d;far=i}}
+ const c1=p.slice(0,far+1),c2=p.slice(far).concat([p[0]]),out=[];dp(c1,0,c1.length-1,out);dp(c2,0,c2.length-1,out);
+ return out.length>=3?out:p}
+// walls (world coords) rasterised onto a grid {W,H,f,ox,oy}: pixel (x,y) <-> world ((x+.5)*f+ox, ...)
+function paRasterWalls(walls,G,extra){const M=new Uint8Array(G.W*G.H);
+ walls.forEach(w=>{const pieces=w.bow?sampleWallPts(w,12):[w.a,w.b],ht=(mPx((w.th||150)/1000)/2)+(extra||0)*G.f;
+  for(let s=0;s<pieces.length-1;s++){const a=pieces[s],b=pieces[s+1];
+   const x0=Math.max(0,Math.floor((Math.min(a.x,b.x)-ht-G.ox)/G.f)),x1=Math.min(G.W-1,Math.ceil((Math.max(a.x,b.x)+ht-G.ox)/G.f)),
+    y0=Math.max(0,Math.floor((Math.min(a.y,b.y)-ht-G.oy)/G.f)),y1=Math.min(G.H-1,Math.ceil((Math.max(a.y,b.y)+ht-G.oy)/G.f));
+   for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){if(M[y*G.W+x])continue;if(distToSeg({x:(x+.5)*G.f+G.ox,y:(y+.5)*G.f+G.oy},a,b)<=ht+G.f*.5)M[y*G.W+x]=1}}});
+ return M}
+// enclosed free-space regions inside a wall raster -> [{poly(world), m2, comp}]
+function paEnclosedRegions(WM,G,minM2){const n=G.W*G.H,free=new Uint8Array(n);for(let i=0;i<n;i++)free[i]=WM[i]?0:1;
+ const {lab,comps}=paComponents(free,G.W,G.H,false),px2m2=Math.pow(G.f*S.scale/1000,2),out=[];
+ comps.forEach((c,id)=>{if(c.edge)return;const m2=c.n*px2m2;if(m2<(minM2||1))return;const loop=paRegionLoop(lab,G.W,G.H,id,c);if(!loop)return;
+  // skip slivers (e.g. the cavity inside a wall drawn as two lines): mean width = 2*area/perimeter
+  let per=0;for(let i=0;i<loop.length;i++){const a=loop[i],b=loop[(i+1)%loop.length];per+=Math.hypot(b.x-a.x,b.y-a.y)}
+  const widthM=2*c.n/(per||1)*G.f*S.scale/1000;if(widthM<.35)return;
+  out.push({poly:loop.map(p=>({x:p.x*G.f+G.ox,y:p.y*G.f+G.oy})),m2,id,c})});
+ return{regions:out,lab}}
+// long thin leftovers -> straight wall by PCA: [{a,b,t}] in grid px
+function paPcaWalls(M,W,H,minLen,maxT,minT){const {lab,comps}=paComponents(M,W,H,true),acc=comps.map(()=>({sx:0,sy:0,sxx:0,syy:0,sxy:0})),out=[];
+ for(let i=0;i<W*H;i++){const id=lab[i];if(id<0)continue;const x=i%W+.5,y=(i-i%W)/W+.5,A=acc[id];A.sx+=x;A.sy+=y;A.sxx+=x*x;A.syy+=y*y;A.sxy+=x*y}
+ comps.forEach((c,id)=>{if(c.n<4)return;const A=acc[id],mx=A.sx/c.n,my=A.sy/c.n,cxx=A.sxx/c.n-mx*mx,cyy=A.syy/c.n-my*my,cxy=A.sxy/c.n-mx*my;
+  const th=.5*Math.atan2(2*cxy,cxx-cyy),ux=Math.cos(th),uy=Math.sin(th);let lo=Infinity,hi=-Infinity;
+  for(let y=c.miny;y<=c.maxy;y++)for(let x=c.minx;x<=c.maxx;x++){if(lab[y*W+x]!==id)continue;const p=(x+.5-mx)*ux+(y+.5-my)*uy;if(p<lo)lo=p;if(p>hi)hi=p}
+  const L=hi-lo+1,T=c.n/L;if(L<minLen||L/T<3||T>maxT||T<(minT||0))return;
+  out.push({a:{x:mx+ux*(lo+.5),y:my+uy*(lo+.5)},b:{x:mx+ux*(hi-.5),y:my+uy*(hi-.5)},t:T,n:c.n})});
+ return out}
+// ---- the trace ----
+async function paTrace(opts){if(paBusy)return null;paBusy=true;
+ try{
+ opts=Object.assign({minWall:80,maxWall:600,style:'auto',doors:true,rooms:true,replace:true},opts||{});
+ if(!S.verified){paMsg('paTraceMsg','Set the drawing scale first (it tells the tracer how thick a wall is).');return null}
+ const P=paPlanPixels(opts.minWall);if(!P){paMsg('paTraceMsg','Upload a floor plan image or PDF first (📂 Floor plan).');return null}
+ const t0=performance.now(),W=P.w,H=P.h,f=P.f,mm2px=mm=>mm/S.scale/f; // mm -> work px
+ paProg(.05,'Reading the image…');await paYield();
+ const ink=paInk(P),rMin=Math.max(1,mm2px(opts.minWall)/2),maxT=Math.max(3,mm2px(opts.maxWall)),minT=Math.max(2,mm2px(opts.minWall)*.6);
+ const Lmin=Math.max(4,Math.round(mm2px(200))),tol=Math.max(2,Math.round(mm2px(40)));
+ const traceStyle=style=>{const base=style==='hollow'?paCloseMask(ink,W,H,Math.max(1.5,mm2px(Math.min(opts.maxWall,350))/2)):ink;
+  const wm=paOpenMask(base,W,H,rMin);let segs=paBands(wm,W,H,true,Lmin,tol,minT,maxT).concat(paBands(wm,W,H,false,Lmin,tol,minT,maxT));
+  // outline-drawn walls: closing also glues text and furniture into blobs, so a band only
+  // counts as a wall if real drawn lines run along BOTH of its faces, it's at least 0.45 m long
+  // and clearly longer than thick
+  if(style==='hollow'){segs=segs.filter(q=>q.s1-q.s0>=Math.max(mm2px(450),2*q.t)&&paFacesInked(ink,W,H,q));segs.forEach(q=>{q.wins=paHollowWindows(ink,W,H,q,mm2px(400),mm2px(3500))})}
+  return{wm,segs,len:segs.filter(q=>q.s1-q.s0>=1.2*q.t).reduce((s,q)=>s+(q.s1-q.s0),0)}};
+ paProg(.2,'Finding walls…');await paYield();
+ let R=traceStyle(opts.style==='hollow'?'hollow':'solid'),style=opts.style==='hollow'?'hollow':'solid';
+ if(opts.style==='auto'){paProg(.35,'Trying outline-drawn walls too…');await paYield();const R2=traceStyle('hollow');if(R2.len>R.len*1.25){R=R2;style='hollow'}}
+ // world units from here on
+ // squarish blobs (length < 1.2x thickness) are columns or the cross-section of a perpendicular wall, not walls
+ let segs=R.segs.filter(s=>s.s1-s.s0>=1.2*s.t).map(s=>({h:s.h,c:s.c*f,s0:s.s0*f,s1:s.s1*f,t:s.t*f,conf:'high',wins:(s.wins||[]).map(w=>[w[0]*f,w[1]*f])}));
+ const M=v=>mPx(v); // metres -> world px
+ paProg(.5,'Cleaning up walls…');await paYield();
+ segs=paMergeCollinear(segs,M(.1));
+ const openings=opts.doors?paFindOpenings(segs,ink,W,H,f,M):[];
+ paSnapEnds(segs,M(.15));
+ if(opts.doors)segs.forEach(sg=>(sg.wins||[]).forEach(w=>openings.push({seg:sg,h:sg.h,c:sg.c,g0:w[0],g1:w[1],kind:'window',conf:'medium'})));
+ // leftovers (diagonals etc.) -> PCA walls
+ const G={W,H,f,ox:0,oy:0};
+ const tmpWalls=segs.map(s=>paSegToWall(s));
+ const covered=paRasterWalls(tmpWalls,G,2),left=new Uint8Array(W*H);for(let i=0;i<W*H;i++)left[i]=R.wm[i]&&!covered[i]?1:0;
+ const diag=paPcaWalls(left,W,H,mm2px(600),maxT,minT).filter(p=>paFacesInkedLine(ink,W,H,p)).map(p=>({a:{x:p.a.x*f,y:p.a.y*f},b:{x:p.b.x*f,y:p.b.y*f},t:p.t*f}));
+ paProg(.7,'Building the model…');await paYield();
+ push();
+ if(opts.replace)S.objs=S.objs.filter(o=>!o.traced);
+ const walls=segs.map(s=>{const w=paSegToWall(s);w.traced=1;w.conf=s.conf||'high';S.objs.push(w);return w});
+ diag.forEach(d=>{const w={type:'wall',id:nextId(),a:d.a,b:d.b,mat:'opaque',th:Math.round(d.t*S.scale/10)*10||150,color:'#cfcfcf',bow:0,traced:1,conf:'medium'};S.objs.push(w);walls.push(w)});
+ let nD=0,nW=0,nO=0;
+ openings.forEach(op=>{const host=walls.find(w=>w._seg===op.seg);if(!host)return;const L=Math.hypot(host.b.x-host.a.x,host.b.y-host.a.y)||1;
+  const mid=op.h?{x:(op.g0+op.g1)/2,y:op.c}:{x:op.c,y:(op.g0+op.g1)/2},t=Math.max(0,Math.min(1,Math.hypot(mid.x-host.a.x,mid.y-host.a.y)/L)),wmm=Math.round((op.g1-op.g0)*S.scale/10)*10;
+  let o;if(op.kind==='window'){o={type:'window',x:mid.x,y:mid.y,ang:0,wmm,sillH:900,stroke:'#2f6f8f',wid:host.id,t,traced:1,conf:op.conf};nW++}
+  // swing: the app's door normal is (-sin,cos) of the wall direction (a->b = +axis here), i.e. +y for
+  // a horizontal wall but -x for a vertical one; hinge at the low-axis jamb = p0 = "left"
+  else{const appSide=op.h?op.side:-op.side,swing=op.kind==='door'?((op.hinge?'r':'l')+(appSide>0?'i':'o')):'na';
+   o={type:'door',x:mid.x,y:mid.y,ang:0,dtype:op.kind==='door'?'single':'opening',swing,wmm,stroke:'#8a5a2a',wid:host.id,t,traced:1,conf:op.conf};op.kind==='door'?nD++:nO++}
+  snapOpeningToWall(o);S.objs.push(o)});
+ walls.forEach(w=>{delete w._seg});
+ // rooms + perimeter
+ let nR=0,m2=0;
+ const allWalls=S.objs.filter(o=>o.type==='wall'&&layerVisible(o)),WM=paRasterWalls(allWalls,G,0),{regions,lab}=paEnclosedRegions(WM,G,1);
+ // perimeter walls: touch the outside space -> solid; inside ones -> opaque partition
+ {const n=W*H,free=new Uint8Array(n);for(let i=0;i<n;i++)free[i]=WM[i]?0:1;const C=paComponents(free,W,H,false);
+  walls.forEach(w=>{const mx=(w.a.x+w.b.x)/2,my=(w.a.y+w.b.y)/2,dx=w.b.x-w.a.x,dy=w.b.y-w.a.y,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L,off=mPx(w.th/1000)/2+f*2;
+   const ext=[1,-1].some(sg=>{const x=Math.floor((mx+nx*off*sg)/f),y=Math.floor((my+ny*off*sg)/f);if(x<0||y<0||x>=W||y>=H)return true;const id=C.lab[y*W+x];return id>=0&&C.comps[id].edge});
+   w.mat=ext?'solid':'opaque';if(ext)w.perim=1})}
+ if(opts.rooms){regions.forEach(r=>{const covered=S.objs.some(o=>isZone(o)&&!o.traced&&inPoly(centroid(r.poly),pts(o)));if(covered)return;
+  const cat='Other',fill=CATS[cat]?CATS[cat].fill:'#dddddd',stroke=CATS[cat]?CATS[cat].stroke:'#666666';nR++;m2+=r.m2;
+  S.objs.push({type:'poly',pts:r.poly,segArc:r.poly.map(_=>0),name:'Room '+nR,cat,fill,stroke,op:+$('iOp').value||.75,num:nextRoomNum(cat),id:nextId(),traced:1,conf:'auto'})})}
+ const wallLen=walls.reduce((s,w)=>s+pxM(Math.hypot(w.b.x-w.a.x,w.b.y-w.a.y)),0);
+ paLast={walls:walls.length,wallM:wallLen,doors:nD,windows:nW,openings:nO,rooms:nR,m2,style,secs:(performance.now()-t0)/1000,diag:diag.length};
+ sync();paProg(null);
+ paMsg('paTraceMsg',`Traced <b>${walls.length}</b> walls (${wallLen.toFixed(1)} m${style==='hollow'?', drawn as outlines':''}${diag.length?`, ${diag.length} angled`:''}), <b>${nD}</b> doors, <b>${nW}</b> windows`+
+  (nO?`, <b>${nO}</b> gaps to confirm`:'')+`, <b>${nR}</b> rooms (${m2.toFixed(1)} m²) in ${paLast.secs.toFixed(1)} s. One undo (Ctrl+Z) reverses it. <b>Next: run the plan check.</b>`);
+ return paLast}
+ finally{paBusy=false;paProg(null)}}
+// both faces of an outline-drawn wall must be real drawn lines running most of its length;
+// the outermost two such lines inside the band are taken as the faces (closing can glue nearby
+// door arcs or corner fills onto the band), and the band is re-centred on them
+function paFacesInked(ink,W,H,q){const a0=Math.round(q.c-q.t/2),a1=Math.round(q.c+q.t/2)-1,at=(a,b)=>{const x=q.h?b:a,y=q.h?a:b;return x>=0&&y>=0&&x<W&&y<H&&ink[y*W+x]};
+ const cov=a=>{let hit=0,tot=0;for(let b=Math.ceil(q.s0);b<q.s1;b++){tot++;if(at(a,b))hit++}return tot?hit/tot:0};
+ let top=-1,bot=-1;for(let a=a0;a<=a1;a++)if(cov(a)>=.7){if(top<0)top=a;bot=a}
+ if(top<0||bot-top<2)return false;q.c=(top+bot+1)/2;q.t=bot-top+1;return true}
+function paFacesInkedLine(ink,W,H,p){const dx=p.b.x-p.a.x,dy=p.b.y-p.a.y,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,nx=-uy,ny=ux,o=Math.max(0,p.t/2-.6);
+ const at=(x,y)=>{const X=Math.floor(x),Y=Math.floor(y);for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const xx=X+i,yy=Y+j;if(xx>=0&&yy>=0&&xx<W&&yy<H&&ink[yy*W+xx])return true}return false};
+ const face=sg=>{let hit=0,tot=0;for(let s=0;s<=L;s+=1){tot++;if(at(p.a.x+ux*s+nx*o*sg,p.a.y+uy*s+ny*o*sg))hit++}return tot&&hit/tot>=.8};
+ return face(1)&&face(-1)}
+// windows in an outline-drawn wall: a stretch where both outline faces stop but at least two
+// thin lines carry on inside the wall's thickness
+function paHollowWindows(ink,W,H,q,minL,maxL){const top=Math.round(q.c-q.t/2),bot=top+Math.round(q.t)-1,out=[],at=(a,b)=>{const x=q.h?b:a,y=q.h?a:b;return x>=0&&y>=0&&x<W&&y<H&&ink[y*W+x]};
+ let run=-1;for(let b=Math.ceil(q.s0);b<=Math.floor(q.s1);b++){let ok=false;
+  if(b<q.s1&&!at(top,b)&&!at(bot,b)){let lines=0,prev=false;for(let a=top+1;a<bot;a++){const on=at(a,b);if(on&&!prev)lines++;prev=on}ok=lines>=2}
+  if(ok&&run<0)run=b;if(!ok&&run>=0){if(b-run>=minL&&b-run<=maxL)out.push([run,b]);run=-1}}
+ return out}
+function paSegToWall(s){const a=s.h?{x:s.s0,y:s.c}:{x:s.c,y:s.s0},b=s.h?{x:s.s1,y:s.c}:{x:s.c,y:s.s1};
+ const w={type:'wall',id:nextId(),a,b,mat:'opaque',th:Math.max(10,Math.round(s.t*S.scale/10)*10),color:'#cfcfcf',bow:0};w._seg=s;return w}
+function paMergeCollinear(segs,gapTol){let changed=true;
+ while(changed){changed=false;
+  for(let i=0;i<segs.length&&!changed;i++)for(let j=i+1;j<segs.length;j++){const A=segs[i],B=segs[j];if(A.h!==B.h)continue;
+   if(Math.abs(A.c-B.c)>Math.max(A.t,B.t)/2)continue;if(B.s0>A.s1+gapTol||A.s0>B.s1+gapTol)continue;
+   const la=A.s1-A.s0,lb=B.s1-B.s0;A.c=(A.c*la+B.c*lb)/(la+lb);A.t=Math.max(A.t,B.t);A.s0=Math.min(A.s0,B.s0);A.s1=Math.max(A.s1,B.s1);A.wins=(A.wins||[]).concat(B.wins||[]);
+   segs.splice(j,1);changed=true;break}}
+ return segs}
+// gaps between collinear walls -> openings (door / window / unknown), walls merged across them
+function paFindOpenings(segs,ink,W,H,f,M){const out=[],at=(x,y)=>{const px=Math.floor(x/f),py=Math.floor(y/f);return px>=0&&py>=0&&px<W&&py<H&&ink[py*W+px]};
+ const near=(x,y)=>at(x,y)||at(x+f,y)||at(x-f,y)||at(x,y+f)||at(x,y-f)||at(x+f*1.5,y)||at(x-f*1.5,y)||at(x,y+f*1.5)||at(x,y-f*1.5);
+ let changed=true;
+ while(changed){changed=false;
+  for(let i=0;i<segs.length&&!changed;i++)for(let j=0;j<segs.length;j++){if(i===j)continue;const A=segs[i],B=segs[j];if(A.h!==B.h)continue;
+   if(Math.abs(A.c-B.c)>Math.max(A.t,B.t)/2)continue;const g0=A.s1,g1=B.s0,g=g1-g0;if(g<M(.55)||g>M(2.4))continue;
+   if(Math.max(A.t,B.t)>2.2*Math.min(A.t,B.t))continue;
+   const c=(A.c+B.c)/2,t=Math.max(A.t,B.t);
+   if(segs.some(o=>o!==A&&o!==B&&(o.h===A.h?(Math.abs(o.c-c)<=t&&o.s1>g0+M(.05)&&o.s0<g1-M(.05)):(o.c>g0+M(.05)&&o.c<g1-M(.05)&&o.s0-M(.1)<=c&&o.s1+M(.1)>=c))))continue;
+   // classify from the thin ink around the gap
+   const P=(s,o)=>A.h?{x:s,y:c+o}:{x:c+o,y:s};let kind='opening',conf='low',best=0,bestHinge=0,bestSide=1;
+   // swing arc: hinge at either jamb, either side, centred on the wall face or centreline, leaf ~ gap width
+   for(const hingeAt of [g0,g1])for(const side of [1,-1])for(const off of [t/2,0])for(const rr of [g,g*.92]){const dir=hingeAt===g0?1:-1;let hit=0,tot=0;
+    for(let k=1;k<=20;k++){const th=(4+k*82/21)*Math.PI/180,s=hingeAt+dir*rr*Math.cos(th),o=side*(off+rr*Math.sin(th));if(Math.abs(o)<=t/2+f)continue;tot++;const p=P(s,o);if(near(p.x,p.y))hit++}
+    if(tot>=8&&hit/tot>best){best=hit/tot;bestHinge=hingeAt===g0?0:1;bestSide=side}}
+   if(best>=.5){kind='door';conf=best>=.7?'high':'medium'}
+   else{let lines=0,prev=false;for(let o=-t/2;o<=t/2;o+=f){let hit=0,tot=0;for(let s=g0+f;s<g1-f;s+=f){tot++;const p=P(s,o);if(at(p.x,p.y))hit++}const on=tot>0&&hit/tot>=.7;if(on&&!prev)lines++;prev=on}
+    if(lines>=2){kind='window';conf='high'}}
+   const la=A.s1-A.s0,lb=B.s1-B.s0;A.c=(A.c*la+B.c*lb)/(la+lb);A.t=t;A.s1=Math.max(A.s1,B.s1);A.s0=Math.min(A.s0,B.s0);
+   A.wins=(A.wins||[]).concat(B.wins||[]);out.forEach(op=>{if(op.seg===B)op.seg=A});
+   segs.splice(j,1);out.push({seg:A,h:A.h,c,g0,g1,kind,conf,hinge:bestHinge,side:bestSide});changed=true;break}}
+ out.forEach(op=>{op.c=op.seg.c});return out}
+function paSnapEnds(segs,tol){
+ for(const A of segs)for(const end of ['s0','s1']){const e=A[end];let best=null,bd=Infinity;
+  for(const B of segs){if(B.h===A.h)continue;const d=Math.abs(e-B.c);if(d>B.t/2+A.t/2+tol)continue;
+   if(A.c<B.s0-A.t/2-tol||A.c>B.s1+A.t/2+tol)continue;if(d<bd){bd=d;best=B}}
+  if(best){A[end]=best.c;if(A.c<best.s0)best.s0=A.c;if(A.c>best.s1)best.s1=A.c}}}
+function paRemoveTraced(){if(!S.objs.some(o=>o.traced)){toast('Nothing traced to remove');return}push();S.objs=S.objs.filter(o=>!o.traced);sync();paMsg('paTraceMsg','Traced elements removed.')}
+
+// ---- plan check: what's missing or broken, each with a place to zoom to and a fix ----
+function paZoneDefaultName(o){return !o.name||/^(room|zone|untitled|space)\s*\d*$/i.test(String(o.name).trim())}
+function paClosestOnWall(p,w){if(w.bow){let best=null,bd=Infinity;sampleWallPts(w,24).forEach(q=>{const d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;best=q}});return best}
+ const dx=w.b.x-w.a.x,dy=w.b.y-w.a.y,L2=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((p.x-w.a.x)*dx+(p.y-w.a.y)*dy)/L2));return{x:w.a.x+dx*t,y:w.a.y+dy*t}}
+function paCheckGrid(walls,zones){let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+ const grow=p=>{if(p.x<x0)x0=p.x;if(p.y<y0)y0=p.y;if(p.x>x1)x1=p.x;if(p.y>y1)y1=p.y};
+ walls.forEach(w=>{grow(w.a);grow(w.b)});zones.forEach(z=>pts(z).forEach(grow));if(!(x1>x0))return null;
+ const pad=mPx(1);x0-=pad;y0-=pad;x1+=pad;y1+=pad;const f=Math.max(mPx(.05),Math.max(x1-x0,y1-y0)/1500);
+ return{W:Math.ceil((x1-x0)/f),H:Math.ceil((y1-y0)/f),f,ox:x0,oy:y0}}
+function paRunCheck(){const iss=[],ign=new Set(S.paIgnored||[]),add=o=>{if(!ign.has(o.key))iss.push(o)};
+ const walls=S.objs.filter(o=>o.type==='wall'&&layerVisible(o)),zones=S.objs.filter(o=>isZone(o)&&layerVisible(o)),opens=S.objs.filter(o=>o.type==='door'||o.type==='window');
+ S.objs.forEach(o=>{if((isZone(o)||o.type==='wall'||o.type==='door'||o.type==='window')&&!o.id)o.id=nextId()});
+ // set-up
+ if(!S.verified)add({key:'scale',sev:'must',title:'Drawing scale not set',detail:'Every size, area, wall thickness and grid in the analysis depends on it.',fixes:[{l:'Set scale…',fn:()=>openScaleSetupModal()}]});
+ if(!walls.length&&!zones.length)add({key:'empty',sev:'must',title:'Nothing traced or drawn yet',detail:img&&img.width?'Use step 1 to trace the plan image, or draw walls and zones by hand.':'Upload a floor plan (📂 Floor plan), set its scale, then trace it.',fixes:img&&img.width?[]:[{l:'Upload plan…',fn:()=>$('fPlan').click()}]});
+ if(!S.northOk)add({key:'north',sev:'should',title:'Which way is north?',detail:`The north arrow currently points ${+$('iNorthA').value||0}° from straight up. Daylight and orientation results use it.`,input:'north'});
+ if($('iDayLat').value===''||$('iDayLon').value==='')add({key:'loc',sev:'info',title:'Site location not set',detail:'Only needed for daylight / sun-path runs.',fixes:[{l:'Set location…',fn:()=>openDayModal()}]});
+ if(!(S.assume&&S.assume.ok)){const a=paAssume();add({key:'assume',sev:'should',title:'Confirm heights',detail:`Assuming walls ${a.wallH} m high, doors ${a.doorH} m, window sills ${a.sillH} m. Used by 3D, daylight and the furniture-height option.`,input:'assume'})}
+ // traced items that need a human call
+ opens.filter(o=>o.traced&&o.type==='door'&&o.dtype==='opening'&&o.conf==='low').forEach(o=>add({key:'gap:'+o.id,sev:'should',title:'Gap in a wall — what is it?',detail:`${(o.wmm/1000).toFixed(2)} m gap with no door swing or window drawn in it.`,at:{x:o.x,y:o.y},fixes:[
+  {l:'Door',fn:()=>{push();o.dtype='single';o.swing='in';o.conf='high';sync()}},{l:'Open gap',fn:()=>{push();o.conf='high';sync()}},{l:'Solid wall',fn:()=>{push();S.objs=S.objs.filter(x=>x!==o);sync()}}]}));
+ walls.filter(w=>w.traced&&w.conf==='medium').forEach(w=>add({key:'angw:'+w.id,sev:'info',title:'Angled wall found — check it',detail:'Fitted from the drawing; angled walls are traced less precisely than straight ones.',at:{x:(w.a.x+w.b.x)/2,y:(w.a.y+w.b.y)/2},fixes:[
+  {l:'Looks right',fn:()=>{w.conf='high';paRunCheck()}},{l:'Remove',fn:()=>{push();S.objs=S.objs.filter(x=>x!==w);sync()}}]}));
+ // wall ends that stop just short of another wall
+ let nEnd=0;walls.forEach(w=>{if(nEnd>=40)return;['a','b'].forEach(e=>{const p=w[e],ht=mPx((w.th||150)/1000)/2;let joined=false,best=null,bd=Infinity;
+  walls.forEach(o=>{if(o===w)return;const d=distToWall(p,o),lim=mPx((o.th||150)/1000)/2+ht+mPx(.03);if(d<=lim)joined=true;else if(d<bd){bd=d;best=o}});
+  if(!joined&&best&&bd<=mPx(.6)){nEnd++;add({key:'end:'+w.id+e,sev:'should',title:'Wall end not connected',detail:`Stops ${pxM(bd).toFixed(2)} m short of the next wall, so the rooms either side may leak into each other.`,at:p,fixes:[
+   {l:'Close the gap',fn:()=>{push();const q=paClosestOnWall(p,best);w[e]={x:q.x,y:q.y};reflowWallOpenings(w);sync()}}]})}})});
+ // doors / windows not on a wall
+ opens.forEach(d=>{const host=d.wid?wallById(d.wid):null,ok=host&&distToWall({x:d.x,y:d.y},host)<=mPx((host.th||150)/1000)/2+mPx(.05);if(ok)return;
+  const nw=nearestWall({x:d.x,y:d.y},mPx(1));add({key:'host:'+d.id,sev:'should',title:(d.type==='door'?'Door':'Window')+' not on a wall',detail:'It won\'t cut an opening or connect the rooms either side.',at:{x:d.x,y:d.y},
+   fixes:nw?[{l:'Snap to nearest wall',fn:()=>{push();d.wid=nw.id;d.t=wallProjT(nw,{x:d.x,y:d.y});snapOpeningToWall(d);sync()}}]:[]})});
+ // zones: names, connections, reachability, overlaps
+ zones.filter(paZoneDefaultName).slice(0,60).forEach(z=>add({key:'name:'+z.id,sev:'should',title:`Name this room${z.name?' ('+z.name+')':''}`,detail:`${pxToM2(areaPx(pts(z))).toFixed(1)} m². Names and categories drive the space program, area schedule and the space-syntax “integration by function”.`,at:centerOf(z),input:'zoneName',obj:z}));
+ if(zones.length>=2){const G=ssBuildGraph(true),en=ssPickEntry(G),dep=ssBfs(G.adj,en.i);
+  G.zs.forEach((z,i)=>{if(!G.adj[i].length)add({key:'iso:'+z.id,sev:'should',title:'Room with no door or opening',detail:`${ssZoneLabel(z)} doesn't connect to any other zone — missing door, or a wall that should be open?`,at:centerOf(z)})});
+  if(!G.ext.length&&!S.ssEntryId)add({key:'entry',sev:'should',title:'No entrance found',detail:'No door opens to the outside. Pick the entrance room so depth and reachability can be measured.',input:'entrance'});
+  else G.zs.forEach((z,i)=>{if(G.adj[i].length&&dep[i]<0)add({key:'reach:'+z.id,sev:'should',title:'Can\'t be reached from the entrance',detail:`${ssZoneLabel(z)} is connected to other rooms, but that group never links back to the entrance (${ssZoneLabel(G.zs[en.i])}).`,at:centerOf(z)})});
+  let nOv=0;for(let i=0;i<zones.length&&nOv<30;i++)for(let j=i+1;j<zones.length&&nOv<30;j++){const A=pts(zones[i]),B=pts(zones[j]),ar=polyIntersectArea(A,B);
+   if(ar>m2ToPx(.25)){nOv++;const a=centroid(A),b=centroid(B);add({key:'ov:'+zones[i].id+':'+zones[j].id,sev:'should',title:'Zones overlap',detail:`${ssZoneLabel(zones[i])} and ${ssZoneLabel(zones[j])} overlap by ${pxToM2(ar).toFixed(1)} m², so that area is counted twice.`,at:{x:(a.x+b.x)/2,y:(a.y+b.y)/2}})}}}
+ // spaces enclosed by walls with no zone in them
+ if(walls.length){const G=paCheckGrid(walls,zones);if(G&&G.W*G.H<=4e6){const WM=paRasterWalls(walls,G,0),{regions,lab}=paEnclosedRegions(WM,G,1),zp=zones.map(z=>pts(z));
+  regions.slice(0,40).forEach(r=>{
+   // how much of this walled space is covered by zones (sampled), and where an uncovered spot is
+   const c0=r.c,step=Math.max(1,Math.floor(Math.sqrt(r.c.n/400)));let tot=0,cov=0,free=null;
+   for(let y=c0.miny;y<=c0.maxy;y+=step)for(let x=c0.minx;x<=c0.maxx;x+=step){if(lab[y*G.W+x]!==r.id)continue;tot++;const p={x:(x+.5)*G.f+G.ox,y:(y+.5)*G.f+G.oy};
+    if(zp.some(q=>inPoly(p,q)))cov++;else if(!free)free=p}
+   const frac=tot?cov/tot:1,c=centroid(r.poly);if(frac>=.9)return;
+   if(frac>=.1){add({key:'partzone:'+Math.round(c.x)+','+Math.round(c.y),sev:'should',title:'Part of a walled space has no zone',detail:`About ${(r.m2*(1-frac)).toFixed(1)} m² of a ${r.m2.toFixed(1)} m² walled space isn't in any zone. Often a wall is missing or stops short, so two rooms run into each other — or a zone needs extending.`,at:free||c});return}
+   add({key:'nozone:'+Math.round(c.x)+','+Math.round(c.y),sev:'should',title:'Enclosed space has no zone',detail:`About ${r.m2.toFixed(1)} m² surrounded by walls but not counted as a room.`,at:c,fixes:[
+    {l:'Create zone',fn:()=>{push();const cat='Other';S.objs.push({type:'poly',pts:r.poly,segArc:r.poly.map(_=>0),name:'',cat,fill:CATS[cat]?CATS[cat].fill:'#ddd',stroke:CATS[cat]?CATS[cat].stroke:'#666',op:+$('iOp').value||.75,num:nextRoomNum(cat),id:nextId()});sync()}}]})})}}
+ // thick lines in the plan image that no wall covers
+ if(S.verified&&img&&img.width>0){const P=paPlanPixels(80);if(P){const W=P.w,H=P.h,f=P.f,ink=paInk(P),mm2px=mm=>mm/S.scale/f;
+  const wm=paOpenMask(ink,W,H,Math.max(1,mm2px(80)/2)),cov=paRasterWalls(walls,{W,H,f,ox:0,oy:0},3),left=new Uint8Array(W*H);for(let i=0;i<W*H;i++)left[i]=wm[i]&&!cov[i]?1:0;
+  paPcaWalls(left,W,H,mm2px(500),mm2px(600),Math.max(2,mm2px(80)*.6)).filter(p=>paFacesInkedLine(ink,W,H,p)).slice(0,40).forEach(p=>{
+   const a={x:p.a.x*f,y:p.a.y*f},b={x:p.b.x*f,y:p.b.y*f},th=Math.max(50,Math.round(p.t*f*S.scale/10)*10);
+   add({key:'ink:'+Math.round((a.x+b.x)/2)+','+Math.round((a.y+b.y)/2),sev:'should',title:'Possible wall not traced',detail:`A ${pxM(Math.hypot(b.x-a.x,b.y-a.y)).toFixed(2)} m thick line in the plan image (~${th} mm) has no wall on it.`,at:{x:(a.x+b.x)/2,y:(a.y+b.y)/2},seg:[a,b],fixes:[
+    {l:'Add wall',fn:()=>{push();S.objs.push({type:'wall',id:nextId(),a,b,mat:'opaque',th,color:'#cfcfcf',bow:0,traced:1,conf:'high'});sync()}}]})})}}
+ const rank={must:0,should:1,info:2};iss.sort((a,b)=>rank[a.sev]-rank[b.sev]);
+ paIssues=iss;paFocus=iss.length?0:-1;
+ S.planCheck={at:Date.now(),must:iss.filter(i=>i.sev==='must').length,should:iss.filter(i=>i.sev==='should').length,info:iss.filter(i=>i.sev==='info').length,sig:ssSig()};
+ paRender();ssRenderReady();draw();return iss}
+function paAssume(){const a=S.assume||{};return{wallH:+a.wallH||2.7,doorH:+a.doorH||2.05,sillH:+a.sillH||.9}}
+// after a fix, re-check (most fixes change the plan) but stay near the same place in the list
+function paAfterFix(){const keep=paFocus;paRunCheck();paFocus=Math.min(Math.max(0,keep),paIssues.length-1);paRender();if(paFocus>=0)paZoomTo(paIssues[paFocus]);draw()}
+function paZoomTo(is){if(!is||!is.at)return;const k=Math.max(view.k,.6);view.k=k;view.x=cv.width/2-is.at.x*k;view.y=cv.height/2-is.at.y*k;draw()}
+function paIgnore(key){S.paIgnored=[...new Set([...(S.paIgnored||[]),key])];paAfterFix()}
+function paInputHtml(is){const a=paAssume();
+ if(is.input==='north')return`<div class="row" style="margin-top:6px"><div><label>North angle (° clockwise from up)</label><input type="number" id="paNorth" step="5" value="${+$('iNorthA').value||0}"></div><div style="flex:0;align-self:flex-end"><button class="pri" data-pa="north">Confirm</button></div></div>`;
+ if(is.input==='assume')return`<div class="row" style="margin-top:6px"><div><label>Walls (m)</label><input type="number" id="paWallH" step="0.1" value="${a.wallH}"></div><div><label>Doors (m)</label><input type="number" id="paDoorH" step="0.05" value="${a.doorH}"></div><div><label>Sills (m)</label><input type="number" id="paSillH" step="0.05" value="${a.sillH}"></div></div><button class="pri" data-pa="assume" style="width:100%;margin-top:6px">Confirm heights</button>`;
+ if(is.input==='zoneName')return`<div class="row" style="margin-top:6px"><div style="flex:2"><label>Name</label><input id="paZName" placeholder="e.g. Meeting room" value="${esc(paZoneDefaultName(is.obj)?'':is.obj.name)}"></div><div><label>Category</label><select id="paZCat">${Object.keys(CATS).map(c=>`<option${c===is.obj.cat?' selected':''}>${esc(c)}</option>`).join('')}</select></div></div><button class="pri" data-pa="zoneName" style="width:100%;margin-top:6px">Save</button>`;
+ if(is.input==='entrance')return`<div class="row" style="margin-top:6px"><div><label>Entrance room</label><select id="paEntry">${ssZones().map(z=>`<option value="${esc(z.id)}">${esc(ssZoneLabel(z))}</option>`).join('')}</select></div><div style="flex:0;align-self:flex-end"><button class="pri" data-pa="entrance">Set</button></div></div>`;
+ return''}
+function paApplyInput(kind,is){
+ if(kind==='north'){const v=+$('paNorth').value||0;$('iNorthA').value=v;if($('iNorthA').onchange)$('iNorthA').onchange();S.northOk=true}
+ else if(kind==='assume'){const wallH=Math.max(1.8,+$('paWallH').value||2.7),doorH=Math.min(wallH,Math.max(1.8,+$('paDoorH').value||2.05)),sillH=Math.max(0,+$('paSillH').value||.9);
+  S.assume={wallH,doorH,sillH,ok:true};if($('iDayHt'))$('iDayHt').value=wallH}
+ else if(kind==='zoneName'){const nm=$('paZName').value.trim();if(!nm){toast('Type a name first');return false}const z=is.obj,cat=$('paZCat').value;push();z.name=nm;
+  if(cat!==z.cat){z.cat=cat;if(CATS[cat]){z.fill=CATS[cat].fill;z.stroke=CATS[cat].stroke}z.num=nextRoomNum(cat)}sync()}
+ else if(kind==='entrance'){S.ssEntryId=$('paEntry').value||null}
+ return true}
+function paRender(){if(!$('paPanel'))return;
+ const st=[];st.push(img&&img.width?'Plan image loaded':'<b>No plan image</b> — upload one with 📂 Floor plan');st.push(S.verified?`scale set (1 px = ${(+S.scale).toFixed(2)} mm)`:'<b style="color:#e5534b">scale not set</b>');
+ paMsg('paTraceStatus',st.join(' · '));
+ const pc=S.planCheck;
+ if(!paIssues.length){paMsg('paSummary',pc?'<div class="paOk">✔ No open issues — the plan is ready for the advanced runs.</div>':'');paMsg('paCard','');paMsg('paList','');paRenderReady();return}
+ const cnt=s=>paIssues.filter(i=>i.sev===s).length;
+ paMsg('paSummary',['must','should','info'].filter(s=>cnt(s)).map(s=>`<span class="paChip" style="border-color:${PA_SEV[s].c};color:${PA_SEV[s].c}">${cnt(s)} ${PA_SEV[s].l}</span>`).join(' ')+
+  `<span class="sub" style="margin-left:6px">Tap an item to zoom to it.</span>`);
+ const is=paIssues[paFocus];
+ if(is){$('paCard').innerHTML=`<div class="paCard" style="border-left-color:${PA_SEV[is.sev].c}"><div class="sub">${paFocus+1} of ${paIssues.length} · ${PA_SEV[is.sev].l}</div><div class="paT">${esc(is.title)}</div><div class="sub">${esc(is.detail||'')}</div>${paInputHtml(is)}`+
+  `<div class="paBtns">${(is.fixes||[]).map((f,i)=>`<button class="pri" data-fix="${i}">${esc(f.l)}</button>`).join('')}<button data-pa="ignore" title="Mark as intentional — it won't be raised again">Ignore</button><button data-pa="prev">◀</button><button data-pa="next">Next ▶</button></div></div>`;
+  $('paCard').querySelectorAll('[data-fix]').forEach(b=>b.onclick=()=>{const r=is.fixes[+b.dataset.fix].fn();if(r&&r.then)r.then(paAfterFix);else paAfterFix()});
+  $('paCard').querySelectorAll('[data-pa]').forEach(b=>b.onclick=()=>{const k=b.dataset.pa;
+   if(k==='next'){paFocus=(paFocus+1)%paIssues.length;paRender();paZoomTo(paIssues[paFocus])}
+   else if(k==='prev'){paFocus=(paFocus-1+paIssues.length)%paIssues.length;paRender();paZoomTo(paIssues[paFocus])}
+   else if(k==='ignore')paIgnore(is.key);
+   else if(paApplyInput(k,is)!==false)paAfterFix()})}
+ $('paList').innerHTML=paIssues.map((x,i)=>`<div class="paRow${i===paFocus?' on':''}" data-i="${i}"><span class="paDot" style="background:${PA_SEV[x.sev].c}">${i+1}</span><span>${esc(x.title)}</span></div>`).join('');
+ $('paList').querySelectorAll('.paRow').forEach(r=>r.onclick=()=>{paFocus=+r.dataset.i;paRender();paZoomTo(paIssues[paFocus])});
+ paRenderReady()}
+function paReadyState(){const pc=S.planCheck;if(!pc)return{ok:false,msg:'Plan not checked yet'};if(pc.sig!==ssSig())return{ok:false,msg:'Plan changed since the last check'};
+ if(pc.must)return{ok:false,msg:`${pc.must} must-fix item${pc.must>1?'s':''} open`};return{ok:true,msg:pc.should?`Ready — ${pc.should} item${pc.should>1?'s':''} worth fixing for better accuracy`:'Ready'}}
+function paRenderReady(){if(!$('paReady'))return;const r=paReadyState();
+ paMsg('paReady',(r.ok?'✔ ':'⚠ ')+esc(r.msg)+(r.ok?'':'. Space syntax and daylight read only what is traced/drawn, so run the check and fix the must-fix items first.'));
+ $('bPaSyntax').disabled=!r.ok;$('bPaDaylight').disabled=!r.ok}
+function ssRenderReady(){const el=$('ssReady');if(!el)return;const r=paReadyState();
+ if(r.ok&&!(S.planCheck&&S.planCheck.should)){el.style.display='none';return}
+ el.style.display='block';el.innerHTML=`<b>${r.ok?'ℹ':'⚠'} ${esc(r.msg)}.</b> Results only reflect the walls, doors and rooms actually traced or drawn. <a href="#" id="ssOpenPA">Open Plan assistant</a>`;
+ $('ssOpenPA').onclick=e=>{e.preventDefault();paOpenPanel()}}
+function paDayReady(){const el=$('dayReady');if(!el)return;const miss=[];if(!S.northOk)miss.push('north not confirmed');if(!(S.assume&&S.assume.ok))miss.push('heights not confirmed');if(!S.verified)miss.push('scale not set');
+ el.style.display=miss.length?'block':'none';el.innerHTML=miss.length?`⚠ ${esc(miss.join(', '))} — results use assumed values. <a href="#" id="dayOpenPA">Open Plan assistant</a>`:'';
+ if(miss.length)$('dayOpenPA').onclick=e=>{e.preventDefault();$('dayModal').style.display='none';paOpenPanel()}}
+function drawPlanIssues(g,k){if(!paOpen||!paIssues.length)return;g.save();
+ paIssues.forEach((is,i)=>{if(!is.at)return;const foc=i===paFocus,r=(foc?13:10)/k,col=PA_SEV[is.sev].c;
+  if(is.seg){g.strokeStyle=col;g.lineWidth=3/k;g.setLineDash([8/k,5/k]);g.beginPath();g.moveTo(is.seg[0].x,is.seg[0].y);g.lineTo(is.seg[1].x,is.seg[1].y);g.stroke();g.setLineDash([])}
+  if(foc){g.strokeStyle=col;g.lineWidth=3/k;g.beginPath();g.arc(is.at.x,is.at.y,r+8/k,0,Math.PI*2);g.stroke()}
+  g.fillStyle=col;g.strokeStyle='#fff';g.lineWidth=2/k;g.beginPath();g.arc(is.at.x,is.at.y,r,0,Math.PI*2);g.fill();g.stroke();
+  g.fillStyle='#fff';g.font=`700 ${(foc?12:10)/k}px Segoe UI`;g.textAlign='center';g.textBaseline='middle';g.fillText(String(i+1),is.at.x,is.at.y+.5/k)});
+ g.textBaseline='alphabetic';g.restore()}
+function paOpenPanel(){toggleHamMenu(false);paOpen=true;$('paPanel').style.display='flex';paRender();draw()}
+function paClosePanel(){paOpen=false;$('paPanel').style.display='none';draw()}
+$('hmPlanAssist').onclick=paOpenPanel;
+$('bPaClose').onclick=paClosePanel;
+$('bPaTrace').onclick=async()=>{const r=await paTrace({minWall:+$('paMinW').value||80,maxWall:+$('paMaxW').value||600,style:$('paStyle').value,doors:$('paDoors').checked,rooms:$('paRooms').checked,replace:$('paReplace').checked});
+ if(r){fit();paRunCheck()}};
+$('bPaUntrace').onclick=()=>{paRemoveTraced();if(S.planCheck)paRunCheck()};
+$('bPaCheck').onclick=()=>{paRunCheck();if(paFocus>=0)paZoomTo(paIssues[paFocus])};
+$('bPaSyntax').onclick=()=>{switchTab('pSyn');ssRenderPanel();ssRunGraph()};
+$('bPaDaylight').onclick=()=>{paClosePanel();openDayModal()};
+setupFloatDrag($('paHandle'),'#paPanel');
 
 const W=$('cvw');['dragover'].forEach(v=>W.addEventListener(v,e=>e.preventDefault()));
 W.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(!f)return;if(/\.(csv|tsv|txt|xlsx|xls)$/i.test(f.name)){openImport();readProgFile(f)}else if(/\.json$/i.test(f.name))f.text().then(t=>loadProjectObj(JSON.parse(t)));else openPlan(f)});
