@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v14.3</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v14.4</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -324,7 +324,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v14.3</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v14.4</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -1556,7 +1556,8 @@ function redo(){if(fut.length){hist.push(snap());restore(fut.pop())}}
 function fit(){if(!(img.width>0)){fitAll();return}const k=Math.min(cv.width/img.width,cv.height/img.height)*.95;view={k,x:(cv.width-img.width*k)/2,y:(cv.height-img.height*k)/2};draw()}
 let snapHighlight=null;
 function resize(){cv.width=$('cvw').clientWidth;cv.height=$('cvw').clientHeight;
- cv3d.width=$('cvw').clientWidth;cv3d.height=$('cvw').clientHeight;draw()}
+ cv3d.width=$('cvw').clientWidth;cv3d.height=$('cvw').clientHeight;
+ if(typeof positionHudDefaults==='function')positionHudDefaults();draw()}
 function setPlan(src,refit=true){img=new Image();if(!src){draw();return}img.onload=()=>{if(refit)fit();else draw()};img.src=src}
 // V13.2 item 4: "the base drawing(s) can be hidden or deleted" once a boundary's been traced
 // over them. Hiding already existed (#iBase, right above this button in the Display panel) --
@@ -4970,14 +4971,40 @@ function setSideFloat(on){const sd=document.querySelector('aside');document.body
  resize();setTimeout(resize,200)}
 $('bFloatNav').onclick=()=>setNavFloat(!document.body.classList.contains('navFloat'));
 $('bFloatSide').onclick=()=>setSideFloat(!document.body.classList.contains('sideFloat'));
-function setupFloatDrag(handle,panelSel,isLocked){let on=false,sx=0,sy=0,ot=0,ol=0;
- handle.addEventListener('mousedown',e=>{if(e.target.closest('button'))return;if(isLocked&&isLocked())return;const p=document.querySelector(panelSel);if(!p.classList.contains('floating'))return;
-  on=true;const r=p.getBoundingClientRect();sx=e.clientX;sy=e.clientY;ot=r.top;ol=r.left;e.preventDefault()});
- window.addEventListener('mousemove',e=>{if(!on)return;const p=document.querySelector(panelSel);
+// V14.4: mouse AND touch/pen (iPad finger, Apple Pencil) -- before, only mouse events were
+// wired, so none of the floating panels/HUD widgets could be dragged on a tablet. Touch/pen go
+// through Pointer Events (mouse keeps its original listeners, which the existing tests drive).
+// Dragging also clears `bottom`, since the bottom-anchored widgets (axis gizmo) would otherwise
+// get stretched between the new top and their old bottom.
+function setupFloatDrag(handle,panelSel,isLocked){let on=false,sx=0,sy=0,ot=0,ol=0,pid=null;
+ const start=e=>{if(e.target.closest('button'))return false;if(isLocked&&isLocked())return false;const p=document.querySelector(panelSel);if(!p.classList.contains('floating'))return false;
+  on=true;const r=p.getBoundingClientRect();sx=e.clientX;sy=e.clientY;ot=r.top;ol=r.left;e.preventDefault();return true};
+ const move=e=>{if(!on)return;const p=document.querySelector(panelSel);
   let nt=Math.max(0,Math.min(window.innerHeight-40,ot+(e.clientY-sy)));
   let nl=Math.max(0,Math.min(window.innerWidth-40,ol+(e.clientX-sx)));
-  p.style.top=nt+'px';p.style.left=nl+'px';p.style.right='auto'});
- window.addEventListener('mouseup',()=>{on=false})}
+  p.style.top=nt+'px';p.style.left=nl+'px';p.style.right='auto';p.style.bottom='auto';
+  if(panelSel==='#view3dBar'&&typeof positionMetricsBelowView3d==='function')positionMetricsBelowView3d()};
+ handle.style.touchAction='none';
+ handle.addEventListener('mousedown',start);
+ window.addEventListener('mousemove',move);
+ window.addEventListener('mouseup',()=>{on=false});
+ handle.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse')return;if(start(e)){pid=e.pointerId;try{handle.setPointerCapture(e.pointerId)}catch(_){}}});
+ window.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'||e.pointerId!==pid)return;move(e)});
+ const end=e=>{if(e.pointerType==='mouse'||e.pointerId!==pid)return;on=false;pid=null};
+ window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end)}
+// V14.4: default (never-dragged) spots for the floating HUD widgets, measured from the canvas
+// panel's REAL on-screen box. CSS alone had them at top:14px / bottom:14px of the whole
+// WINDOW -- fine with no header, but in practice the 3D-view bar landed on top of the header
+// row and the axis gizmo on top of the status bar (very visible on iPad). Left/right already
+// tracked the side panels via calc(var(--navw/--sidew)); this does the same for top/bottom.
+// Runs from resize() (window resize, iPad rotation, panel collapse/float) and is skipped for any
+// widget the user has dragged (style.left set), so a custom spot is never overridden.
+function positionHudDefaults(){const r=$('cvw').getBoundingClientRect();if(!r.width&&!r.height)return;
+ const vb=$('view3dBar');if(!vb.style.left)vb.style.top=(r.top+14)+'px';
+ ['axisGizmo2D','gizmoDock'].forEach(id=>{const el=$(id);
+  if(el.style.left)el.style.bottom='auto';
+  else{el.style.top='';el.style.bottom=Math.max(14,window.innerHeight-r.bottom+14)+'px'}});
+ if(typeof positionMetricsBelowView3d==='function')positionMetricsBelowView3d()}
 setupFloatDrag($('dragNav'),'nav');
 setupFloatDrag($('dragSide'),'aside');
 setupFloatDrag($('view3dGrip'),'#view3dBar',()=>hud.view3d.locked);
