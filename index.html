@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.7</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.8</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -380,7 +380,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.7</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.8</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bBell" title="Notifications" style="display:none">🔔<span id="bellN"></span></button><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -1716,7 +1716,10 @@ function commitTypedRot(){const deg=+typedRot||0;typedRot='';drag=null; // drop 
  const targets=sels.filter(o=>ABSROT.includes(o.type));
  if(!targets.length){toast('Nothing rotatable selected',1800);return}
  push();targets.forEach(o=>{o.rot=deg*Math.PI/180});sync();toast(`Rotated to ${deg}°`,1800)}
-function nextId(){return 'o'+(_uid++)}
+// ids must be unique across everyone editing a cloud board, and across boards opened in one
+// session: a short random tag per page load + a counter (plain o1, o2… collided between two people)
+const ID_TAG=(()=>{try{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0].toString(36).slice(0,5)}catch(e){return Math.random().toString(36).slice(2,7)}})();
+function nextId(){return 'o'+ID_TAG+'_'+(_uid++)}
 let floors=[],curFloor=0;
 let LAYVIS={zone:true,wall:true,door:true,security:true,sketch:true,dim:true,comment:true,furniture:true};
 const sel=()=>sels[sels.length-1]||null;
@@ -3209,6 +3212,7 @@ function syncMultiSelBar(){
 /* ---------- panels ---------- */
 function sync(){
  ensureWallIds();
+ if(typeof rtScheduleBroadcast==='function'&&typeof rtChannel!=='undefined'&&rtChannel)rtScheduleBroadcast();
  if(typeof ssOnSync==='function')ssOnSync();
  renderMetricsPanel();
  $('iScale').value=+S.scale.toFixed(3);
@@ -5671,7 +5675,7 @@ function cloudPostComments(silent){if(!sb||!cloudState.activeBoard||!cloudCanCom
  return Promise.all([...ins,...upd]).then(()=>{if(fresh.length||edits.length){cloudCommentsChanged();if(!silent)$('cwBoardMsg').textContent=`Posted ${fresh.length} comment${fresh.length===1?'':'s'}.`;return cloudLoadComments()}})}
 // ---- auto-save: a few seconds after the last edit (wired into push() alongside live sync) ----
 function cloudScheduleAutosave(){if(!sb||!cloudState.activeBoard||!cloudState.email||cloudState.previewing)return;cloudState.dirty=true;cloudStatusPill();
- if(!$('cwAutosave').checked)return;clearTimeout(cloudAutosaveTimer);cloudAutosaveTimer=setTimeout(()=>{cloudSaveBoard(true)},4000)}
+ if(!$('cwAutosave').checked)return;clearTimeout(cloudAutosaveTimer);cloudAutosaveTimer=setTimeout(function go(){if(drag){cloudAutosaveTimer=setTimeout(go,300);return}cloudSaveBoard(true)},4000)}
 // ---- rendering ----
 function cloudRoleChip(r){return r?`<span class="cwChip cwRole_${r}">${r}</span>`:'<span class="cwChip">no access</span>'}
 function cloudMembersHtml(scope){const list=cloudState[scope==='ws'?'wsMembers':'projMembers'],manage=scope==='ws'?cloudCanManageWs():cloudCanManageProj();
@@ -5878,12 +5882,12 @@ const RT_DEBOUNCE_MS=350,RT_CURSOR_THROTTLE_MS=80;
 function rtColorFor(email){let h=0;for(let i=0;i<(email||'').length;i++)h=(h*31+email.charCodeAt(i))|0;
  const palette=['#e74c3c','#e67e22','#f1c40f','#27ae60','#16a085','#2980b9','#8e44ad','#d63384'];
  return palette[Math.abs(h)%palette.length]}
-function rtEnsureIds(){S.objs.forEach(o=>{if(!o.id)o.id=nextId()})}
+function rtEnsureIds(){const seen=new Set();S.objs.forEach(o=>{if(!o.id||seen.has(o.id))o.id=nextId();seen.add(o.id)})} // (boards saved before v15.8 can hold the same id twice)
 function rtLeaveChannel(){if(rtChannel&&sb){try{sb.removeChannel(rtChannel)}catch(e){}}clearTimeout(rtDirtyTimer);rtChannel=null;rtPeers={};rtActorId=null}
 function rtJoinBoard(boardId){
  rtLeaveChannel();
  if(!sb||!boardId||typeof sb.channel!=='function')return;
- rtActorId=(cloudState.email||'anon')+':'+Math.random().toString(36).slice(2);
+ rtActorId=(cloudState.email||'anon')+':'+Math.random().toString(36).slice(2);rtResetSigs();
  const ch=sb.channel('board:'+boardId,{config:{presence:{key:rtActorId}}});
  ch.on('broadcast',{event:'edit'},({payload})=>{if(payload&&payload.actor!==rtActorId)rtApplyRemote(payload)});
  ch.on('broadcast',{event:'comments'},()=>{if(typeof cloudLoadComments==='function')cloudLoadComments()});
@@ -5895,13 +5899,26 @@ function rtJoinBoard(boardId){
  rtChannel=ch; // set BEFORE subscribe(): some clients fire the SUBSCRIBED callback synchronously,
  // and rtTrackCursor below no-ops while rtChannel is still null/the old channel
  ch.subscribe(status=>{if(status==='SUBSCRIBED')rtTrackCursor(mouse||{x:0,y:0})})}
+// what each object looked like when we last sent / received it: only objects that changed since
+// get a new timestamp, so a peer's newer edit to OTHER objects is never overwritten by our snapshot
+var rtSentSig=new Map(),rtApplying=false;
+function rtSig(o){return JSON.stringify(o,(k,v)=>k==='rtTs'?undefined:v)}
+function rtResetSigs(){rtEnsureIds();rtSentSig=new Map();S.objs.forEach(o=>{if(o.id)rtSentSig.set(o.id,rtSig(o))})}
 function rtBroadcastNow(){
  if(!rtChannel)return;
+ // never send half a gesture: a move / resize / draw pushes undo when it STARTS, so wait for it to end
+ if(drag&&Date.now()-(rtBroadcastNow._since||(rtBroadcastNow._since=Date.now()))<8000){clearTimeout(rtDirtyTimer);rtDirtyTimer=setTimeout(rtBroadcastNow,120);return}
+ rtBroadcastNow._since=0; // (8 s cap: a release outside the canvas can leave a gesture open)
  rtEnsureIds();
- const ts=Date.now();
- S.objs.forEach(o=>{o.rtTs=ts});
- rtChannel.send({type:'broadcast',event:'edit',payload:{actor:rtActorId,floorIdx:curFloor,ts,objs:S.objs}})}
-function rtScheduleBroadcast(){if(!rtChannel||(typeof cloudCanEdit==='function'&&!cloudCanEdit())||(typeof cloudState!=='undefined'&&cloudState.previewing))return;clearTimeout(rtDirtyTimer);rtDirtyTimer=setTimeout(rtBroadcastNow,RT_DEBOUNCE_MS)}
+ const ts=Date.now(),now=new Map(),ch=[];let del=false;
+ S.objs.forEach(o=>{const g=rtSig(o);now.set(o.id,g);if(rtSentSig.get(o.id)!==g){o.rtTs=ts;ch.push(o)}});
+ rtSentSig.forEach((_,id)=>{if(!now.has(id))del=true}); // something was deleted
+ if(!ch.length&&!del)return;
+ rtSentSig=now;
+ // only the changed objects travel, plus the list of every id on the floor (so deletions still show);
+ // keeps messages small -- Realtime drops messages over its size limit
+ rtChannel.send({type:'broadcast',event:'edit',payload:{actor:rtActorId,floorIdx:curFloor,ts,objs:ch,ids:S.objs.map(o=>o.id)}})}
+function rtScheduleBroadcast(){if(rtApplying||!rtChannel||(typeof cloudCanEdit==='function'&&!cloudCanEdit())||(typeof cloudState!=='undefined'&&cloudState.previewing))return;clearTimeout(rtDirtyTimer);rtDirtyTimer=setTimeout(rtBroadcastNow,RT_DEBOUNCE_MS)}
 // Merge an incoming floor snapshot from another peer into our own objects for the floor
 // you're both currently looking at. Per object: newer rtTs wins outright; an object we have
 // that's missing from the incoming snapshot is dropped only if it's OLDER than that snapshot
@@ -5915,9 +5932,16 @@ function rtMergeFloorObjs(localObjs,incoming,incomingTs){
  return Object.values(byId).filter(o=>incomingIds.has(o.id)||(o.rtTs&&o.rtTs>incomingTs))}
 function rtApplyRemote(payload){
  if(!payload||payload.floorIdx!==curFloor)return; // only the floor you're both on stays live
- S.objs=rtMergeFloorObjs(S.objs,payload.objs,payload.ts);
- sels=sels.filter(o=>S.objs.includes(o));gcSel=gcSel.filter(o=>S.objs.includes(o));
- sync()}
+ // mid-gesture (dragging something): apply when the gesture ends so the object isn't yanked away
+ if(drag){clearTimeout(rtApplyRemote._t);rtApplyRemote._p=payload;rtApplyRemote._t=setTimeout(()=>rtApplyRemote(rtApplyRemote._p),150);return}
+ // keep the selection pointing at the same objects (by id) after they're replaced
+ const selIds=new Set(sels.map(o=>o.id).filter(Boolean)),gcIds=new Set(gcSel.map(o=>o.id).filter(Boolean));
+ let inc=payload.objs||[];
+ if(Array.isArray(payload.ids)){const chg=new Map(inc.map(o=>[o.id,o])),loc=new Map(S.objs.map(o=>[o.id,o]));inc=payload.ids.map(id=>chg.get(id)||loc.get(id)).filter(Boolean)}
+ S.objs=rtMergeFloorObjs(S.objs,inc,payload.ts);
+ (payload.objs||[]).forEach(o=>{if(o&&o.id&&S.objs.includes(o))rtSentSig.set(o.id,rtSig(o))});
+ sels=S.objs.filter(o=>o.id&&selIds.has(o.id));gcSel=S.objs.filter(o=>o.id&&gcIds.has(o.id));
+ rtApplying=true;try{sync()}finally{rtApplying=false}}
 function rtTrackCursor(w){
  if(!rtChannel)return;
  const now=Date.now();if(now-rtLastCursorSentAt<RT_CURSOR_THROTTLE_MS)return;rtLastCursorSentAt=now;
