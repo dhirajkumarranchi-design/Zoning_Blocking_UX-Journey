@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.8</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.9</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -380,7 +380,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.8</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.9</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bBell" title="Notifications" style="display:none">🔔<span id="bellN"></span></button><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -870,7 +870,7 @@ input[type=date],input[type=time]{color-scheme:dark}
    <label><input type="checkbox" id="iSnapEdge" checked> Snap to walls/edges</label>
    <label><input type="checkbox" id="iLegend" checked> Legend</label>
    <label><input type="checkbox" id="iNorth" checked> North arrow</label>
-   <div class="row"><div><label>North angle (°)</label><input type="number" id="iNorthA" value="0" step="5"></div></div>
+   <div class="row" style="align-items:flex-end"><div><label>North angle (°)</label><input type="number" id="iNorthA" value="0" step="5"></div><div style="flex:0 0 auto"><label style="margin:0 0 6px;white-space:nowrap" title="Once north is set, lock it so it can't be turned by accident"><input type="checkbox" id="iNorthRotLock"> 🔒 Lock north</label></div></div>
    <div class="row" style="margin-top:4px;align-items:center">
     <label style="margin:0"><input type="checkbox" id="iNorthLock"> Lock position</label>
     <div style="display:flex;gap:4px;align-items:center;justify-content:flex-end"><button type="button" id="bNorthSmaller" style="width:26px;padding:4px 0" title="Smaller">−</button><span id="northScaleLbl" class="sub" style="min-width:34px;text-align:center">100%</span><button type="button" id="bNorthBigger" style="width:26px;padding:4px 0" title="Bigger">+</button></div>
@@ -1675,7 +1675,7 @@ let img=new Image(),S={objs:[],scale:24,verified:false,prog:[],flows:[],bound:nu
 // this easy; the user unlocks any of them from its own gear button whenever they do want to
 // move it. North and the scale bar are unchanged (still default-unlocked) -- nobody asked for
 // those to change, and both already sit out of the way at the plan's own corners.
-let hud={north:{locked:false,scale:1},axis:{locked:true,scale:1},view3d:{locked:true,scale:1},metrics:{locked:true},scalebar:{locked:false,scale:1}},hudGearTarget=null;
+let hud={north:{locked:false,rotLocked:false,scale:1},axis:{locked:true,scale:1},view3d:{locked:true,scale:1},metrics:{locked:true},scalebar:{locked:false,scale:1}},hudGearTarget=null;
 // Task #117: manual structural grid + columns. S.gridLines = manually drawn line segments
 // (any length/angle, unequal spacing -- no auto-repeat like the existing lettered Bay X/Y grid).
 // S.columns = column markers generated at grid-line intersections (or left after a split),
@@ -2898,6 +2898,14 @@ function drawUSFOverlay(g){const st=usfStats();g.setTransform(1,0,0,1,0,0);
  g.fillStyle='rgba(255,255,255,.92)';g.fillRect(x,y,w,h);g.strokeStyle='#ccc';g.lineWidth=1;g.strokeRect(x,y,w,h);
  g.fillStyle='#222';g.font='600 12px Segoe UI';g.fillText('Overall USF/USM',x+10,y+16);
  g.font='11px Segoe UI';lines.forEach((t,i)=>g.fillText(t,x+10,y+16+18+i*16))}
+// bigger targets on touch screens (finger, not mouse)
+function hudHitR(){try{return matchMedia('(pointer:coarse)').matches?16:9}catch(e){return 9}}
+function northRotLockPos(){const r=22*(hud.north.scale||1);return{x:northPos.x,y:northPos.y+r+17,r:8}}
+function northSetRotLock(on,quiet){hud.north.rotLocked=!!on;
+ if(on){S.northOk=true;if(typeof paDayReady==='function')paDayReady()}
+ const a=$('iNorthA');if(a)a.disabled=!!on;const d=$('dayNorth');if(d)d.disabled=!!on;const c=$('iNorthRotLock');if(c)c.checked=!!on;
+ if(!quiet)toast(on?`North locked at ${Math.round(+$('iNorthA').value||0)}° — tap 🔒 to unlock`:'North unlocked — drag the arrow to turn it',2200);
+ draw()}
 function drawNorth(g){g.setTransform(1,0,0,1,0,0);const ang=(+($('iNorthA').value||0))*Math.PI/180;const cx=northPos.x,cy=northPos.y,r=22*(hud.north.scale||1);
  g.save();g.translate(cx,cy);g.rotate(ang);g.fillStyle='rgba(255,255,255,.92)';g.beginPath();g.arc(0,0,r+8,0,Math.PI*2);g.fill();g.strokeStyle='#888';g.lineWidth=1;g.stroke();
  g.beginPath();g.moveTo(0,-r);g.lineTo(7*(r/22),8*(r/22));g.lineTo(0,2*(r/22));g.lineTo(-7*(r/22),8*(r/22));g.closePath();g.fillStyle='#222';g.fill();
@@ -2910,6 +2918,12 @@ function drawNorth(g){g.setTransform(1,0,0,1,0,0);const ang=(+($('iNorthA').valu
  g.fillStyle=hud.north.locked?'#c0392b':'rgba(255,255,255,.92)';g.fill();g.strokeStyle='#888';g.lineWidth=1;g.stroke();
  g.fillStyle=hud.north.locked?'#fff':'#555';g.font='9px Segoe UI';g.textAlign='center';g.textBaseline='middle';
  g.fillText(hud.north.locked?'📌':'📍',lx,ly+0.5);g.textAlign='left';g.textBaseline='alphabetic';
+ // V15.9: rotation lock (bottom badge) -- once north is set, lock it so a stray drag can't turn it
+ const rl=northRotLockPos(),rk=!!hud.north.rotLocked;g.beginPath();g.arc(rl.x,rl.y,rl.r,0,Math.PI*2);
+ g.fillStyle=rk?'#c0392b':'rgba(255,255,255,.92)';g.fill();g.strokeStyle=rk?'#922b21':'#888';g.lineWidth=1;g.stroke();
+ g.font=`${Math.round(rl.r*1.25)}px Segoe UI`;g.textAlign='center';g.textBaseline='middle';g.fillStyle=rk?'#fff':'#555';g.fillText(rk?'🔒':'🔓',rl.x,rl.y+0.5);
+ if(rk){g.font='600 10px Segoe UI';g.fillStyle='#c0392b';g.fillText(`${Math.round(+$('iNorthA').value||0)}°`,rl.x+rl.r+14,rl.y+0.5)}
+ g.textAlign='left';g.textBaseline='alphabetic';
  // small drag handle (right side) — grab here to FLOAT (reposition) the compass; grab the ring
  // itself to rotate it. Hidden while position-locked -- nothing to drag, so no handle to show.
  if(hud.north.locked)return;
@@ -2970,14 +2984,14 @@ function applySmartDefaultsIfEmpty(){const lat=+$('iDayLat').value,lon=+$('iDayL
  if(!$('iDayDate').value)$('iDayDate').value=d.date;if(!$('iDayTime').value)$('iDayTime').value=d.time;
  $('iDayUTC').value=d.utcOff;
  $('dayDefaultNote').textContent=`Defaults filled in: winter solstice (worst-case sun angle) at solar noon, timezone estimated from longitude (UTC${d.utcOff>=0?'+':''}${d.utcOff}) — standard practice for a first-pass study. Change any field to override.`}
-function openDayModal(){if(typeof paDayReady==='function')paDayReady();$('iDayOn').checked=true;$('dayNorth').value=$('iNorthA').value||0;
+function openDayModal(){if(typeof paDayReady==='function')paDayReady();$('iDayOn').checked=true;$('dayNorth').value=$('iNorthA').value||0;$('dayNorth').disabled=!!hud.north.rotLocked;
  applySmartDefaultsIfEmpty();
  if(!$('dayDefaultNote').textContent&&!($('iDayLat').value&&$('iDayLon').value))$('dayDefaultNote').textContent='Search an address or use your location below, then a sensible default date/time fills in automatically.';
  $('dayModal').style.display='flex';refreshDaylight()}
 function closeDayModal(){$('dayModal').style.display='none'}
 $('bOpenDay').onclick=openDayModal;$('dayClose').onclick=closeDayModal;
 $('dayRun').onclick=()=>{refreshDaylight();toast(sunInfo()?'Daylight analysis updated on the plan':'Enter latitude & longitude first',3000)};
-$('dayNorth').onchange=()=>{$('iNorthA').value=$('dayNorth').value;draw()};
+$('dayNorth').onchange=()=>{if(hud.north.rotLocked){$('dayNorth').value=$('iNorthA').value;return}$('iNorthA').value=$('dayNorth').value;draw()};
 $('dayGeoloc').onclick=()=>{if(!navigator.geolocation){$('dayGeoMsg').textContent='Geolocation is not available in this browser.';return}
  $('dayGeoMsg').textContent='Locating…';
  navigator.geolocation.getCurrentPosition(pos=>{$('iDayLat').value=pos.coords.latitude.toFixed(6);$('iDayLon').value=pos.coords.longitude.toFixed(6);
@@ -3668,13 +3682,14 @@ function drawDraftDims(o,g,k){
  g.restore()}
 cv.onmousedown=e=>{if(typeof ssIsoMode!=='undefined'&&ssIsoMode&&e.button!==1){ssIsoClick(e);return}
  if($('iNorth').checked){
-  const nr=22*(hud.north.scale||1);
-  if(Math.hypot(e.offsetX-(northPos.x-nr-9),e.offsetY-northPos.y)<8){
+  const nr=22*(hud.north.scale||1),hr=hudHitR(),rl=northRotLockPos();
+  if(Math.hypot(e.offsetX-rl.x,e.offsetY-rl.y)<Math.max(hr,rl.r+2)){northSetRotLock(!hud.north.rotLocked);return}
+  if(Math.hypot(e.offsetX-(northPos.x-nr-9),e.offsetY-northPos.y)<hr){
    hud.north.locked=!hud.north.locked;applyHudVisuals();
    toast(hud.north.locked?'North arrow position locked':'North arrow position unlocked',2000);
    draw();return}
-  if(!hud.north.locked&&Math.hypot(e.offsetX-(northPos.x+nr+9),e.offsetY-northPos.y)<8){drag={northMove:1,dx:e.offsetX-northPos.x,dy:e.offsetY-northPos.y};cv.style.cursor='grabbing';return}
-  if(Math.hypot(e.offsetX-northPos.x,e.offsetY-northPos.y)<nr+8){drag={northDrag:1};cv.style.cursor='grabbing';return}}
+  if(!hud.north.locked&&Math.hypot(e.offsetX-(northPos.x+nr+9),e.offsetY-northPos.y)<hr){drag={northMove:1,dx:e.offsetX-northPos.x,dy:e.offsetY-northPos.y};cv.style.cursor='grabbing';return}
+  if(Math.hypot(e.offsetX-northPos.x,e.offsetY-northPos.y)<nr+8){if(hud.north.rotLocked){toast(`North is locked at ${Math.round(+$('iNorthA').value||0)}° — tap 🔒 under the arrow to unlock`,2200);return}drag={northDrag:1};cv.style.cursor='grabbing';return}}
  // V13.5: the scale bar's 📌/⠿ icon (its left-hand gutter strip) is now a real clickable
  // position-lock toggle, same affordance other HUD widgets already had via an on-widget gear
  // button -- previously this lock was only reachable from the side panel's Display box.
@@ -3823,7 +3838,7 @@ cv.onmousemove=e=>{const raw=toW(e.offsetX,e.offsetY),w=gp(raw);mouse=(tool==='s
  $('fCur').textContent=`X ${pxM(raw.x).toFixed(2)} m  Y ${pxM(raw.y).toFixed(2)} m`;
  if(drag&&drag.pan){view.x=drag.vx+e.offsetX-drag.sx;view.y=drag.vy+e.offsetY-drag.sy}
  else if(drag&&drag.northMove){northPos.x=e.offsetX-drag.dx;northPos.y=e.offsetY-drag.dy;lt='Repositioning north arrow'}
- else if(drag&&drag.northDrag){const ang=Math.round(Math.atan2(e.offsetX-northPos.x,-(e.offsetY-northPos.y))*180/Math.PI);$('iNorthA').value=ang;lt=`North ${ang}°`}
+ else if(drag&&drag.northDrag&&!hud.north.rotLocked){const ang=Math.round(Math.atan2(e.offsetX-northPos.x,-(e.offsetY-northPos.y))*180/Math.PI);$('iNorthA').value=ang;lt=`North ${ang}°`}
  else if(drag&&drag.scaleBarMove){scaleBarPos={x:e.offsetX-drag.dx,y:e.offsetY-drag.dy};lt='Repositioning scale bar'}
  else if(drag&&drag.gcMove){const dx=raw.x-drag.last.x,dy=raw.y-drag.last.y;
   gcSel.forEach(o=>{if(o.locked)return;if(isGridLine(o)){o.x1+=dx;o.y1+=dy;o.x2+=dx;o.y2+=dy}else{o.x+=dx;o.y+=dy}});
@@ -5271,6 +5286,7 @@ function applyHudVisuals(){
  $('northScaleLbl').textContent=Math.round((hud.north.scale||1)*100)+'%';
  $('scaleBarScaleLbl').textContent=Math.round((hud.scalebar.scale||1)*100)+'%';
  $('iNorthLock').checked=hud.north.locked;$('iScaleBarLock').checked=hud.scalebar.locked;
+ $('iNorthRotLock').checked=!!hud.north.rotLocked;$('iNorthA').disabled=!!hud.north.rotLocked;if($('dayNorth'))$('dayNorth').disabled=!!hud.north.rotLocked;
  positionMetricsBelowView3d()}
 function openHudGear(key,btnEl){hudGearTarget=key;const st=hud[key];
  $('hgLock').checked=!!st.locked;
@@ -5292,6 +5308,7 @@ document.addEventListener('mousedown',e=>{if($('hudGearMenu').style.display==='b
 // North arrow + scale bar live on the canvas, not as HTML docks -- their lock/size controls sit
 // in the side panel's Display box instead of a gear popover.
 $('iNorthLock').onchange=()=>{hud.north.locked=$('iNorthLock').checked;draw()};
+$('iNorthRotLock').onchange=()=>northSetRotLock($('iNorthRotLock').checked);
 $('bNorthSmaller').onclick=()=>{hud.north.scale=Math.max(.6,(hud.north.scale||1)-.1);applyHudVisuals();draw()};
 $('bNorthBigger').onclick=()=>{hud.north.scale=Math.min(1.8,(hud.north.scale||1)+.1);applyHudVisuals();draw()};
 $('iScaleBarLock').onchange=()=>{hud.scalebar.locked=$('iScaleBarLock').checked;draw()};
@@ -6729,7 +6746,7 @@ function paInputHtml(is){const a=paAssume();
  if(is.input==='entrance')return`<div class="row" style="margin-top:6px"><div><label>Entrance room</label><select id="paEntry">${ssZones().map(z=>`<option value="${esc(z.id)}">${esc(ssZoneLabel(z))}</option>`).join('')}</select></div><div style="flex:0;align-self:flex-end"><button class="pri" data-pa="entrance">Set</button></div></div>`;
  return''}
 function paApplyInput(kind,is){
- if(kind==='north'){const v=+$('paNorth').value||0;$('iNorthA').value=v;if($('iNorthA').onchange)$('iNorthA').onchange();S.northOk=true}
+ if(kind==='north'){const v=+$('paNorth').value||0;$('iNorthA').value=v;if($('iNorthA').onchange)$('iNorthA').onchange();S.northOk=true;northSetRotLock(true,true)}
  else if(kind==='assume'){const wallH=Math.max(1.8,+$('paWallH').value||2.7),doorH=Math.min(wallH,Math.max(1.8,+$('paDoorH').value||2.05)),sillH=Math.max(0,+$('paSillH').value||.9);
   S.assume={wallH,doorH,sillH,ok:true};if($('iDayHt'))$('iDayHt').value=wallH}
  else if(kind==='zoneName'){const nm=$('paZName').value.trim();if(!nm){toast('Type a name first');return false}const z=is.obj,cat=$('paZCat').value;push();z.name=nm;
@@ -6991,7 +7008,7 @@ function paAiIssues(add){const pct=c=>c?` · ${Math.round(c*100)}% sure`:'',done
   else if(s.kind==='stairs')add({...base,title:'🤖 Stairs here',detail:`${pxM(s.box.w).toFixed(1)} × ${pxM(s.box.h).toFixed(1)} m${pct(s.conf)}.`,at:{x:s.box.x+s.box.w/2,y:s.box.y+s.box.h/2},fixes:[{l:'Add stairs',fn:()=>{push();S.objs.push({type:'stairs',id:nextId(),x:s.box.x,y:s.box.y,w:s.box.w,h:s.box.h,dir:'up',rot:0,treads:12,stroke:'#555',fill:'#eee',traced:1,conf:'ai'});done(s,'accepted');sync()}},rej]});
   else if(s.kind==='furniture'){const K=FURNITURE_KINDS[s.fk]||{};add({...base,sev:'info',title:`🤖 ${K.label||s.fk}`,detail:`Furniture symbol in the drawing${pct(s.conf)} — adding it gives the 3D view and the visibility analysis its real height.`,at:{x:s.box.x+s.box.w/2,y:s.box.y+s.box.h/2},
    fixes:[{l:'Add',fn:()=>{push();S.objs.push({type:'furniture',id:nextId(),x:s.box.x,y:s.box.y,w:s.box.w,h:s.box.h,rot:0,kind:s.fk,name:K.label||s.fk,fill:'#d9c6ad',stroke:'#555555',traced:1,conf:'ai'});done(s,'accepted');sync()}},rej]})}
-  else if(s.kind==='north')add({...base,title:`🤖 North arrow reads ${s.angle}°`,detail:`From the drawing's north symbol${pct(s.conf)}. Currently ${+$('iNorthA').value||0}°.`,fixes:[{l:'Use '+s.angle+'°',fn:()=>{$('iNorthA').value=s.angle;if($('iNorthA').onchange)$('iNorthA').onchange();S.northOk=true;done(s,'accepted')}},rej]});
+  else if(s.kind==='north')add({...base,title:`🤖 North arrow reads ${s.angle}°`,detail:`From the drawing's north symbol${pct(s.conf)}. Currently ${+$('iNorthA').value||0}°.`,fixes:[{l:(hud.north.rotLocked?'Unlock & use ':'Use ')+s.angle+'°',fn:()=>{if(hud.north.rotLocked)northSetRotLock(false,true);$('iNorthA').value=s.angle;if($('iNorthA').onchange)$('iNorthA').onchange();S.northOk=true;done(s,'accepted')}},rej]});
   else if(s.kind==='areascale')add({...base,title:`🔤 Written areas say the scale is ${Math.round(s.diff*100)}% off`,detail:`${s.n} rooms have their area printed on the plan; they read ${s.ratio>1?'larger':'smaller'} than the trace by a steady ×${s.ratio.toFixed(3)} (${s.list}). That points at the drawing scale: 1 px = ${s.scale.toFixed(3)} mm instead of ${(+S.scale).toFixed(3)} mm. Check before accepting — every size changes.`,at:s.at,
    fixes:[{l:'Use this scale',fn:()=>{setScale(s.scale,`Scale set from ${s.n} areas written on the plan`);done(s,'accepted');sync()}},rej]});
   else if(s.kind==='scale')add({...base,sev:s.diff>.1||!S.verified?'should':'info',title:`🤖 Dimension “${s.value}” suggests a different scale`,detail:`It reads 1 px = ${s.scale.toFixed(3)} mm; the plan is set to ${(+S.scale).toFixed(3)} mm (${Math.round(s.diff*100)}% apart)${pct(s.conf)}. Check before accepting — every size changes.`,at:{x:(s.a.x+s.b.x)/2,y:(s.a.y+s.b.y)/2},seg:[s.a,s.b],
