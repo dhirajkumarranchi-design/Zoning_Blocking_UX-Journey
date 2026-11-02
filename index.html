@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.6</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.7</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -380,7 +380,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.6</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.7</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bBell" title="Notifications" style="display:none">🔔<span id="bellN"></span></button><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -1094,7 +1094,7 @@ input[type=date],input[type=time]{color-scheme:dark}
     <button class="pri" id="cwSendLink">✉ Email me a sign-in code</button>
    </div>
    <div class="row" id="cwCodeRow" style="display:none;margin-top:8px;align-items:flex-end">
-    <div style="flex:1"><label>6-digit code from the email</label><input id="cwCode" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" maxlength="10"></div>
+    <div style="flex:1"><label>6-digit code — or paste the link from the email</label><input id="cwCode" autocomplete="one-time-code" placeholder="123456  or  https://…"></div>
     <button class="pri" id="cwVerify">Sign in</button>
    </div>
    <div class="sub" id="cwLoginMsg" style="margin-top:6px;min-height:14px"></div>
@@ -5543,14 +5543,32 @@ function cloudSignIn(){const email=$('cwEmail').value.trim().toLowerCase();
  sb.auth.signInWithOtp({email,options:opts}).then(({error})=>{
   if(error){$('cwLoginMsg').textContent='Could not send — '+error.message;return}
   cloudState.codeFor=email;$('cwCodeRow').style.display='flex';
-  $('cwLoginMsg').innerHTML=`Sent to <b>${escHtml(email)}</b>. Type the 6-digit code from the email below${web?' — or click the link in it':''}.`+(web?'':' (The link only works from the web version of the app; the code works anywhere.)');
+  $('cwLoginMsg').innerHTML=`Sent to <b>${escHtml(email)}</b>. Type the 6-digit code from the email below. No code in the email? <b>Copy the link</b> in it (long-press / right-click → Copy link — don't open it) and paste it in the same box. Works inside Miro and on iPad too.`;
   setTimeout(()=>{const c=$('cwCode');if(c&&c.focus)c.focus()},0)})}
-function cloudVerifyCode(){const email=cloudState.codeFor||$('cwEmail').value.trim().toLowerCase(),token=$('cwCode').value.replace(/\s+/g,'');
- if(!/^\d{6,10}$/.test(token)){$('cwLoginMsg').textContent='Enter the code from the email (6 digits).';return}
+function cloudVerifyCode(){const raw=$('cwCode').value.trim();if(/^https?:\/\//i.test(raw)||/[#?&](token|token_hash|access_token)=/.test(raw))return cloudSignInFromLink(raw);
+ const email=cloudState.codeFor||$('cwEmail').value.trim().toLowerCase(),token=raw.replace(/\s+/g,'');
+ if(!/^\d{6,10}$/.test(token)){$('cwLoginMsg').textContent='Enter the code from the email (6 digits), or paste the link from it.';return}
  $('cwLoginMsg').textContent='Checking…';
  sb.auth.verifyOtp({email,token,type:'email'}).then(({error})=>{
   if(error){$('cwLoginMsg').textContent='That code didn’t work — '+error.message+'. Codes expire after an hour; send a new one if needed.';return}
   $('cwCode').value='';$('cwCodeRow').style.display='none';$('cwLoginMsg').textContent=''})}
+// sign in with the link from the email pasted into the app -- for places where clicking it can't
+// sign THIS copy in (inside Miro's frame, the iPad app): the link carries a one-time token, the app
+// redeems it itself. Also takes the address the link lands on (#access_token=...) if it was opened.
+function cloudSignInFromLink(raw){let u;try{u=new URL(raw.replace(/&amp;/g,'&'))}catch(e){try{u=new URL('https://x/?'+raw.replace(/^[#?]/,''))}catch(e2){u=null}}
+ if(!u){$('cwLoginMsg').textContent='That doesn’t look like the link from the email.';return Promise.resolve(false)}
+ const P=new URLSearchParams(u.search),Hh=new URLSearchParams(u.hash.replace(/^#/,'')),g=k=>P.get(k)||Hh.get(k);
+ const done=({error})=>{if(error){$('cwLoginMsg').textContent='That link didn’t work — '+error.message+'. Links work once and expire after an hour: if you opened it already, send a new one and copy the link without opening it.';return false}
+  $('cwCode').value='';$('cwCodeRow').style.display='none';$('cwLoginMsg').textContent='';return true};
+ if(g('error_description')){$('cwLoginMsg').textContent='That link has expired or was already used ('+g('error_description').replace(/\+/g,' ')+'). Send a new one.';return Promise.resolve(false)}
+ $('cwLoginMsg').textContent='Checking…';
+ if(g('access_token')&&g('refresh_token'))return sb.auth.setSession({access_token:g('access_token'),refresh_token:g('refresh_token')}).then(done);
+ const th=g('token_hash')||g('token');
+ // mail apps sometimes wrap links (google.com/url?q=…, Outlook safelinks ?url=…): unwrap and retry
+ const inner=!th&&['q','url','u','target'].map(g).find(v=>v&&/^https?:\/\//i.test(v));if(inner)return cloudSignInFromLink(inner);
+ if(!th){$('cwLoginMsg').textContent='That link has no sign-in token in it — copy the button/link in the email itself.';return Promise.resolve(false)}
+ const type=g('type')||'magiclink';
+ return sb.auth.verifyOtp({token_hash:th,type}).then(r=>r.error&&type!=='email'?sb.auth.verifyOtp({token_hash:th,type:'email'}):r).then(done)}
 function cloudSignOut(){if(typeof rtLeaveChannel==='function')rtLeaveChannel();clearTimeout(cloudAutosaveTimer);if(sb)sb.auth.signOut();cloudResetState(false);cloudUiRefreshStep()}
 function cloudClaimInvites(){if(!sb||typeof sb.rpc!=='function')return Promise.resolve();return sb.rpc('claim_invites').then(()=>{},()=>{})}
 // ---- workspaces ----
