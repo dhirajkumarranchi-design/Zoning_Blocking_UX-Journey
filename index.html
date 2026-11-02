@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.5</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.6</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -380,7 +380,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.5</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.6</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bBell" title="Notifications" style="display:none">🔔<span id="bellN"></span></button><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -5491,7 +5491,7 @@ function loadProjectObj(obj){hist=[];fut=[];
 // Filled in once the owner sends their Supabase Project URL + anon public key (both are meant
 // to be public -- RLS is what protects the data). Empty = the admin can still connect from the
 // panel, saved in this browser only.
-const CLOUD_BUILTIN={url:'',key:''};
+const CLOUD_BUILTIN={url:'https://mtwaoryqtdsyswotopjm.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im10d2FvcnlxdGRzeXN3b3RvcGptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1OTUyNjUsImV4cCI6MjEwOTE3MTI2NX0.spwMP92KccXGQxayZffh2uoQ1StOqBYD_9Jc_5RGqYc'};
 const CLOUD_ROLE_RANK={owner:4,editor:3,commenter:2,viewer:1};
 let sb=null,cloudState={email:null,workspaces:[],activeWs:null,wsName:'',wsRole:null,wsMembers:[],projects:[],activeProject:null,projName:'',projRole:null,projPrivate:false,projMembers:[],
  boards:[],activeBoard:null,boardName:'',lastLoadedAt:null,codeFor:null,saving:false,savedAt:null,dirty:false,comments:[],replyDrafts:{},notifs:[],previewing:null,versions:[]};
