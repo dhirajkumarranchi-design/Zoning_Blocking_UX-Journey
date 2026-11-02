@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.4</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.5</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -277,7 +277,13 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}tr:hover td{backgro
 .sub{color:var(--mut);font-size:11px}
 .foot{padding:10px 14px;font-size:12.5px;background:var(--panel2);border-top:1px solid var(--line)}
 .bar{height:6px;background:#3a3a3a;border-radius:3px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--acc)}
-footer{grid-area:st;background:var(--panel);border-top:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:0 14px;font-size:11.5px;color:var(--mut)}
+footer{grid-area:st;background:var(--panel);border-top:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:0 14px;font-size:11.5px;color:var(--mut);white-space:nowrap;overflow:hidden;min-width:0}
+footer>span{white-space:nowrap;flex:0 0 auto}
+footer #cmdLine{width:min(190px,16vw)!important}
+footer .fHint{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+footer .fHintTouch{display:none}
+@media (hover:none) and (pointer:coarse){footer .fHintMouse{display:none}footer .fHintTouch{display:inline}}
+@media (max-width:1100px){footer{gap:10px}footer #fSel{display:none}}
 /* modal */
 #modal,#vmodal,#scaleSetupModal,#settingsModal,#dayModal,#lightModal,#floorNameModal,#exportModal,#libModal,#wallifyScopeModal,#cloudModal,#ssJModal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:60} /* above the floating HUD (46) and Plan assistant (47) */
 /* Furniture library is a floating PALETTE, not a blocking modal -- it has to stay open and the
@@ -295,7 +301,7 @@ footer{grid-area:st;background:var(--panel);border-top:1px solid var(--line);dis
 #paHandle{cursor:move}
 #paPanel .box h4{margin:0 0 6px}
 #paPanel label{display:block}
-#paPanel button.pri,#paPanel #bPaUntrace,#paPanel #bPaCheck,#paPanel #bPaAiNames{width:100%;margin-top:8px}
+#paPanel button.pri,#paPanel #bPaUntrace,#paPanel #bPaCheck,#paPanel #bPaAiNames,#paPanel #bPaOcrNames{width:100%;margin-top:8px}
 #paProgWrap{display:none;margin-top:8px;height:6px;border-radius:3px;background:var(--panel2);overflow:hidden}#paProg{height:100%;width:0;background:var(--acc)}
 .paChip{display:inline-block;border:1px solid;border-radius:10px;padding:1px 8px;font-size:11.5px;margin:6px 4px 0 0}
 .paCard{border:1px solid var(--line);border-left:4px solid;border-radius:8px;padding:8px 10px;margin-top:8px;background:var(--panel2)}
@@ -306,6 +312,10 @@ footer{grid-area:st;background:var(--panel);border-top:1px solid var(--line);dis
 .paDot{flex:0 0 20px;height:20px;border-radius:50%;color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
 .paOk{color:#3fb950;margin-top:8px}
 #ssReady{font-size:12px;line-height:1.45}
+.ssType{display:inline-block;min-width:16px;text-align:center;border-radius:4px;color:#111;font-weight:700;font-size:11px;padding:0 3px}
+.ssRead{margin-top:10px;font-size:12.5px}.ssRead table{width:100%}
+.ssIsoBox{margin-top:8px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px}.ssIsoBox table{width:100%;margin:4px 0}.ssIsoBox a{color:var(--acc)}
+#bIsoPt.on{border-color:var(--acc);color:var(--acc)}
 .cwCrumb{margin:10px 0 4px;padding:7px 10px;background:var(--panel2);border-radius:8px;font-size:12.5px}
 .cwLvl{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}.cwLvl h4{margin:0 0 6px;font-size:13px;color:var(--txt);text-transform:none;letter-spacing:0;display:flex;gap:8px;align-items:center}
 #cloudModal details{margin-top:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px}#cloudModal summary{cursor:pointer;font-size:12.5px}
@@ -370,7 +380,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.4</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.5</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bBell" title="Notifications" style="display:none">🔔<span id="bellN"></span></button><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -521,6 +531,12 @@ input[type=date],input[type=time]{color-scheme:dark}
     <div id="paProgWrap"><div id="paProg"></div></div>
     <div id="paTraceMsg" class="sub" style="margin-top:6px"></div>
     <button id="bPaUntrace">Remove traced elements</button>
+   </div>
+   <div class="box"><h4>1a · Read the plan's text <span class="sub">· no AI</span></h4>
+    <div class="sub">Reads the room names and areas printed on the drawing with open-source OCR that runs on your device (the reader, a few MB, downloads once; the plan never leaves your device). Names come back as suggestions in the check list; written areas cross-check the scale.</div>
+    <button class="pri" id="bPaOcr">🔤 Read room names &amp; areas</button>
+    <div id="paOcrMsg" class="sub" style="margin-top:6px"></div>
+    <button id="bPaOcrNames" style="display:none">Accept all names read from the plan</button>
    </div>
    <div class="box"><h4>1b · AI review <span class="sub">· optional second layer</span></h4>
     <div class="sub">Shows an AI the plan and your trace, and asks only for what code can't know: room names written on the drawing, what each gap really is, walls or doors the trace missed, stairs &amp; furniture, the north arrow, and a dimension to cross-check the scale. Every answer comes back as a suggestion in the check list to accept or reject — nothing is changed on its own. Nothing is sent until you click.</div>
@@ -678,21 +694,25 @@ input[type=date],input[type=time]{color-scheme:dark}
    <label><input type="checkbox" id="ssOpenEdges" checked> Touching zones with no wall between count as connected (open plan)</label>
    <button class="pri" id="bSsRun" style="width:100%;margin-top:8px">&#9654; Analyse room graph</button>
    <div class="row" style="margin-top:8px"><div><label>Colour zones by</label><select id="ssMetric">
-    <option value="integ">Integration (HH)</option><option value="depth">Step depth from entrance</option><option value="conn">Connectivity</option><option value="choice">Choice (through-movement)</option><option value="control">Control</option></select></div></div>
+    <option value="integ">Integration (HH)</option><option value="depth">Step depth from entrance</option><option value="conn">Connectivity</option><option value="r3">Local integration (R3)</option><option value="choice">Choice (through-movement)</option><option value="control">Control</option><option value="type">Space type (a / b / c / d)</option></select></div></div>
    <label><input type="checkbox" id="ssShowGraph" checked> Show graph on the plan</label>
    <div id="ssMsg" class="sub" style="margin-top:6px"></div>
    <div class="row" style="margin-top:6px"><button id="bSsJgraph" style="flex:1">&#127795; Justified graph</button><button id="bSsCsv" style="flex:1">&#10515; CSV</button></div>
   </div>
-  <div class="scroll"><table><thead><tr><th>Zone</th><th class="n">Conn</th><th class="n">Depth</th><th class="n">Integ.</th><th class="n">Choice</th></tr></thead><tbody id="tSs"></tbody></table></div>
+  <div class="scroll"><table><thead><tr><th>Zone</th><th class="n" title="Hillier space type">Type</th><th class="n">Conn</th><th class="n">Depth</th><th class="n">Integ.</th><th class="n" title="Local integration, radius 3">R3</th></tr></thead><tbody id="tSs"></tbody></table></div>
+  <div class="box" id="ssReadings" style="display:none"></div>
   <div class="box"><h4>Space syntax · visibility (VGA)</h4>
    <div class="sub">Lays a grid over every zone and works out which spots can see which, with walls blocking sight (doors left open). Shows how visible and connected each spot on the floor is &mdash; the classic depthmap heatmap.</div>
    <div class="row" style="margin-top:8px"><div><label>Grid cell</label><select id="vgaCell"><option value=".5">0.5 m</option><option value=".75" selected>0.75 m</option><option value="1">1 m</option><option value="1.5">1.5 m</option></select></div>
-    <div><label>Show</label><select id="vgaMetric"><option value="integ">Visual integration</option><option value="conn">Visual connectivity</option><option value="depth">Visual depth from entrance</option></select></div></div>
+    <div><label>Show</label><select id="vgaMetric"><option value="integ">Visual integration</option><option value="conn">Visual connectivity</option><option value="depth">Visual depth from entrance</option><option value="walk">Walking distance from entrance (m)</option><option value="iso">Isovist area (m²)</option></select></div></div>
    <label><input type="checkbox" id="vgaFurn"> Furniture blocks sight (knee level)</label>
    <button class="pri" id="bVgaRun" style="width:100%;margin-top:8px">&#9654; Run visibility analysis</button>
    <div id="vgaProgWrap" style="display:none;margin-top:8px;height:6px;border-radius:3px;background:var(--panel2);overflow:hidden"><div id="vgaProg" style="height:100%;width:0;background:var(--acc)"></div></div>
    <label><input type="checkbox" id="vgaShow" checked> Show heatmap on the plan</label>
    <div id="vgaMsg" class="sub" style="margin-top:6px"></div>
+   <button id="bIsoPt" style="width:100%;margin-top:8px">📍 Isovist at a point</button>
+   <div class="sub" style="margin-top:4px">Tap anywhere to see exactly what's visible from that spot — useful for a reception desk, a security post or a display wall. Works without running the analysis.</div>
+   <div id="ssIsoStats"></div>
   </div>
   <div class="box"><div id="ssLegend"></div><button id="bSsClear" style="width:100%;margin-top:8px">Clear analysis</button></div>
  </div>
@@ -909,7 +929,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </aside>
 <footer><span id="fScale"></span><span id="fCur"></span><span id="fZoom"></span><span id="fSel"></span>
  <span style="display:flex;align-items:center;gap:5px"><label for="cmdLine" style="opacity:.75">Command:</label><input id="cmdLine" title="AutoCAD-style command line — type a tool or action name/abbreviation (MOVE, M, ROTATE, RO, RECTANG, REC, LINE, ERASE, COPY, ARRAY, UNDO…) and press Enter. Esc clears it. This never collides with the single-key shortcuts below, which only fire outside text boxes." placeholder="type a command, Enter to run" style="width:190px;background:#161616;color:#eee;border:1px solid #444;border-radius:3px;padding:2px 7px;font-size:11.5px"></span>
- <span style="flex:1"></span><span>Wheel zoom · Space-drag pan · Shift-click / box multi-select · Shift = 90° · Rotate (O): 10° steps, Shift 90°, Ctrl/Cmd+Shift 45° · Ctrl+A/C/V · Ctrl+Shift+D duplicate · Ctrl+D Daylight · Del · Command line ← AutoCAD-style (type MOVE, RO, REC, LINE, ERASE…)</span></footer>
+ <span style="flex:1 1 0;min-width:0"></span><span class="fHint fHintTouch" title="Touch gestures">Pinch to zoom · two-finger drag to pan · long-press for the menu · double-tap to finish a shape or rename a zone</span><span class="fHint fHintMouse" title="Wheel zoom · Space-drag pan · Shift-click / box multi-select · Shift = 90° · Rotate (O): 10° steps, Shift 90°, Ctrl/Cmd+Shift 45° · Ctrl+A/C/V · Ctrl+Shift+D duplicate · Ctrl+D Daylight · Del · Command line ← AutoCAD-style (type MOVE, RO, REC, LINE, ERASE…)">Wheel zoom · Space-drag pan · Shift-click / box multi-select · Shift = 90° · Rotate (O): 10° steps, Shift 90°, Ctrl/Cmd+Shift 45° · Ctrl+A/C/V · Ctrl+Shift+D duplicate · Ctrl+D Daylight · Del · Command line ← AutoCAD-style (type MOVE, RO, REC, LINE, ERASE…)</span></footer>
 
 <div id="modal"><div class="mdl">
  <h3 id="impTitle">Import space program</h3>
@@ -3642,7 +3662,7 @@ function drawDraftDims(o,g,k){
    stamp(`${o.n||6} sides`,o.x,o.y-r-15/k-fs*1.3);
    stamp2(pxToM2(area),o.x,o.y)}}
  g.restore()}
-cv.onmousedown=e=>{
+cv.onmousedown=e=>{if(typeof ssIsoMode!=='undefined'&&ssIsoMode&&e.button!==1){ssIsoClick(e);return}
  if($('iNorth').checked){
   const nr=22*(hud.north.scale||1);
   if(Math.hypot(e.offsetX-(northPos.x-nr-9),e.offsetY-northPos.y)<8){
@@ -5990,7 +6010,24 @@ function ssGraphMetrics(adj,entry){const k=adj.length,out=[];
   const dl=new Array(k).fill(0);while(st.length){const w=st.pop();for(const v of P[w])dl[v]+=sig[v]/sig[w]*(1+dl[w]);if(w!==s)CB[w]+=dl[w]}}
  for(let s=0;s<k;s++)out[s].choice=CB[s]/2;
  const de=entry>=0?ssBfs(adj,entry):new Array(k).fill(-1);for(let s=0;s<k;s++)out[s].depth=de[s]>=0?de[s]:null;
+ // local integration, radius 3 (same HH normalisation, over the rooms within 3 steps)
+ for(let s=0;s<k;s++){const d=ssBfs(adj,s);let td=0,r=0;d.forEach(x=>{if(x>0&&x<=3){td+=x;r++}});const K=r+1,md=K>1?td/(K-1):null,ra=(md!=null&&K>2)?2*(md-1)/(K-2):null,dk=ssDk(K),rra=(ra!=null&&dk)?ra/dk:null;
+  out[s].r3=rra!=null?1/Math.max(rra,.01):null}
+ const ty=ssSpaceTypes(adj);for(let s=0;s<k;s++)out[s].type=ty[s];
  return out}
+// Hillier's space types: a = dead end (one link); b = on a tree branch, not on any ring (removing
+// it cuts the plan in two); c = on exactly one ring; d = where rings meet (2+ rings through it).
+// Rings come from bridge detection: an edge on any cycle is not a bridge.
+function ssSpaceTypes(adj){const k=adj.length,disc=new Array(k).fill(-1),low=new Array(k).fill(0),bridge=new Set();let t=0;
+ const key=(a,b)=>a<b?a+','+b:b+','+a;
+ for(let r=0;r<k;r++){if(disc[r]>=0)continue;const st=[[r,-1,0]];disc[r]=low[r]=t++;
+  while(st.length){const fr=st[st.length-1],[v,par]=fr;if(fr[2]<adj[v].length){const w=adj[v][fr[2]++];if(w===par)continue;
+    if(disc[w]<0){disc[w]=low[w]=t++;st.push([w,v,0])}else low[v]=Math.min(low[v],disc[w])}
+   else{st.pop();if(par>=0){low[par]=Math.min(low[par],low[v]);if(low[v]>disc[par])bridge.add(key(par,v))}}}}
+ return adj.map((nb,v)=>{if(nb.length<=1)return'a';const ring=nb.filter(w=>!bridge.has(key(v,w))).length;return ring===0?'b':ring===2?'c':'d'})}
+function ssR2(xs,ys){const P=xs.map((x,i)=>[x,ys[i]]).filter(([x,y])=>x!=null&&y!=null&&isFinite(x)&&isFinite(y));if(P.length<3)return null;
+ const n=P.length,mx=P.reduce((a,p)=>a+p[0],0)/n,my=P.reduce((a,p)=>a+p[1],0)/n;let sxy=0,sxx=0,syy=0;P.forEach(([x,y])=>{sxy+=(x-mx)*(y-my);sxx+=(x-mx)**2;syy+=(y-my)**2});
+ return sxx&&syy?(sxy*sxy)/(sxx*syy):null}
 function ssPickEntry(G){
  const want=S.ssEntryId;if(want){const i=G.zs.findIndex(o=>o.id===want);if(i>=0)return{i,src:'chosen'}}
  if(G.ext.length){let best=G.ext[0];G.ext.forEach(e=>{if(G.areas[e.i]>G.areas[best.i])best=e});return{i:best.i,src:'exterior door'}}
@@ -5999,7 +6036,7 @@ function ssRunGraph(){
  const zs=ssZones();if(zs.length<2){ssGraph=null;ssSetMsg('ssMsg','Need at least 2 visible zones to analyse.');ssRenderPanel();draw();return null}
  const G=ssBuildGraph($('ssOpenEdges').checked),en=ssPickEntry(G),M=ssGraphMetrics(G.adj,en.i);
  ssGraph={ids:G.zs.map(o=>o.id),names:G.zs.map(ssZoneLabel),areas:G.areas,edges:G.edges,adj:G.adj,m:M,entry:en.i,entrySrc:en.src,ext:G.ext.map(e=>({i:e.i,x:e.door.x,y:e.door.y})),
-  walls:G.solids,sig:ssSig(),floor:curFloor};
+  walls:G.solids,cats:G.zs.map(o=>o.cat||'Other'),sig:ssSig(),floor:curFloor};
  ssStale.graph=false;ssRenderPanel();draw();return ssGraph}
 // ---- (B) visibility graph ----
 function ssYield(){return new Promise(r=>setTimeout(r,0))}
@@ -6071,30 +6108,53 @@ async function ssRunVga(){const tok=++ssVgaTok,t0=performance.now();
  let src=0,bd=Infinity;for(let i=0;i<n;i++){const d=Math.hypot(X0+(cells[2*i]+.5)*c-ep.x,Y0+(cells[2*i+1]+.5)*c-ep.y);if(d<bd){bd=d;src=i}}
  const depth=new Float64Array(n).fill(NaN);dist.fill(-1);dist[src]=0;{let h=0,t=0;queue[t++]=src;
   while(h<t){const v=queue[h++];depth[v]=dist[v];for(let e=off[v];e<off[v+1];e++){const w=adj[e];if(dist[w]<0){dist[w]=dist[v]+1;queue[t++]=w}}}}
- ssVga={x0:X0,y0:Y0,c,cols,rows,cells,n,conn,md,integ,depth,src,sampled:m<n?m:0,cellM,coarsened,furnBlocks,walls:ns,comps:compSize.length,
+ // walking distance (metres) from the same entrance point: 8-neighbour steps between floor cells
+ // that don't cross a wall (no squeezing diagonally past a wall corner)
+ const walk=new Float64Array(n).fill(NaN);{const dd=new Float64Array(n).fill(Infinity),hp=[];
+  const hpush=(d,v)=>{hp.push([d,v]);let i=hp.length-1;while(i>0){const q=(i-1)>>1;if(hp[q][0]<=hp[i][0])break;const t=hp[q];hp[q]=hp[i];hp[i]=t;i=q}};
+  const hpop=()=>{const top=hp[0],l=hp.pop();if(hp.length){hp[0]=l;let i=0;for(;;){const a=2*i+1,b=a+1;let m=i;if(a<hp.length&&hp[a][0]<hp[m][0])m=a;if(b<hp.length&&hp[b][0]<hp[m][0])m=b;if(m===i)break;const t=hp[m];hp[m]=hp[i];hp[i]=t;i=m}}return top};
+  const STEP=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,Math.SQRT2],[1,-1,Math.SQRT2],[-1,1,Math.SQRT2],[-1,-1,Math.SQRT2]];
+  dd[src]=0;hpush(0,src);
+  while(hp.length){const [d,v]=hpop();if(d>dd[v])continue;const gx=cells[2*v],gy=cells[2*v+1],ax=X0+(gx+.5)*c,ay=Y0+(gy+.5)*c;
+   for(const [ox,oy,w] of STEP){const nx=gx+ox,ny=gy+oy;if(nx<0||ny<0||nx>=cols||ny>=rows)continue;const fu=floor[ny*cols+nx];if(fu<0)continue;const u=fu/2; // floor[] holds the cell's offset in the x,y pairs array
+    if(ox&&oy&&(floor[gy*cols+nx]<0||floor[ny*cols+gx]<0))continue;
+    const bx=X0+(nx+.5)*c,by=Y0+(ny+.5)*c;sid++;
+    if(blocked(ax,ay,bx,by,gy*cols+gx)||blocked(ax,ay,bx,by,ny*cols+nx)||(ox&&oy&&(blocked(ax,ay,bx,by,gy*cols+nx)||blocked(ax,ay,bx,by,ny*cols+gx))))continue;
+    const nd=d+w*c;if(nd<dd[u]){dd[u]=nd;hpush(nd,u)}}}
+  for(let i=0;i<n;i++)walk[i]=isFinite(dd[i])?pxM(dd[i]):NaN}
+ // isovist area of every grid point (48 sight rays each)
+ const IB=ssBlockers(furnBlocks),iso=new Float64Array(n),RAYS=48,maxT=Math.hypot(X1-X0,Y1-Y0)+c;last=performance.now();
+ for(let i=0;i<n;i++){const ax=X0+(cells[2*i]+.5)*c,ay=Y0+(cells[2*i+1]+.5)*c;let A=0,px=0,py=0;
+  for(let r=0;r<=RAYS;r++){const a=r/RAYS*Math.PI*2,dx=Math.cos(a),dy=Math.sin(a),t=ssRayHit(ax,ay,dx,dy,IB,maxT),x=dx*t,y=dy*t;if(r)A+=px*y-x*py;px=x;py=y}
+  iso[i]=pxToM2(Math.abs(A)/2);
+  if(performance.now()-last>30){ssProgress(.95);await ssYield();last=performance.now();if(tok!==ssVgaTok)return null}}
+ let walkMax=0;for(let i=0;i<n;i++)if(isFinite(walk[i])&&walk[i]>walkMax)walkMax=walk[i];
+ ssVga={x0:X0,y0:Y0,c,cols,rows,cells,n,conn,md,integ,depth,walk,iso,walkMax,src,sampled:m<n?m:0,cellM,coarsened,furnBlocks,walls:ns,comps:compSize.length,
   secs:(performance.now()-t0)/1000,sig:ssSig(),floor:curFloor};
  ssStale.vga=false;ssProgress(null);ssRenderPanel();draw();return ssVga}
 function ssProgress(f){const w=$('vgaProgWrap');if(!w)return;if(f==null){w.style.display='none';return}w.style.display='block';$('vgaProg').style.width=Math.round(f*100)+'%'}
 // ---- shared: ranges, drawing, panel ----
 function ssRange(arr){let lo=Infinity,hi=-Infinity;for(const v of arr){if(v==null||!isFinite(v))continue;if(v<lo)lo=v;if(v>hi)hi=v}return lo<=hi?[lo,hi]:[0,1]}
 // depth: shallow (near the entrance) is red/"hot", deep is blue -- everything else: high = red
-const ssInvert=met=>met==='depth';
-function ssGraphVals(met){return ssGraph.m.map(r=>met==='depth'?r.depth:met==='conn'?r.conn:met==='choice'?r.choice:met==='control'?r.control:r.integ)}
-function ssVgaVals(met){return met==='conn'?ssVga.conn:met==='depth'?ssVga.depth:ssVga.integ}
+const ssInvert=met=>met==='depth'||met==='walk';
+const SS_TYPE_COL={a:'#4a9eda',b:'#2ecc71',c:'#f1c40f',d:'#e5534b'},SS_TYPE_TXT={a:'a · dead end',b:'b · on a branch',c:'c · on one ring',d:'d · where rings meet'};
+function ssGraphVals(met){return ssGraph.m.map(r=>met==='type'?'abcd'.indexOf(r.type):met==='r3'?r.r3:met==='depth'?r.depth:met==='conn'?r.conn:met==='choice'?r.choice:met==='control'?r.control:r.integ)}
+function ssVgaVals(met){return met==='conn'?ssVga.conn:met==='depth'?ssVga.depth:met==='walk'?ssVga.walk:met==='iso'?ssVga.iso:ssVga.integ}
 function drawSyntax(g,k){
  const showV=!!(ssVga&&ssVga.floor===curFloor&&$('vgaShow').checked),showG=!!(ssGraph&&ssGraph.floor===curFloor&&$('ssShowGraph').checked);
- if(!showV&&!showG)return;
+ if(!showV&&!showG){if(typeof ssIso!=='undefined'&&ssIso)drawIsovist(g,k);return}
  const byId=new Map(S.objs.filter(isZone).map(o=>[o.id,o]));g.save();
  if(showV){const met=$('vgaMetric').value,arr=ssVgaVals(met),[lo,hi]=ssRange(arr),inv=ssInvert(met),V=ssVga,pad=.6/k;g.globalAlpha=.8;
   for(let i=0;i<V.n;i++){const v=arr[i];g.fillStyle=isFinite(v)?ssColor(inv?1-(v-lo)/((hi-lo)||1):(v-lo)/((hi-lo)||1)):'#6b6b6b';
    g.fillRect(V.x0+V.cells[2*i]*V.c,V.y0+V.cells[2*i+1]*V.c,V.c+pad,V.c+pad)}}
  else{const met=$('ssMetric').value,vals=ssGraphVals(met),[lo,hi]=ssRange(vals),inv=ssInvert(met);g.globalAlpha=.45;
   ssGraph.ids.forEach((id,i)=>{const o=byId.get(id);if(!o)return;const v=vals[i];
-   g.fillStyle=v==null?'#6b6b6b':ssColor(inv?1-(v-lo)/((hi-lo)||1):(v-lo)/((hi-lo)||1));const p=pts(o);
+   g.fillStyle=met==='type'?SS_TYPE_COL[ssGraph.m[i].type]:v==null?'#6b6b6b':ssColor(inv?1-(v-lo)/((hi-lo)||1):(v-lo)/((hi-lo)||1));const p=pts(o);
    g.beginPath();p.forEach((q,j)=>j?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y));g.closePath();g.fill()})}
  g.globalAlpha=1;
  // keep walls/doors crisp on top of the colour wash
  S.objs.forEach(o=>{if((o.type==='wall'||o.type==='door'||o.type==='window')&&layerVisible(o))drawObj(o,g,k)});
+ if(typeof ssIso!=='undefined'&&ssIso)drawIsovist(g,k);
  if(showG){const C=ssGraph.ids.map(id=>{const o=byId.get(id);return o?centerOf(o):null});
   ssGraph.edges.forEach(e=>{const a=C[e.i],b=C[e.j];if(!a||!b)return;const p=e.p||{x:(a.x+b.x)/2,y:(a.y+b.y)/2};
    g.setLineDash(e.kind==='door'?[]:e.kind==='open'?[7/k,5/k]:[2/k,4/k]);
@@ -6103,7 +6163,7 @@ function drawSyntax(g,k){
    g.setLineDash([]);g.fillStyle='#fff';g.beginPath();g.arc(p.x,p.y,3/k,0,Math.PI*2);g.fill()});
   g.setLineDash([]);const met=$('ssMetric').value,vals=ssGraphVals(met),[lo,hi]=ssRange(vals),inv=ssInvert(met),r=12/k;
   C.forEach((c0,i)=>{if(!c0)return;const v=vals[i],m=ssGraph.m[i];
-   g.fillStyle=v==null?'#6b6b6b':ssColor(inv?1-(v-lo)/((hi-lo)||1):(v-lo)/((hi-lo)||1));g.strokeStyle='#fff';g.lineWidth=2/k;
+   g.fillStyle=met==='type'?SS_TYPE_COL[m.type]:v==null?'#6b6b6b':ssColor(inv?1-(v-lo)/((hi-lo)||1):(v-lo)/((hi-lo)||1));g.strokeStyle='#fff';g.lineWidth=2/k;
    g.beginPath();g.arc(c0.x,c0.y,r,0,Math.PI*2);g.fill();g.stroke();
    if(i===ssGraph.entry){g.strokeStyle='#111';g.lineWidth=2.5/k;g.beginPath();g.arc(c0.x,c0.y,r+4/k,0,Math.PI*2);g.stroke()}
    g.fillStyle='#fff';g.font=`700 ${11/k}px Segoe UI`;g.textAlign='center';g.textBaseline='middle';
@@ -6126,22 +6186,25 @@ function ssRenderPanel(){if(!$('pSyn'))return;ssRenderEntry();
    (iso?`<br>${iso} zone(s) connect to nothing at all.`:''));
   const rows=G.m.map((r,i)=>({r,i})).sort((a,b)=>(b.r.integ||0)-(a.r.integ||0));
   rows.forEach(({r,i})=>{const tr=document.createElement('tr');tr.style.cursor='pointer';
-   tr.innerHTML=`<td>${esc(G.names[i])}${i===G.entry?' <span class="sub">(in)</span>':''}</td><td class="n">${r.conn}</td><td class="n">${r.depth==null?'×':r.depth}</td><td class="n">${ssFmt(r.integ,2)}</td><td class="n">${ssFmt(r.choice,1)}</td>`;
+   tr.innerHTML=`<td>${esc(G.names[i])}${i===G.entry?' <span class="sub">(in)</span>':''}</td><td class="n"><span class="ssType" style="background:${SS_TYPE_COL[r.type]}">${r.type}</span></td><td class="n">${r.conn}</td><td class="n">${r.depth==null?'×':r.depth}</td><td class="n">${ssFmt(r.integ,2)}</td><td class="n">${ssFmt(r.r3,2)}</td>`;
    tr.onclick=()=>{const o=S.objs.find(x=>x.id===G.ids[i]);if(o){sels=[o];loadSel();draw()}};tb.appendChild(tr)})}
+ ssRenderReadings();
  if(ssVga){const V=ssVga;ssSetMsg('vgaMsg',(ssStale.vga?'<b style="color:#e5534b">⚠ Plan changed since this ran — re-run to update.</b><br>':'')+
    `${V.n.toLocaleString()} grid points at ${V.cellM.toFixed(2)} m${V.coarsened?' (grid made coarser to fit)':''} · ${V.walls} wall pieces${V.furnBlocks?' + furniture':''} · ${V.secs.toFixed(1)} s.<br>`+
    (V.sampled?`Integration estimated from ${V.sampled.toLocaleString()} evenly spread sample points (plan too big for every-point exact).`:'Integration exact (every point).')+
    (V.comps>1?`<br>${V.comps} separate visible regions — some areas can't see into each other at all.`:'')+
+   (V.walkMax?`<br>Farthest point is <b>${V.walkMax.toFixed(1)} m</b> walk from the entrance (around walls, through doors). A planning check only — not a code-compliant egress calculation.`:'')+
    (!S.verified?'<br><b>Scale not verified</b> — grid size in metres may be off.':''))}
  ssRenderLegend();if(typeof ssRenderReady==='function')ssRenderReady()}
 function ssRenderLegend(){const el=$('ssLegend');if(!el)return;
  const useV=ssVga&&$('vgaShow').checked,useG=!useV&&ssGraph&&$('ssShowGraph').checked;
  if(!useV&&!useG){el.innerHTML='<div class="sub">Run an analysis to see the colour key.</div>';return}
  const met=useV?$('vgaMetric').value:$('ssMetric').value,vals=useV?ssVgaVals(met):ssGraphVals(met),[lo,hi]=ssRange(vals),inv=ssInvert(met);
+ if(!useV&&met==='type'){el.innerHTML='<div class="sub" style="margin-bottom:4px">Space type (Hillier)</div>'+'abcd'.split('').map(t=>`<div style="display:flex;align-items:center;gap:6px;font-size:12px;margin:2px 0"><span class="ssType" style="background:${SS_TYPE_COL[t]}">${t}</span>${SS_TYPE_TXT[t].slice(4)} <span class="sub">(${ssGraph.m.filter(r=>r.type===t).length})</span></div>`).join('');return}
  const name=useV?$('vgaMetric').selectedOptions[0].textContent:$('ssMetric').selectedOptions[0].textContent;
- const d=met==='depth'||met==='conn'?0:2;
+ const d=met==='depth'||met==='conn'?0:met==='walk'||met==='iso'?1:2,u=met==='walk'?' m':met==='iso'?' m²':'';
  el.innerHTML=`<div class="sub" style="margin-bottom:4px">${esc(name)}${useV?' (heatmap)':''}</div><div style="height:10px;border-radius:5px;background:linear-gradient(90deg,${SS_PAL[0]},${SS_PAL[8]},${SS_PAL[16]},${SS_PAL[24]},${SS_PAL[32]})"></div>`+
-  `<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-top:3px"><span>${inv?ssFmt(hi,d)+' (deep)':ssFmt(lo,d)+' (low)'}</span><span>${inv?ssFmt(lo,d)+' (shallow)':ssFmt(hi,d)+' (high)'}</span></div>`}
+  `<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-top:3px"><span>${inv?ssFmt(hi,d)+u+(met==='walk'?' (far)':' (deep)'):ssFmt(lo,d)+u+' (low)'}</span><span>${inv?ssFmt(lo,d)+u+(met==='walk'?' (near)':' (shallow)'):ssFmt(hi,d)+u+' (high)'}</span></div>`}
 function ssOnSync(){if(!$('pSyn'))return;if($('pSyn').classList.contains('on'))ssRenderEntry();
  if(!ssGraph&&!ssVga)return;const sig=ssSig(),g0=ssStale.graph,v0=ssStale.vga;
  if(ssGraph)ssStale.graph=ssGraph.sig!==sig;if(ssVga)ssStale.vga=ssVga.sig!==sig;
@@ -6166,9 +6229,67 @@ function ssJustifiedSVG(){if(!ssGraph)return null;const G=ssGraph,k=G.ids.length
    `<text x="${p.x}" y="${p.y+34}" font-size="10.5" fill="#333" text-anchor="middle">${esc(G.names[i].length>16?G.names[i].slice(0,15)+'…':G.names[i])}</text></g>`)});
  P.push('</svg>');return P.join('')}
 function ssCsv(){if(!ssGraph)return null;const G=ssGraph,q=s=>`"${String(s).replace(/"/g,'""')}"`;
- const L=[['Zone','Area m2','Connectivity','Step depth from entrance','Mean depth','RA','RRA','Integration (HH)','Choice','Control','Entrance'].join(',')];
- G.m.forEach((r,i)=>L.push([q(G.names[i]),pxToM2(G.areas[i]).toFixed(2),r.conn,r.depth==null?'':r.depth,ssFmt(r.md,3),ssFmt(r.ra,4),ssFmt(r.rra,4),ssFmt(r.integ,3),ssFmt(r.choice,2),ssFmt(r.control,3),i===G.entry?'yes':''].join(',')));
+ const L=[['Zone','Category','Area m2','Space type','Connectivity','Step depth from entrance','Mean depth','RA','RRA','Integration (HH)','Local integration R3','Choice','Control','Entrance'].join(',')];
+ G.m.forEach((r,i)=>L.push([q(G.names[i]),q((G.cats||[])[i]||''),pxToM2(G.areas[i]).toFixed(2),r.type,r.conn,r.depth==null?'':r.depth,ssFmt(r.md,3),ssFmt(r.ra,4),ssFmt(r.rra,4),ssFmt(r.integ,3),ssFmt(r.r3,3),ssFmt(r.choice,2),ssFmt(r.control,3),i===G.entry?'yes':''].join(',')));
  return L.join('\n')}
+// ---- V15.5: readings -- intelligibility, synergy, integration by function ----
+const SS_EXPECT={'Public':'high','Circulation':'high','Retail / Concession':'high','Back-of-House':'low','Mechanical / Electrical':'low','Storage':'low'};
+function ssScatterSvg(xs,ys,xl,yl){const P=xs.map((x,i)=>[x,ys[i]]).filter(([x,y])=>x!=null&&y!=null&&isFinite(x)&&isFinite(y));if(P.length<3)return'';
+ const W=250,H=150,pad=28,[x0,x1]=ssRange(P.map(p=>p[0])),[y0,y1]=ssRange(P.map(p=>p[1])),X=x=>pad+(x-x0)/((x1-x0)||1)*(W-pad-8),Y=y=>H-pad-(y-y0)/((y1-y0)||1)*(H-pad-8);
+ const n=P.length,mx=P.reduce((a,p)=>a+p[0],0)/n,my=P.reduce((a,p)=>a+p[1],0)/n;let sxy=0,sxx=0;P.forEach(([x,y])=>{sxy+=(x-mx)*(y-my);sxx+=(x-mx)**2});const b=sxx?sxy/sxx:0,a=my-b*mx;
+ return`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;display:block;margin-top:4px"><rect x="${pad}" y="4" width="${W-pad-4}" height="${H-pad-4}" fill="none" stroke="currentColor" stroke-opacity=".25"/>`+
+  `<line x1="${X(x0)}" y1="${Y(a+b*x0)}" x2="${X(x1)}" y2="${Y(a+b*x1)}" stroke="#e6a23c" stroke-width="1.5" stroke-dasharray="4 3"/>`+
+  P.map(([x,y])=>`<circle cx="${X(x).toFixed(1)}" cy="${Y(y).toFixed(1)}" r="3" fill="#4a9eda" fill-opacity=".8"/>`).join('')+
+  `<text x="${W/2+pad/2}" y="${H-6}" font-size="10" fill="currentColor" fill-opacity=".7" text-anchor="middle">${xl}</text><text x="10" y="${(H-pad)/2}" font-size="10" fill="currentColor" fill-opacity=".7" text-anchor="middle" transform="rotate(-90 10 ${(H-pad)/2})">${yl}</text></svg>`}
+function ssR2Words(r){return r==null?'not enough rooms to tell':r>=.6?'strong':r>=.35?'moderate':'weak'}
+function ssRenderReadings(){const el=$('ssReadings');if(!el)return;if(!ssGraph||ssGraph.m.length<3){el.style.display='none';return}el.style.display='block';
+ const M=ssGraph.m,conn=M.map(r=>r.conn),integ=M.map(r=>r.integ),r3=M.map(r=>r.r3),ri=ssR2(conn,integ),rs=ssR2(r3,integ);
+ const types=['a','b','c','d'].map(t=>`<span class="ssType" style="background:${SS_TYPE_COL[t]}">${t}</span> ${M.filter(r=>r.type===t).length}`).join(' &nbsp;');
+ // integration by function
+ const byCat={};M.forEach((r,i)=>{if(r.integ==null)return;const c=(ssGraph.cats||[])[i]||'Other';(byCat[c]=byCat[c]||[]).push(r.integ)});
+ const rows=Object.entries(byCat).map(([c,v])=>({c,n:v.length,mean:v.reduce((a,b)=>a+b,0)/v.length})).sort((a,b)=>b.mean-a.mean);
+ const third=Math.max(1,Math.ceil(rows.length/3)),flags=[];
+ rows.forEach((r,i)=>{const e=SS_EXPECT[r.c];if(rows.length<3||!e)return;
+  if(e==='high'&&i>=rows.length-third)flags.push(`⚠ <b>${esc(r.c)}</b> spaces are among the most <i>segregated</i> — hard to find / reach for visitors.`);
+  if(e==='low'&&i<third)flags.push(`⚠ <b>${esc(r.c)}</b> spaces are among the most <i>integrated</i> — likely to get through-traffic they shouldn't.`)});
+ el.innerHTML=`<h4>Readings</h4>
+  <div class="ssRead"><b>Intelligibility</b> r² = ${ri==null?'–':ri.toFixed(2)} <span class="sub">(${ssR2Words(ri)})</span><div class="sub">How well what you can see locally (connectivity) predicts how central a room really is (integration). High = easy to find your way.</div>${ssScatterSvg(conn,integ,'connectivity','integration')}</div>
+  <div class="ssRead"><b>Synergy</b> r² = ${rs==null?'–':rs.toFixed(2)} <span class="sub">(${ssR2Words(rs)})</span><div class="sub">Whether local structure (R3) agrees with the whole-plan structure. High = the parts and the whole work the same way.</div></div>
+  <div class="ssRead"><b>Space types</b> &nbsp;${types}<div class="sub">a dead ends · b branches (no way round) · c on one loop · d where loops meet. Many c/d = more route choice; mostly a/b = a deep tree.</div></div>
+  <div class="ssRead"><b>Integration by function</b>${rows.length?`<table style="margin-top:4px"><tr><th>Category</th><th class="n">Rooms</th><th class="n">Mean integ.</th></tr>${rows.map(r=>`<tr><td>${esc(r.c)}</td><td class="n">${r.n}</td><td class="n">${r.mean.toFixed(2)}</td></tr>`).join('')}</table>`:'<div class="sub">Name rooms and give them categories to see this.</div>'}
+   ${flags.length?`<div style="margin-top:6px;font-size:12px;line-height:1.5">${flags.join('<br>')}</div>`:rows.length>=3?'<div class="sub" style="margin-top:4px">✔ Public / circulation spaces are integrated and back-of-house ones are tucked away, as expected.</div>':''}</div>`}
+// ---- isovists ----
+// what blocks a line of sight: solid walls (doors open), the outer edge of the zoned floor, and
+// (optionally) furniture
+function ssBlockers(furn){const B=ssWallSolids().map(s=>[s.a.x,s.a.y,s.b.x,s.b.y]),zs=ssZones();
+ if(zs.length){const loops=unionPolys(zs.map(o=>ensureCCW(pts(o))));loops.forEach(L=>L.forEach((p,i)=>{const q=L[(i+1)%L.length];B.push([p.x,p.y,q.x,q.y])}))}
+ if(furn)S.objs.filter(o=>o.type==='furniture'&&layerVisible(o)).forEach(o=>{const p=pts(o);p.forEach((a,i)=>{const b=p[(i+1)%p.length];B.push([a.x,a.y,b.x,b.y])})});
+ return B}
+function ssRayHit(ax,ay,dx,dy,B,maxT){let best=maxT;for(let i=0;i<B.length;i++){const s=B[i],ex=s[2]-s[0],ey=s[3]-s[1],den=dx*ey-dy*ex;if(den>-1e-12&&den<1e-12)continue;
+  const fx=s[0]-ax,fy=s[1]-ay,t=(fx*ey-fy*ex)/den,u=(fx*dy-fy*dx)/den;if(t>1e-6&&t<best&&u>=-1e-9&&u<=1+1e-9)best=t}return best}
+function ssIsovist(pt,B,rays){rays=rays||360;const maxT=mPx(120),poly=[],rad=[];
+ for(let k=0;k<rays;k++){const a=k/rays*Math.PI*2,dx=Math.cos(a),dy=Math.sin(a),t=ssRayHit(pt.x,pt.y,dx,dy,B,maxT);rad.push(t);poly.push({x:pt.x+dx*t,y:pt.y+dy*t})}
+ const A=areaPx(poly);let P=0,occ=0;for(let i=0;i<poly.length;i++){const q=poly[(i+1)%poly.length],d=Math.hypot(q.x-poly[i].x,q.y-poly[i].y);P+=d;if(Math.abs(rad[(i+1)%rays]-rad[i])>mPx(.5))occ+=d}
+ const c=centroid(poly),m2=pxToM2(A),pm=pxM(P);
+ return{pt,poly,area:m2,perim:pm,compact:pm?4*Math.PI*m2/(pm*pm):0,maxR:pxM(Math.max(...rad)),minR:pxM(Math.min(...rad)),meanR:pxM(rad.reduce((a,b)=>a+b,0)/rays),occl:pxM(occ),drift:pxM(Math.hypot(c.x-pt.x,c.y-pt.y)),open:rad.some(r=>r>=maxT*.999)}}
+var ssIso=null,ssIsoMode=false;
+function ssIsoToggle(on){ssIsoMode=on==null?!ssIsoMode:on;$('bIsoPt').classList.toggle('on',ssIsoMode);$('bIsoPt').textContent=ssIsoMode?'📍 Tap the plan… (click here to stop)':'📍 Isovist at a point';
+ cv.style.cursor=ssIsoMode?'crosshair':'';if(!ssIsoMode&&!ssIso)$('ssIsoStats').innerHTML='';draw()}
+function ssIsoClick(e){const w=toW(e.offsetX,e.offsetY);ssIso=ssIsovist(w,ssBlockers($('vgaFurn').checked),360);
+ const inZ=ssZones().some(z=>inPoly(w,pts(z))),I=ssIso;
+ $('ssIsoStats').innerHTML=`<div class="ssIsoBox"><b>Isovist</b>${inZ?'':' <span class="sub">(point is outside every zone)</span>'}<table>
+  <tr><td>Visible area</td><td class="n">${I.area.toFixed(1)} m²</td></tr><tr><td>Perimeter</td><td class="n">${I.perim.toFixed(1)} m</td></tr>
+  <tr><td title="1 = a circle; low = spiky / many views out">Compactness</td><td class="n">${I.compact.toFixed(2)}</td></tr>
+  <tr><td title="Total length of edges where a view continues past an obstacle">Occlusivity</td><td class="n">${I.occl.toFixed(1)} m</td></tr>
+  <tr><td>Longest view</td><td class="n">${I.maxR.toFixed(1)} m</td></tr><tr><td>Mean / nearest</td><td class="n">${I.meanR.toFixed(1)} / ${I.minR.toFixed(2)} m</td></tr>
+  <tr><td title="How far the visible area's centre is from you — high = the view pulls you one way">Drift</td><td class="n">${I.drift.toFixed(1)} m</td></tr></table>${I.open?'<div class="sub">⚠ Some views run off the plan — an outer wall may be missing.</div>':''}
+  <a href="#" id="ssIsoClear">Clear</a></div>`;
+ $('ssIsoClear').onclick=ev=>{ev.preventDefault();ssIso=null;$('ssIsoStats').innerHTML='';draw()};draw()}
+function drawIsovist(g,k){if(!ssIso)return;const I=ssIso;g.save();g.fillStyle='rgba(255,214,90,.28)';g.strokeStyle='#e6a23c';g.lineWidth=1.5/k;
+ g.beginPath();I.poly.forEach((p,i)=>i?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y));g.closePath();g.fill();g.stroke();
+ g.fillStyle='#e6a23c';g.strokeStyle='#fff';g.lineWidth=2/k;g.beginPath();g.arc(I.pt.x,I.pt.y,6/k,0,Math.PI*2);g.fill();g.stroke();g.restore()}
+$('bIsoPt').onclick=()=>ssIsoToggle();
+
 $('bSsRun').onclick=()=>ssRunGraph();
 $('bVgaRun').onclick=()=>{ssRunVga().catch(e=>{ssProgress(null);ssSetMsg('vgaMsg','Analysis failed: '+esc(e.message))})};
 $('ssEntry').onchange=e=>{S.ssEntryId=e.target.value||null;if(ssGraph)ssRunGraph()};
@@ -6242,14 +6363,14 @@ function paCloseMask(m,W,H,g){const n=W*H,inv=new Uint8Array(n);for(let i=0;i<n;
  const d=paDT(inv,W,H,false),lim=Math.round(g*3),dil=new Uint8Array(n);for(let i=0;i<n;i++)dil[i]=m[i]||d[i]<=lim?1:0;
  const de=paDT(dil,W,H,true),out=new Uint8Array(n);for(let i=0;i<n;i++)out[i]=dil[i]&&de[i]>lim?1:0;
  for(let i=0;i<n;i++)if(m[i])out[i]=1;return out}
-function paBands(M,W,H,horiz,Lmin,tol,minT,maxT){const segs=[],closed=[],A=horiz?H:W,B=horiz?W:H;let active=[];
+function paBands(M,W,H,horiz,Lmin,tol,minT,maxT,curvy){const segs=[],closed=[],A=horiz?H:W,B=horiz?W:H;let active=[];
  for(let a=0;a<=A;a++){const runs=[];
   if(a<A){let b=0;while(b<B){const on=horiz?M[a*W+b]:M[b*W+a];if(on){const s=b;while(b<B&&(horiz?M[a*W+b]:M[b*W+a]))b++;if(b-s>=Lmin)runs.push([s,b-1])}else b++}}
   const next=[],used=new Set();
   for(const r of runs){let hit=null;for(const bd of active){if(used.has(bd))continue;if(Math.abs(r[0]-bd.l0)<=tol&&Math.abs(r[1]-bd.l1)<=tol){hit=bd;break}}
-   if(hit){used.add(hit);hit.a1=a;hit.l0=r[0];hit.l1=r[1];hit.s0+=r[0];hit.s1+=r[1];hit.n++;next.push(hit)}
-   else next.push({a0:a,a1:a,l0:r[0],l1:r[1],s0:r[0],s1:r[1],n:1})}
-  for(const bd of active)if(!used.has(bd))closed.push({a0:bd.a0,a1:bd.a1,s0:bd.s0/bd.n,s1:bd.s1/bd.n+1});
+   if(hit){used.add(hit);hit.a1=a;hit.l0=r[0];hit.l1=r[1];hit.s0+=r[0];hit.s1+=r[1];hit.n++;hit.m0=Math.min(hit.m0,r[0]);hit.M0=Math.max(hit.M0,r[0]);hit.m1=Math.min(hit.m1,r[1]);hit.M1=Math.max(hit.M1,r[1]);next.push(hit)}
+   else next.push({a0:a,a1:a,l0:r[0],l1:r[1],s0:r[0],s1:r[1],n:1,m0:r[0],M0:r[0],m1:r[1],M1:r[1]})}
+  for(const bd of active)if(!used.has(bd))closed.push({a0:bd.a0,a1:bd.a1,s0:bd.s0/bd.n,s1:bd.s1/bd.n+1,m0:bd.m0,M0:bd.M0,m1:bd.m1,M1:bd.M1});
   active=next}
  // strips stacked directly on each other (a window or a hatch line splitting one wall's rows)
  // are one wall: merge when they touch across rows and overlap >= half the shorter one
@@ -6258,8 +6379,15 @@ function paBands(M,W,H,horiz,Lmin,tol,minT,maxT){const segs=[],closed=[],A=horiz
    if(B.a0>A.a1+1||A.a0>B.a1+1)continue;const ov=Math.min(A.s1,B.s1)-Math.max(A.s0,B.s0);if(ov<.5*Math.min(A.s1-A.s0,B.s1-B.s0)||ov<.3*Math.max(A.s1-A.s0,B.s1-B.s0))continue;
    // only wall-shaped strips (longer than thick, not already over-thick) and only if the result is still a wall
    const tA=A.a1-A.a0+1,tB=B.a1-B.a0+1;if(tA>maxT||tB>maxT||A.s1-A.s0<1.2*tA||B.s1-B.s0<1.2*tB||Math.max(A.a1,B.a1)-Math.min(A.a0,B.a0)+1>maxT)continue;
-   A.a0=Math.min(A.a0,B.a0);A.a1=Math.max(A.a1,B.a1);A.s0=Math.min(A.s0,B.s0);A.s1=Math.max(A.s1,B.s1);closed.splice(j,1);changed=true;break}}
- closed.forEach(bd=>{const t=bd.a1-bd.a0+1;if(t>=minT&&t<=maxT)segs.push({h:horiz,c:(bd.a0+bd.a1+1)/2,s0:bd.s0,s1:bd.s1,t})});
+   A.a0=Math.min(A.a0,B.a0);A.a1=Math.max(A.a1,B.a1);A.s0=Math.min(A.s0,B.s0);A.s1=Math.max(A.s1,B.s1);A.m0=Math.min(A.m0,B.m0);A.M0=Math.max(A.M0,B.M0);A.m1=Math.min(A.m1,B.m1);A.M1=Math.max(A.M1,B.M1);closed.splice(j,1);changed=true;break}}
+ // a strip with wall pixels running along BOTH of its sides is a slice through something wider
+ // that isn't a straight wall here (a curved wall's slices) -- also left for the curve fitter
+ const side=(a,s0,s1)=>{if(a<0||a>=A)return 0;let h=0,n=0;for(let b=Math.ceil(s0);b<s1;b++){n++;if(horiz?M[a*W+b]:M[b*W+a])h++}return n?h/n:0};
+ // both ends drifting steadily across the strip (more than a 45-degree mitre would) = a slice through a
+ // CURVED wall: a straight wall's rows all start and stop in about the same place. Filled walls only --
+ // outline walls get door arcs glued on by the closing, which drift the same way
+ const drift=(bd,t)=>{const lim=Math.max(3*tol,1.5*t,.12*(bd.s1-bd.s0));return bd.M0-bd.m0>lim&&bd.M1-bd.m1>lim};
+ closed.forEach(bd=>{const t=bd.a1-bd.a0+1;if(t>=minT&&t<=maxT&&!(curvy&&drift(bd,t))&&!(side(bd.a0-1,bd.s0,bd.s1)>.5&&side(bd.a1+1,bd.s0,bd.s1)>.5))segs.push({h:horiz,c:(bd.a0+bd.a1+1)/2,s0:bd.s0,s1:bd.s1,t})});
  return segs}
 // connected components (4- or 8-connected) of a mask: {lab:Int32Array, comps:[{n,minx,miny,maxx,maxy,edge}]}
 function paComponents(M,W,H,eight){const lab=new Int32Array(W*H).fill(-1),comps=[],q=new Int32Array(W*H);
@@ -6323,7 +6451,7 @@ async function paTrace(opts){if(paBusy)return null;paBusy=true;
  const ink=paInk(P),rMin=Math.max(1,mm2px(opts.minWall)/2),maxT=Math.max(3,mm2px(opts.maxWall)),minT=Math.max(2,mm2px(opts.minWall)*.6);
  const Lmin=Math.max(4,Math.round(mm2px(200))),tol=Math.max(2,Math.round(mm2px(40)));
  const traceStyle=style=>{const base=style==='hollow'?paCloseMask(ink,W,H,Math.max(1.5,mm2px(Math.min(opts.maxWall,350))/2)):ink;
-  const wm=paOpenMask(base,W,H,rMin);let segs=paBands(wm,W,H,true,Lmin,tol,minT,maxT).concat(paBands(wm,W,H,false,Lmin,tol,minT,maxT));
+  const wm=paOpenMask(base,W,H,rMin);const crv=style!=='hollow';let segs=paBands(wm,W,H,true,Lmin,tol,minT,maxT,crv).concat(paBands(wm,W,H,false,Lmin,tol,minT,maxT,crv));
   // outline-drawn walls: closing also glues text and furniture into blobs, so a band only
   // counts as a wall if real drawn lines run along BOTH of its faces, it's at least 0.45 m long
   // and clearly longer than thick
@@ -6346,11 +6474,22 @@ async function paTrace(opts){if(paBusy)return null;paBusy=true;
  const tmpWalls=segs.map(s=>paSegToWall(s));
  const covered=paRasterWalls(tmpWalls,G,2),left=new Uint8Array(W*H);for(let i=0;i<W*H;i++)left[i]=R.wm[i]&&!covered[i]?1:0;
  const diag=paPcaWalls(left,W,H,mm2px(600),maxT,minT).filter(p=>paFacesInkedLine(ink,W,H,p)).map(p=>({a:{x:p.a.x*f,y:p.a.y*f},b:{x:p.b.x*f,y:p.b.y*f},t:p.t*f}));
+ // whatever is still left (not covered by straight or angled walls) may be curved walls
+ const covered2=paRasterWalls(segs.map(s=>paSegToWall(s)).concat(diag.map(d=>({a:d.a,b:d.b,th:d.t*S.scale}))),G,2),left2=new Uint8Array(W*H);
+ for(let i=0;i<W*H;i++)left2[i]=R.wm[i]&&!covered2[i]?1:0;
+ const arcs=paArcWalls(left2,W,H,ink,mm2px(600),maxT,minT).map(p=>({a:{x:p.a.x*f,y:p.a.y*f},b:{x:p.b.x*f,y:p.b.y*f},bow:p.bow*f,t:p.t*f}));
  paProg(.7,'Building the model…');await paYield();
  push();
  if(opts.replace)S.objs=S.objs.filter(o=>!o.traced);
  const walls=segs.map(s=>{const w=paSegToWall(s);w.traced=1;w.conf=s.conf||'high';S.objs.push(w);return w});
  diag.forEach(d=>{const w={type:'wall',id:nextId(),a:d.a,b:d.b,mat:'opaque',th:Math.round(d.t*S.scale/10)*10||150,color:'#cfcfcf',bow:0,traced:1,conf:'medium'};S.objs.push(w);walls.push(w)});
+ // a curve found in the leftovers starts where the straight walls stop covering it: pull each end onto
+ // the nearest straight-wall end close by, keeping the curve's apex where it was
+ arcs.forEach(d=>{const L0=Math.hypot(d.b.x-d.a.x,d.b.y-d.a.y)||1,apex={x:(d.a.x+d.b.x)/2-(d.b.y-d.a.y)/L0*d.bow,y:(d.a.y+d.b.y)/2+(d.b.x-d.a.x)/L0*d.bow},reach=Math.max(M(.45),d.t*2.2);
+  const ends=walls.flatMap(w=>[w.a,w.b]),snap=p=>{let best=null,bd=reach;ends.forEach(e=>{const q=Math.hypot(e.x-p.x,e.y-p.y);if(q<bd){bd=q;best=e}});return best?{x:best.x,y:best.y}:p};
+  const na=snap(d.a),nb=snap(d.b);if(Math.hypot(nb.x-na.x,nb.y-na.y)<1)return;const L=Math.hypot(nb.x-na.x,nb.y-na.y);
+  d.a=na;d.b=nb;d.bow=((apex.x-(na.x+nb.x)/2)*-(nb.y-na.y)+(apex.y-(na.y+nb.y)/2)*(nb.x-na.x))/L});
+ arcs.forEach(d=>{const w={type:'wall',id:nextId(),a:d.a,b:d.b,mat:'opaque',th:Math.round(d.t*S.scale/10)*10||150,color:'#cfcfcf',bow:d.bow,traced:1,conf:'medium',curved:1};S.objs.push(w);walls.push(w)});
  let nD=0,nW=0,nO=0;
  openings.forEach(op=>{const host=walls.find(w=>w._seg===op.seg);if(!host)return;const L=Math.hypot(host.b.x-host.a.x,host.b.y-host.a.y)||1;
   const mid=op.h?{x:(op.g0+op.g1)/2,y:op.c}:{x:op.c,y:(op.g0+op.g1)/2},t=Math.max(0,Math.min(1,Math.hypot(mid.x-host.a.x,mid.y-host.a.y)/L)),wmm=Math.round((op.g1-op.g0)*S.scale/10)*10;
@@ -6373,9 +6512,9 @@ async function paTrace(opts){if(paBusy)return null;paBusy=true;
   const cat='Other',fill=CATS[cat]?CATS[cat].fill:'#dddddd',stroke=CATS[cat]?CATS[cat].stroke:'#666666';nR++;m2+=r.m2;
   S.objs.push({type:'poly',pts:r.poly,segArc:r.poly.map(_=>0),name:'Room '+nR,cat,fill,stroke,op:+$('iOp').value||.75,num:nextRoomNum(cat),id:nextId(),traced:1,conf:'auto'})})}
  const wallLen=walls.reduce((s,w)=>s+pxM(Math.hypot(w.b.x-w.a.x,w.b.y-w.a.y)),0);
- paLast={walls:walls.length,wallM:wallLen,doors:nD,windows:nW,openings:nO,rooms:nR,m2,style,secs:(performance.now()-t0)/1000,diag:diag.length};
+ paLast={walls:walls.length,wallM:wallLen,doors:nD,windows:nW,openings:nO,rooms:nR,m2,style,secs:(performance.now()-t0)/1000,diag:diag.length,curved:arcs.length};
  sync();paProg(null);
- paMsg('paTraceMsg',`Traced <b>${walls.length}</b> walls (${wallLen.toFixed(1)} m${style==='hollow'?', drawn as outlines':''}${diag.length?`, ${diag.length} angled`:''}), <b>${nD}</b> doors, <b>${nW}</b> windows`+
+ paMsg('paTraceMsg',`Traced <b>${walls.length}</b> walls (${wallLen.toFixed(1)} m${style==='hollow'?', drawn as outlines':''}${diag.length?`, ${diag.length} angled`:''}${arcs.length?`, ${arcs.length} curved`:''}), <b>${nD}</b> doors, <b>${nW}</b> windows`+
   (nO?`, <b>${nO}</b> gaps to confirm`:'')+`, <b>${nR}</b> rooms (${m2.toFixed(1)} m²) in ${paLast.secs.toFixed(1)} s. One undo (Ctrl+Z) reverses it. <b>Next: run the plan check.</b>`);
  return paLast}
  finally{paBusy=false;paProg(null)}}
@@ -6386,6 +6525,43 @@ function paFacesInked(ink,W,H,q){const a0=Math.round(q.c-q.t/2),a1=Math.round(q.
  const cov=a=>{let hit=0,tot=0;for(let b=Math.ceil(q.s0);b<q.s1;b++){tot++;if(at(a,b))hit++}return tot?hit/tot:0};
  let top=-1,bot=-1;for(let a=a0;a<=a1;a++)if(cov(a)>=.7){if(top<0)top=a;bot=a}
  if(top<0||bot-top<2)return false;q.c=(top+bot+1)/2;q.t=bot-top+1;return true}
+// ---- curved walls: fit a quadratic curve (the app's "bow" wall: control point = chord midpoint +
+// normal*bow*2, so the curve's mid-point sits bow px off the chord) to a leftover blob that isn't
+// straight. Ends = the two mutually farthest pixels; bow = the signed sagitta. Accepted only if the
+// blob hugs the curve AND drawn edges run along both of its faces (so text / furniture can't pass);
+// a curve bending too far for one quadratic is split in half and each half fitted on its own.
+function paBezPt(a,b,bow,t){const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy)||1,cx=(a.x+b.x)/2-dy/L*bow*2,cy=(a.y+b.y)/2+dx/L*bow*2,m=1-t;
+ return{x:m*m*a.x+2*m*t*cx+t*t*b.x,y:m*m*a.y+2*m*t*cy+t*t*b.y}}
+function paFitArc(P,M,ink,W,H,minLen,maxT,minT,depth){if(P.length<8)return[];
+ let a0=P[0],far=0;for(const p of P){const d=(p.x-P[0].x)**2+(p.y-P[0].y)**2;if(d>far){far=d;a0=p}}
+ let b0=a0;far=0;for(const p of P){const d=(p.x-a0.x)**2+(p.y-a0.y)**2;if(d>far){far=d;b0=p}}
+ // ends = middle of each end of the stroke (not its corners); bend = the centreline's offset mid-way
+ const L0=Math.hypot(b0.x-a0.x,b0.y-a0.y)||1,u0x=(b0.x-a0.x)/L0,u0y=(b0.y-a0.y)/L0,pr=P.map(p=>(p.x-a0.x)*u0x+(p.y-a0.y)*u0y);
+ let smin=Infinity,smax=-Infinity;pr.forEach(v=>{if(v<smin)smin=v;if(v>smax)smax=v});const rg=smax-smin||1;
+ const cen=(lo,hi)=>{let x=0,y=0,n=0;P.forEach((p,i)=>{if(pr[i]>=lo&&pr[i]<=hi){x+=p.x;y+=p.y;n++}});return n?{x:x/n,y:y/n}:null};
+ const a=cen(smin,smin+rg*.04),b=cen(smax-rg*.04,smax);if(!a||!b)return[];
+ const dx=b.x-a.x,dy=b.y-a.y,L=Math.hypot(dx,dy);if(L<minLen*.6)return[];
+ const nx=-dy/L,ny=dx/L,ux=dx/L,uy=dy/L;let so=0,sn=0;
+ P.forEach(p=>{const t=((p.x-a.x)*ux+(p.y-a.y)*uy)/L;if(t>.45&&t<.55){so+=(p.x-a.x)*nx+(p.y-a.y)*ny;sn++}});const sag=sn?so/sn:0;
+ // arc length + thickness
+ let len=0,prev=a;const S=40,pts=[];for(let i=0;i<=S;i++){const q=paBezPt(a,b,sag,i/S);pts.push(q);if(i)len+=Math.hypot(q.x-prev.x,q.y-prev.y);prev=q}
+ const T=P.length/len;if(len<minLen||T>maxT||T<minT||len/T<3)return[];
+ if(Math.abs(sag)<T*1.2)return[]; // straight enough -- the straight fitters own it
+ // how well the blob hugs the curve
+ const tol=T/2+1.6,dist=p=>{let m=Infinity;for(let i=0;i<S;i++){const d=distToSeg(p,pts[i],pts[i+1]);if(d<m)m=d}return m};
+ const step=Math.max(1,Math.floor(P.length/300));let ok=0,tot=0;for(let i=0;i<P.length;i+=step){tot++;if(dist(P[i])<=tol)ok++}
+ // faces: drawn edges along both sides of the curve
+ const at=(x,y)=>{const X=Math.floor(x),Y=Math.floor(y);for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const xx=X+i,yy=Y+j;if(xx>=0&&yy>=0&&xx<W&&yy<H&&ink[yy*W+xx])return true}return false};
+ const face=sg=>{let h=0,n=0;for(let i=1;i<S;i++){const q=pts[i],r=pts[i+1],tx=r.x-q.x,ty=r.y-q.y,tl=Math.hypot(tx,ty)||1,o=Math.max(0,T/2-.6);n++;if(at(q.x-ty/tl*o*sg,q.y+tx/tl*o*sg))h++}return h/n>=.8};
+ if(ok/tot>=.88&&face(1)&&face(-1))return[{a:{x:a.x,y:a.y},b:{x:b.x,y:b.y},bow:sag,t:T}];
+ if((depth||0)>=2)return[];
+ // too much bend for one curve: split at the point of greatest sagitta and fit each half
+ let split=0,sm=-1;P.forEach((p,i)=>{const d=Math.abs((p.x-a.x)*nx+(p.y-a.y)*ny);if(d>sm){sm=d;split=i}});
+ const s0=P[split],cut=(s0.x-a.x)*ux+(s0.y-a.y)*uy,P1=P.filter(p=>(p.x-a.x)*ux+(p.y-a.y)*uy<cut),P2=P.filter(p=>(p.x-a.x)*ux+(p.y-a.y)*uy>=cut);
+ return[...paFitArc(P1,M,ink,W,H,minLen*.5,maxT,minT,(depth||0)+1),...paFitArc(P2,M,ink,W,H,minLen*.5,maxT,minT,(depth||0)+1)]}
+function paArcWalls(M,W,H,ink,minLen,maxT,minT){const {lab,comps}=paComponents(M,W,H,true),lists=comps.map(()=>[]);
+ for(let i=0;i<W*H;i++){const id=lab[i];if(id>=0&&comps[id].n>=8&&comps[id].n<200000)lists[id].push({x:i%W+.5,y:(i-i%W)/W+.5})}
+ const out=[];lists.forEach(P=>{if(P.length)out.push(...paFitArc(P,M,ink,W,H,minLen,maxT,minT,0))});return out}
 function paFacesInkedLine(ink,W,H,p){const dx=p.b.x-p.a.x,dy=p.b.y-p.a.y,L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,nx=-uy,ny=ux,o=Math.max(0,p.t/2-.6);
  const at=(x,y)=>{const X=Math.floor(x),Y=Math.floor(y);for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const xx=X+i,yy=Y+j;if(xx>=0&&yy>=0&&xx<W&&yy<H&&ink[yy*W+xx])return true}return false};
  const face=sg=>{let hit=0,tot=0;for(let s=0;s<=L;s+=1){tot++;if(at(p.a.x+ux*s+nx*o*sg,p.a.y+uy*s+ny*o*sg))hit++}return tot&&hit/tot>=.8};
@@ -6457,7 +6633,7 @@ function paRunCheck(){const iss=[],ign=new Set(S.paIgnored||[]),add=o=>{if(!ign.
  // traced items that need a human call
  opens.filter(o=>o.traced&&o.type==='door'&&o.dtype==='opening'&&o.conf==='low').forEach(o=>add({key:'gap:'+o.id,sev:'should',title:'Gap in a wall — what is it?',detail:`${(o.wmm/1000).toFixed(2)} m gap with no door swing or window drawn in it.`,at:{x:o.x,y:o.y},fixes:[
   {l:'Door',fn:()=>{push();o.dtype='single';o.swing='in';o.conf='high';sync()}},{l:'Open gap',fn:()=>{push();o.conf='high';sync()}},{l:'Solid wall',fn:()=>{push();S.objs=S.objs.filter(x=>x!==o);sync()}}]}));
- walls.filter(w=>w.traced&&w.conf==='medium').forEach(w=>add({key:'angw:'+w.id,sev:'info',title:'Angled wall found — check it',detail:'Fitted from the drawing; angled walls are traced less precisely than straight ones.',at:{x:(w.a.x+w.b.x)/2,y:(w.a.y+w.b.y)/2},fixes:[
+ walls.filter(w=>w.traced&&w.conf==='medium').forEach(w=>add({key:'angw:'+w.id,sev:'info',title:w.curved?'Curved wall found — check it':'Angled wall found — check it',detail:'Fitted from the drawing; angled walls are traced less precisely than straight ones.',at:{x:(w.a.x+w.b.x)/2,y:(w.a.y+w.b.y)/2},fixes:[
   {l:'Looks right',fn:()=>{w.conf='high';paRunCheck()}},{l:'Remove',fn:()=>{push();S.objs=S.objs.filter(x=>x!==w);sync()}}]}));
  // wall ends that stop just short of another wall
  let nEnd=0;walls.forEach(w=>{if(nEnd>=40)return;['a','b'].forEach(e=>{const p=w[e],ht=mPx((w.th||150)/1000)/2;let joined=false,best=null,bd=Infinity;
@@ -6529,7 +6705,7 @@ function paRender(){if(!$('paPanel'))return;
   `<span class="sub" style="margin-left:6px">Tap an item to zoom to it.</span>`);
  const is=paIssues[paFocus];
  if(typeof paAiRenderStatus==='function')paAiRenderStatus();
- if(is){$('paCard').innerHTML=`<div class="paCard" style="border-left-color:${PA_SEV[is.sev].c}"><div class="sub">${paFocus+1} of ${paIssues.length} · ${PA_SEV[is.sev].l}${is.ai?' · <b style="color:#a78bfa">AI suggestion</b>':''}</div><div class="paT">${esc(is.title)}</div><div class="sub">${esc(is.detail||'')}</div>${paInputHtml(is)}`+
+ if(is){$('paCard').innerHTML=`<div class="paCard" style="border-left-color:${PA_SEV[is.sev].c}"><div class="sub">${paFocus+1} of ${paIssues.length} · ${PA_SEV[is.sev].l}${is.ai?' · <b style="color:#a78bfa">AI suggestion</b>':''}${is.ocr?' · <b style="color:#4a9eda">read from the plan</b>':''}</div><div class="paT">${esc(is.title)}</div><div class="sub">${esc(is.detail||'')}</div>${paInputHtml(is)}`+
   `<div class="paBtns">${(is.fixes||[]).map((f,i)=>`<button class="pri" data-fix="${i}">${esc(f.l)}</button>`).join('')}<button data-pa="ignore" title="Mark as intentional — it won't be raised again">Ignore</button><button data-pa="prev">◀</button><button data-pa="next">Next ▶</button></div></div>`;
   $('paCard').querySelectorAll('[data-fix]').forEach(b=>b.onclick=()=>{const r=is.fixes[+b.dataset.fix].fn();if(r&&r.then)r.then(paAfterFix);else paAfterFix()});
   $('paCard').querySelectorAll('[data-pa]').forEach(b=>b.onclick=()=>{const k=b.dataset.pa;
@@ -6583,6 +6759,93 @@ setupFloatDrag($('paHandle'),'#paPanel');
 // own key from Settings (no backend), same as the existing digitizer.
 // ========================================================================
 var paAiSugs=[],paAiMap=null,paAiBusy=false;
+// ========================================================================
+// V15.5: read the plan's own text (room names, written areas) WITHOUT AI -- Tesseract OCR compiled
+// to WebAssembly, running in the browser (lazy-loaded from the CDN on first use; the image is never
+// uploaded). Words -> lines -> the lines inside each room -> a name + category suggestion, and any
+// "12.5 m²" written in a room is compared with the traced area to cross-check the drawing scale.
+// ========================================================================
+var paOcrBusy=false,paOcrWorker=null;
+const PA_OCR_URL='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
+function paOcrLoadLib(){if(window.Tesseract)return Promise.resolve(window.Tesseract);
+ return new Promise((ok,no)=>{const sc=document.createElement('script');sc.src=PA_OCR_URL;sc.onload=()=>window.Tesseract?ok(window.Tesseract):no(new Error('OCR library did not load'));sc.onerror=()=>no(new Error('could not download the OCR reader (offline?)'));document.head.appendChild(sc)})}
+// image -> [{text,conf(0-100),x0,y0,x1,y1}] in the canvas's pixels. Tests replace this.
+async function paOcrEngine(cnv,onProg){const T=await paOcrLoadLib();
+ if(!paOcrWorker){paOcrWorker=await T.createWorker('eng',1,{logger:m=>{if(onProg&&m&&m.status==='recognizing text')onProg(m.progress||0)}});
+  try{await paOcrWorker.setParameters({tessedit_pageseg_mode:'11'})}catch(e){}} // sparse text: labels scattered over a drawing
+ const r=await paOcrWorker.recognize(cnv,{},{blocks:true,text:true});let W=r.data.words;
+ if(!W||!W.length){W=[];(r.data.blocks||[]).forEach(b=>(b.paragraphs||[]).forEach(p=>(p.lines||[]).forEach(l=>(l.words||[]).forEach(w=>W.push(w)))))}
+ return W.map(w=>({text:w.text,conf:w.confidence,x0:w.bbox.x0,y0:w.bbox.y0,x1:w.bbox.x1,y1:w.bbox.y1}))}
+// the plan image at a size OCR likes (text ~15-40 px tall): upscale small scans, cap huge ones
+function paOcrCanvas(){if(!(img&&img.width>0))return null;const W0=img.naturalWidth||img.width,H0=img.naturalHeight||img.height,M=Math.max(W0,H0),sc=M<1600?2:M>4200?4200/M:1;
+ const c=document.createElement('canvas');c.width=Math.round(W0*sc);c.height=Math.round(H0*sc);const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);return{c,f:1/sc}}
+const PA_AREA_RE=/(\d{1,4}(?:[.,]\d{1,2})?)\s*(m2|m²|sq\.?\s*m|sqm|sq\.?\s*ft|sqft|sf|ft2|ft²)(?![a-z])/i;
+// words (world px) -> text lines: same baseline band, small gaps
+function paOcrLines(words){const W=words.filter(w=>w&&String(w.text||'').trim()&&w.x1>w.x0&&w.y1>w.y0).map(w=>({...w,text:String(w.text).trim(),h:w.y1-w.y0,cy:(w.y0+w.y1)/2})).sort((a,b)=>a.x0-b.x0);
+ const lines=[];W.forEach(w=>{let best=null,bd=Infinity;lines.forEach(L=>{const last=L.w[L.w.length-1],gap=w.x0-last.x1;
+   if(Math.abs(w.cy-L.cy)<=.5*Math.max(w.h,L.h)&&gap>-.3*L.h&&gap<=1.6*Math.max(w.h,L.h)&&Math.abs(w.h-L.h)<=.6*Math.max(w.h,L.h)&&gap<bd){bd=gap;best=L}});
+  if(best){best.w.push(w);best.x1=Math.max(best.x1,w.x1);best.y0=Math.min(best.y0,w.y0);best.y1=Math.max(best.y1,w.y1);best.cy=(best.y0+best.y1)/2;best.h=Math.max(best.h,w.h)}
+  else lines.push({w:[w],x0:w.x0,x1:w.x1,y0:w.y0,y1:w.y1,cy:w.cy,h:w.h})});
+ return lines.map(L=>{const text=L.w.map(w=>w.text).join(' ').replace(/\s+/g,' ').trim(),conf=L.w.reduce((s,w)=>s+(+w.conf||0),0)/L.w.length,letters=(text.match(/[a-z]/ig)||[]).length;
+  return{text,conf,x0:L.x0,x1:L.x1,y0:L.y0,y1:L.y1,h:L.h,cx:(L.x0+L.x1)/2,cy:L.cy,letters,area:paOcrArea(text)}})}
+// "12.5 m²" -> 12.5 (m²); "135 sq ft" -> 12.54
+function paOcrArea(t){const m=String(t).match(PA_AREA_RE);if(!m)return null;const v=parseFloat(m[1].replace(',','.'));if(!(v>0))return null;return /ft|sf/i.test(m[2])?v*0.09290304:v}
+// a room-name line: mostly letters, not a dimension / door tag / area / level marker
+function paOcrIsName(L){const t=L.text;if(L.area!=null||L.letters<2||L.conf<55)return false;const al=t.replace(/[^a-z0-9]/ig,'');if(!al.length||L.letters/al.length<.6)return false;
+ if(/^(d|w|dr|wd|ws)\s*-?\d+$/i.test(t)||/^(n|north|up|dn|down)$/i.test(t)||/^\d/.test(t)&&L.letters<4)return false;return true}
+function paOcrClean(t){return String(t).replace(/^[^a-z0-9(]+|[^a-z0-9)]+$/ig,'').replace(/\s+/g,' ').replace(/\b([A-Z])([A-Z]+)\b/g,(m,a,b)=>a+b.toLowerCase()).slice(0,48)}
+// name -> category: the program / library first (exact or word match), then keywords
+const PA_CAT_WORDS=[['Restroom',/\b(toilet|wc|w\.c|bath|bathroom|restroom|washroom|lavatory|shower|powder|ensuite|en-suite)\b/i],
+ ['Circulation',/\b(corridor|hall|hallway|passage|lobby|foyer|entry|entrance|stair|stairs|lift|elevator|landing|vestibule|gallery)\b/i],
+ ['Mechanical / Electrical',/\b(plant|electrical|elec|mech|mechanical|server|riser|hvac|boiler|ups|meter|pump|generator|data)\b/i],
+ ['Storage',/\b(store|storage|closet|wardrobe|pantry|archive|garage|shed|locker)\b/i],
+ ['Outdoor',/\b(balcony|terrace|patio|garden|deck|yard|verandah|veranda|porch|courtyard|lawn)\b/i],
+ ['Office',/\b(office|study|meeting|conference|boardroom|workstation|work|admin|cabin)\b/i],
+ ['Security',/\b(security|guard|control|cctv)\b/i],
+ ['Retail / Concession',/\b(shop|retail|cafe|café|bar|kiosk|showroom|concession)\b/i],
+ ['Back-of-House',/\b(kitchen|laundry|utility|service|staff|bedroom|bed|loading|maid|servant|dressing|prep)\b/i],
+ ['Public',/\b(living|lounge|dining|reception|waiting|family|drawing|hall|multipurpose|cafeteria|auditorium)\b/i]];
+function paOcrCat(name){const n=String(name).toLowerCase().trim();if(!n)return null;
+ const lib=[...S.prog.map(p=>({name:p.name,group:p.group,src:'space program'})),...Object.values(LIBRARY).flat().map(p=>({name:p.name,group:p.group,src:'library'}))].filter(p=>p.name&&p.group);
+ let hit=lib.find(p=>p.name.toLowerCase().trim()===n);
+ if(!hit)hit=lib.find(p=>{const w=p.name.toLowerCase().split(/[^a-z]+/).filter(x=>x.length>2);return w.length&&w.every(x=>n.includes(x))});
+ if(hit)return{cat:hit.group,why:'matches “'+hit.name+'” in the '+hit.src};
+ for(const [c,re] of PA_CAT_WORDS)if(re.test(n))return{cat:c,why:'from the word “'+n.match(re)[0]+'”'};return null}
+// lines + zones -> suggestions (pure; tested directly)
+function paOcrSuggest(lines,zones){const out=[],areas=[];
+ zones.forEach(z=>{const P=pts(z),inside=lines.filter(L=>inPoly({x:L.cx,y:L.cy},P));if(!inside.length)return;
+  const ar=inside.find(L=>L.area!=null);if(ar)areas.push({z,written:ar.area,traced:pxToM2(areaPx(P))});
+  const names=inside.filter(paOcrIsName).sort((a,b)=>a.y0-b.y0);if(!names.length)return;
+  // the biggest lettering is the room name; join a second line right under it of the same size (MASTER / BEDROOM)
+  const top=names.reduce((a,b)=>b.h>a.h*1.15?b:a),i=names.indexOf(top),nx=names[i+1];
+  let txt=top.text,conf=top.conf;if(nx&&Math.abs(nx.h-top.h)<=.3*top.h&&nx.y0-top.y1<=1.1*top.h&&Math.abs(nx.cx-top.cx)<=1.5*top.h+.5*(top.x1-top.x0)){txt+=' '+nx.text;conf=(conf+nx.conf)/2}
+  const name=paOcrClean(txt);if(name.length<2)return;
+  if(!paZoneDefaultName(z)&&String(z.name).trim().toLowerCase()===name.toLowerCase())return;
+  const C=paOcrCat(name)||{cat:z.cat||'Other',why:''};
+  out.push({kind:'name',src:'ocr',objId:z.id,name,cat:CATS[C.cat]?C.cat:(z.cat||'Other'),catWhy:C.why,conf:Math.max(0,Math.min(1,conf/100))})});
+ // written areas vs traced areas: a steady ratio across rooms = the scale is off (area ~ scale^2)
+ const ok=areas.filter(a=>a.traced>.5&&a.written>.5),rs=ok.map(a=>a.written/a.traced).sort((a,b)=>a-b),med=rs.length?rs[rs.length>>1]:1;
+ const agree=ok.filter(a=>Math.abs(a.written/a.traced/med-1)<=.06),res={n:ok.length,match:ok.filter(a=>Math.abs(a.written/a.traced-1)<=.05).length,ratio:med,areas:ok};
+ if(agree.length>=2&&Math.abs(med-1)>.05){const sc=S.scale*Math.sqrt(med),c=centerOf(agree[0].z);
+  out.push({kind:'areascale',src:'ocr',scale:sc,ratio:med,diff:Math.abs(Math.sqrt(med)-1),n:agree.length,at:c,list:agree.slice(0,4).map(a=>`${ssZoneLabel(a.z)} ${a.written.toFixed(1)} vs ${a.traced.toFixed(1)} m²`).join('; '),conf:Math.min(1,agree.length/4+.4)})}
+ out.forEach((s,i)=>{s.sid='ocr'+Date.now().toString(36)+i;s.status='pending'});
+ return{sugs:out,areas:res}}
+async function paOcrRun(){if(paOcrBusy)return null;const C=paOcrCanvas();if(!C){paMsg('paOcrMsg','Upload a floor plan image first.');return null}
+ const zones=S.objs.filter(o=>isZone(o)&&layerVisible(o));
+ paOcrBusy=true;$('bPaOcr').disabled=true;paMsg('paOcrMsg','Reading the text on the plan… (the first time also downloads the reader)');
+ try{const raw=await paOcrEngine(C.c,p=>paMsg('paOcrMsg',`Reading the text on the plan… ${Math.round(p*100)}%`)),words=raw.map(w=>({...w,x0:w.x0*C.f,x1:w.x1*C.f,y0:w.y0*C.f,y1:w.y1*C.f}));
+  const lines=paOcrLines(words);paOcrLast={words:words.length,lines};
+  if(!zones.length){paMsg('paOcrMsg',`Read ${lines.length} lines of text, but there are no rooms yet to put names on — trace the plan (step 1) first, then read again.`);return{sugs:[],lines}}
+  const R=paOcrSuggest(lines,zones);paAiSugs=paAiSugs.filter(s=>!(s.src==='ocr'&&s.status==='pending')).concat(R.sugs);
+  const nN=R.sugs.filter(s=>s.kind==='name').length,A=R.areas;
+  paMsg('paOcrMsg',`Read ${lines.length} lines of text. <b>${nN}</b> room name${nN===1?'':'s'} found${nN?' — added to the check list below (marked 🔤)':''}.`+
+   (A.n?` ${A.n} room${A.n>1?'s have':' has'} an area written on it: ${A.match} match${A.match===1?'es':''} the trace within 5%${R.sugs.some(s=>s.kind==='areascale')?' — the rest point at a scale problem (see the check list)':''}.`:'')+(nN||A.n?'':' Nothing that looks like a room name sits inside a traced room (rotated or handwritten text isn\'t read).'));
+  $('bPaOcrNames').style.display=nN>1?'block':'none';
+  paRunCheck();const first=paIssues.findIndex(i=>i.ocr);if(first>=0){paFocus=first;paRender();paZoomTo(paIssues[first])}
+  return R}
+ catch(e){paMsg('paOcrMsg','Reading the plan text failed: '+esc(e.message));return null}
+ finally{paOcrBusy=false;$('bPaOcr').disabled=false}}
+var paOcrLast=null;
 // current defaults (the old digitizer still pointed at a retired 2024 model); Settings can override
 const PA_AI_DEFAULT={anthropic:'claude-sonnet-5',openai:'gpt-4o',google:'gemini-2.5-flash'};
 function paAiCfg(){let s={};try{s=JSON.parse(localStorage.getItem('zsSettings')||'{}')}catch(e){}
@@ -6665,7 +6928,7 @@ async function paAiReview(){if(paAiBusy)return null;const cfg=paAiCfg();
  const A=paAiImages();if(!A){paMsg('paAiMsg','Upload a floor plan image first.');return null}
  paAiBusy=true;$('bPaAi').disabled=true;paMsg('paAiMsg',`Asking ${esc(cfg.provider)}… (sends the plan image and a copy with the trace drawn on it)`);
  try{const txt=await paCallVision(cfg,A.images,paAiPrompt(A),8000),data=extractJson(txt),R=paAiToSuggestions(data,A);
-  paAiSugs=paAiSugs.filter(s=>s.status!=='pending').concat(R.sugs);paAiMap=A.map;
+  paAiSugs=paAiSugs.filter(s=>s.status!=='pending'||s.src==='ocr').concat(R.sugs);paAiMap=A.map;
   const n=R.sugs.length,names=R.sugs.filter(s=>s.kind==='name').length;
   paMsg('paAiMsg',n?`<b>${n}</b> AI suggestion${n>1?'s':''} added to the check list below (marked 🤖) — accept or reject each.`+(R.notes?`<br><i>${esc(R.notes)}</i>`:''):'The AI found nothing to add — the trace looks complete to it.'+(R.notes?`<br><i>${esc(R.notes)}</i>`:''));
   $('bPaAiNames').style.display=names>1?'block':'none';
@@ -6676,8 +6939,9 @@ async function paAiReview(){if(paAiBusy)return null;const cfg=paAiCfg();
 // suggestions -> plan-check issues (called from paRunCheck)
 function paAiIssues(add){const pct=c=>c?` · ${Math.round(c*100)}% sure`:'',done=(s,st)=>{s.status=st};
  paAiSugs.filter(s=>s.status==='pending').forEach(s=>{const base={ai:true,key:'ai:'+s.sid,sev:'should'},rej={l:'Reject',fn:()=>done(s,'rejected')};
+  if(s.src==='ocr'){base.ai=false;base.ocr=true}
   if(s.kind==='name'){const o=S.objs.find(z=>z.id===s.objId);if(!o){done(s,'stale');return}
-   add({...base,title:`🤖 Room looks like “${s.name}”`,detail:`Category ${s.cat}${pct(s.conf)}. Currently “${o.name||'unnamed'}”.`,at:centerOf(o),fixes:[{l:'Accept',fn:()=>{push();o.name=s.name;if(s.cat!==o.cat&&CATS[s.cat]){o.cat=s.cat;o.fill=CATS[s.cat].fill;o.stroke=CATS[s.cat].stroke;o.num=nextRoomNum(s.cat)}done(s,'accepted');sync()}},rej]})}
+   add({...base,title:s.src==='ocr'?`🔤 Plan text says “${s.name}”`:`🤖 Room looks like “${s.name}”`,detail:s.src==='ocr'?`Read from the drawing inside this room${pct(s.conf)} · category ${s.cat}${s.catWhy?' ('+s.catWhy+')':''}. Currently “${o.name||'unnamed'}”.`:`Category ${s.cat}${pct(s.conf)}. Currently “${o.name||'unnamed'}”.`,at:centerOf(o),fixes:[{l:'Accept',fn:()=>{push();o.name=s.name;if(s.cat!==o.cat&&CATS[s.cat]){o.cat=s.cat;o.fill=CATS[s.cat].fill;o.stroke=CATS[s.cat].stroke;o.num=nextRoomNum(s.cat)}done(s,'accepted');sync()}},rej]})}
   else if(s.kind==='retype'){const o=S.objs.find(z=>z.id===s.objId);if(!o){done(s,'stale');return}
    add({...base,title:`🤖 This ${s.from} looks like ${s.want==='solid wall'?'a solid wall':'a '+s.want}`,detail:`${(o.wmm/1000).toFixed(2)} m wide${pct(s.conf)}.`,at:{x:o.x,y:o.y},fixes:[{l:'Accept',fn:()=>{push();paAiRetype(o,s.want);done(s,'accepted');sync()}},rej]})}
   else if(s.kind==='wall')add({...base,title:'🤖 Missing wall',detail:`${pxM(Math.hypot(s.b.x-s.a.x,s.b.y-s.a.y)).toFixed(2)} m, ~${s.th} mm thick${pct(s.conf)}. Ends snap onto nearby walls.`,at:{x:(s.a.x+s.b.x)/2,y:(s.a.y+s.b.y)/2},seg:[s.a,s.b],fixes:[{l:'Add wall',fn:()=>{push();paAiAddWall(s);done(s,'accepted');sync()}},rej]});
@@ -6686,6 +6950,8 @@ function paAiIssues(add){const pct=c=>c?` · ${Math.round(c*100)}% sure`:'',done
   else if(s.kind==='furniture'){const K=FURNITURE_KINDS[s.fk]||{};add({...base,sev:'info',title:`🤖 ${K.label||s.fk}`,detail:`Furniture symbol in the drawing${pct(s.conf)} — adding it gives the 3D view and the visibility analysis its real height.`,at:{x:s.box.x+s.box.w/2,y:s.box.y+s.box.h/2},
    fixes:[{l:'Add',fn:()=>{push();S.objs.push({type:'furniture',id:nextId(),x:s.box.x,y:s.box.y,w:s.box.w,h:s.box.h,rot:0,kind:s.fk,name:K.label||s.fk,fill:'#d9c6ad',stroke:'#555555',traced:1,conf:'ai'});done(s,'accepted');sync()}},rej]})}
   else if(s.kind==='north')add({...base,title:`🤖 North arrow reads ${s.angle}°`,detail:`From the drawing's north symbol${pct(s.conf)}. Currently ${+$('iNorthA').value||0}°.`,fixes:[{l:'Use '+s.angle+'°',fn:()=>{$('iNorthA').value=s.angle;if($('iNorthA').onchange)$('iNorthA').onchange();S.northOk=true;done(s,'accepted')}},rej]});
+  else if(s.kind==='areascale')add({...base,title:`🔤 Written areas say the scale is ${Math.round(s.diff*100)}% off`,detail:`${s.n} rooms have their area printed on the plan; they read ${s.ratio>1?'larger':'smaller'} than the trace by a steady ×${s.ratio.toFixed(3)} (${s.list}). That points at the drawing scale: 1 px = ${s.scale.toFixed(3)} mm instead of ${(+S.scale).toFixed(3)} mm. Check before accepting — every size changes.`,at:s.at,
+   fixes:[{l:'Use this scale',fn:()=>{setScale(s.scale,`Scale set from ${s.n} areas written on the plan`);done(s,'accepted');sync()}},rej]});
   else if(s.kind==='scale')add({...base,sev:s.diff>.1||!S.verified?'should':'info',title:`🤖 Dimension “${s.value}” suggests a different scale`,detail:`It reads 1 px = ${s.scale.toFixed(3)} mm; the plan is set to ${(+S.scale).toFixed(3)} mm (${Math.round(s.diff*100)}% apart)${pct(s.conf)}. Check before accepting — every size changes.`,at:{x:(s.a.x+s.b.x)/2,y:(s.a.y+s.b.y)/2},seg:[s.a,s.b],
    fixes:[{l:'Use this scale',fn:()=>{setScale(s.scale,`Scale set from the dimension “${s.value}” (AI-read)`);S.verified=true;done(s,'accepted');sync()}},rej]})})}
 function paAiRetype(o,want){
@@ -6699,14 +6965,16 @@ function paAiAddOpening(s){const host=nearestWall(s.at,mPx(1));if(!host){toast('
  const base={x:s.at.x,y:s.at.y,ang:0,wmm:Math.round(s.wmm/10)*10,wid:host.id,t:wallProjT(host,s.at),traced:1,conf:'ai',id:nextId()};
  const o=s.want==='window'?{type:'window',...base,sillH:Math.round(((S.assume&&+S.assume.sillH)||.9)*1000),stroke:'#2f6f8f'}:{type:'door',...base,dtype:s.want==='open gap'?'opening':'single',swing:s.want==='open gap'?'na':'li',stroke:'#8a5a2a'};
  snapOpeningToWall(o);S.objs.push(o);sync();return true}
-function paAiAcceptAllNames(){const list=paAiSugs.filter(s=>s.status==='pending'&&s.kind==='name');if(!list.length)return;push();
+function paAiAcceptAllNames(src){const ocr=src==='ocr',list=paAiSugs.filter(s=>s.status==='pending'&&s.kind==='name'&&(s.src==='ocr')===ocr);if(!list.length)return;push();
  list.forEach(s=>{const o=S.objs.find(z=>z.id===s.objId);if(!o){s.status='stale';return}o.name=s.name;if(s.cat!==o.cat&&CATS[s.cat]){o.cat=s.cat;o.fill=CATS[s.cat].fill;o.stroke=CATS[s.cat].stroke;o.num=nextRoomNum(s.cat)}s.status='accepted'});
- sync();$('bPaAiNames').style.display='none';paAfterFix();toast(`Applied ${list.length} room names`)}
+ sync();$(ocr?'bPaOcrNames':'bPaAiNames').style.display='none';paAfterFix();toast(`Applied ${list.length} room names`)}
 function paAiRenderStatus(){const el=$('paAiStatus');if(!el)return;const c=paAiCfg(),name={anthropic:'Anthropic (Claude)',openai:'OpenAI',google:'Google (Gemini)'}[c.provider]||c.provider;
  el.innerHTML=c.key?`Uses <b>${esc(name)}</b> · model ${esc(c.model||PA_AI_DEFAULT[c.provider]||'default')} · your key from Settings. <a href="#" id="paAiSet2">Change</a>`:`No AI key set — the code trace and check work without one. <a href="#" id="paAiSet2">Add a key</a>`;
  $('paAiSet2').onclick=e=>{e.preventDefault();openSettingsModal()}}
 $('bPaAi').onclick=()=>paAiReview();
-$('bPaAiNames').onclick=paAiAcceptAllNames;
+$('bPaAiNames').onclick=()=>paAiAcceptAllNames('ai');
+$('bPaOcrNames').onclick=()=>paAiAcceptAllNames('ocr');
+$('bPaOcr').onclick=()=>paOcrRun();
 
 const W=$('cvw');['dragover'].forEach(v=>W.addEventListener(v,e=>e.preventDefault()));
 W.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(!f)return;if(/\.(csv|tsv|txt|xlsx|xls)$/i.test(f.name)){openImport();readProgFile(f)}else if(/\.json$/i.test(f.name))f.text().then(t=>loadProjectObj(JSON.parse(t)));else openPlan(f)});
