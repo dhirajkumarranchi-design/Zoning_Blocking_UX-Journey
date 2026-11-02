@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.3</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.4</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -315,6 +315,22 @@ footer{grid-area:st;background:var(--panel);border-top:1px solid var(--line);dis
 #cloudModal label:has(input[type=checkbox]){display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt);margin:6px 0 0}
 #cloudModal .row>button{flex:0 0 auto;white-space:nowrap}#cloudModal .row>label{flex:0 0 auto}
 #cloudModal a{color:var(--acc)}
+#bBell{position:relative;margin-right:4px}#bellN:not(:empty){position:absolute;top:-5px;right:-5px;background:#e5534b;color:#fff;font-size:10px;font-weight:700;border-radius:9px;padding:1px 5px;line-height:1.3}
+#bellMenu{position:fixed;display:none;z-index:70;width:330px;max-height:60vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+.bellHead{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line)}.bellHead a{color:var(--acc);font-size:12px}
+.bellItem{display:flex;gap:9px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:12.5px}.bellItem:hover{background:var(--panel2)}.bellItem.unread{background:rgba(201,154,92,.08)}.bellItem.unread .bellIc{color:var(--acc)}
+.bellIc{flex:0 0 18px;text-align:center;font-weight:700}
+.cwTabs{display:flex;gap:4px;margin:10px 0 2px;border-bottom:1px solid var(--line)}.cwTabs div{padding:7px 10px;font-size:12.5px;cursor:pointer;color:var(--mut);border-bottom:2px solid transparent}.cwTabs div.on{color:var(--txt);border-bottom-color:var(--acc)}
+.cwCards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-top:8px}.cwCard{border:1px solid var(--line);border-radius:9px;padding:9px 10px;cursor:pointer;background:var(--panel2)}.cwCard:hover,.cwCard.on{border-color:var(--acc)}
+.cwCardT{font-weight:600;margin-bottom:4px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}.cwDashHead{margin-top:10px}
+.cwAct{font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--line)}
+.cwVer{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.cwVer>div{flex:1}.cwVer.on{background:rgba(201,154,92,.08)}
+.cwPreview{background:rgba(74,158,218,.12);border:1px solid #4a9eda;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:12.5px}
+.cThread{border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin:8px;font-size:12.5px}.cThread.res{opacity:.6}.cThread.local{border-style:dashed}
+.cHead{margin-bottom:3px}.cBody{margin-bottom:4px;white-space:pre-wrap}.cRep{margin:6px 0 0 10px;padding-left:8px;border-left:2px solid var(--line)}.cRep>div{white-space:pre-wrap}
+.cActs{margin-top:6px;font-size:11.5px}.cActs a,.cMentionBar a{color:var(--acc)}.cMention{color:var(--acc);font-weight:600}
+.cReply{width:100%;box-sizing:border-box;margin-top:6px;height:34px;min-height:34px;padding:6px;font-size:12.5px;border:1px solid var(--border2);background:var(--inputbg);color:var(--txt);border-radius:6px;resize:vertical;font-family:inherit}
+.cMentionBar{font-size:11px;margin-top:3px;display:flex;flex-wrap:wrap;gap:6px}
 #cwStatusPill{display:inline-block;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
 .cwMem select{width:auto!important;padding:2px 6px!important}.cwMem a{font-size:11.5px}
 .cwChip{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:9px;border:1px solid var(--line);color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
@@ -354,9 +370,9 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.3</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.4</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
- <div class="hb"><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
+ <div class="hb"><button id="bBell" title="Notifications" style="display:none">🔔<span id="bellN"></span></button><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
  <div class="hb" style="border:0"><span id="scalePill" class="pill bad" title="Click to calibrate">⚠ Scale not verified</span></div>
  <div style="flex:1"></div>
@@ -1037,6 +1053,7 @@ input[type=date],input[type=time]{color-scheme:dark}
  <div class="mb"><div class="sub" style="margin-bottom:8px">Each row is one more room deep from the entrance (bottom). Colour = integration. A tall, thin tree means a deep, segregated layout; a short, wide one with rings means a shallow, well-connected one.</div><div id="ssJBody" style="overflow:auto;max-height:66vh;background:#fff;border-radius:6px"></div></div>
  <div class="mf"><button id="bSsJDl">&#10515; Download SVG</button><button class="pri" id="bSsJClose">Close</button></div>
 </div></div>
+<div id="bellMenu"></div>
 <div id="cloudModal"><div class="mdl" style="width:min(760px,94vw)">
  <h3>☁ Cloud — workspaces, projects &amp; boards</h3>
  <div class="mb">
@@ -1065,6 +1082,8 @@ input[type=date],input[type=time]{color-scheme:dark}
   <div id="cwAppSec" style="display:none">
    <div class="sub">Signed in as <b id="cwWhoAmI"></b> · <a href="#" id="cwSignOut">Sign out</a><a href="#" id="cwReconnect2" style="display:none;margin-left:6px">· admin: switch Supabase project</a></div>
    <div id="cwCrumb" class="cwCrumb"></div>
+   <div id="cwTabs" class="cwTabs"><div data-cwt="files" class="on">📂 Files &amp; sharing</div><div data-cwt="dash">🗂 Dashboard</div><div data-cwt="hist">🕑 History</div><div data-cwt="act">📜 Activity</div></div>
+   <div id="cwTab_files">
    <div class="cwLvl"><h4>🏢 Workspace <span id="cwWsRole"></span></h4>
     <div class="row" style="align-items:flex-end">
      <div style="flex:1"><label>Your workspaces</label><select id="cwWorkspace"></select></div>
@@ -1116,6 +1135,17 @@ input[type=date],input[type=time]{color-scheme:dark}
     <button id="cwPostComments" style="width:100%;margin-top:6px;display:none">💬 Post my comments</button>
     <div class="sub" id="cwBoardMsg" style="margin-top:6px;min-height:14px"></div>
     <button id="cwCheckUpdates" style="width:100%;margin-top:4px">🔄 Check for a newer save from someone else</button>
+   </div>
+   </div>
+   <div id="cwTab_dash" style="display:none"><div id="cwDash"></div></div>
+   <div id="cwTab_hist" style="display:none">
+    <div class="sub" style="margin-top:10px">History of <b id="cwVerBoard"></b> — a checkpoint is kept automatically every 10 minutes of editing; save a named version before big changes or a client review. Restoring keeps the current state as a version too, so it can be undone.</div>
+    <div class="row" id="cwVerSaveRow" style="margin-top:8px;align-items:flex-end"><div style="flex:1"><label>Name this version (optional)</label><input id="cwVerNote" placeholder="e.g. Sent to client 2 Nov" maxlength="200"></div><button class="pri" id="cwVerSave">＋ Save version</button></div>
+    <div id="cwVerList" style="margin-top:8px"></div>
+   </div>
+   <div id="cwTab_act" style="display:none">
+    <div class="row" style="margin-top:10px;align-items:flex-end"><div style="flex:1"><label>Show</label><select id="cwActScope"><option value="proj">This project</option><option value="ws">Whole workspace</option></select></div><button id="cwActRefresh">↻ Refresh</button></div>
+    <div id="cwActList" style="margin-top:8px"></div>
    </div>
   </div>
  </div>
@@ -3296,7 +3326,7 @@ $('iGcColor').oninput=()=>{if(!gcSel.length)return;push();gcSel.forEach(o=>o.col
 $('iGcOp').oninput=()=>{if(!gcSel.length)return;gcSel.forEach(o=>o.op=+$('iGcOp').value);draw()};
 $('bGcLock').onclick=()=>{if(!gcSel.length)return;push();const allLocked=gcSel.every(o=>o.locked);gcSel.forEach(o=>o.locked=!allLocked);sync()};
 $('bGcDelete').onclick=()=>{if(!gcSel.length)return;push();S.gridLines=S.gridLines.filter(o=>!gcSel.includes(o));S.columns=S.columns.filter(o=>!gcSel.includes(o));gcSel=[];sync()};
-function renderComments(){const cs=S.objs.filter(o=>o.type==='comment'),cl=$('cList');cl.innerHTML='';
+function renderComments(){if(typeof cloudThreadsActive==='function'&&cloudThreadsActive()){cloudRenderThreads();return}const cs=S.objs.filter(o=>o.type==='comment'),cl=$('cList');cl.innerHTML='';
  cs.forEach((c,i)=>{const d=document.createElement('div');d.className='crow'+(c.resolved?' res':'');
   d.innerHTML=`<b>#${i+1}</b> ${c.resolved?'✓ ':''}${(c.text||'(empty)').replace(/</g,'&lt;')}<div class="ct">${new Date(c.ts).toLocaleString()}</div>`;
   d.onclick=()=>{sels=[c];setTool('select');loadSel();view.x=cv.width/2-c.x*view.k;view.y=cv.height/2-c.y*view.k;sync()};
@@ -5444,7 +5474,7 @@ function loadProjectObj(obj){hist=[];fut=[];
 const CLOUD_BUILTIN={url:'',key:''};
 const CLOUD_ROLE_RANK={owner:4,editor:3,commenter:2,viewer:1};
 let sb=null,cloudState={email:null,workspaces:[],activeWs:null,wsName:'',wsRole:null,wsMembers:[],projects:[],activeProject:null,projName:'',projRole:null,projPrivate:false,projMembers:[],
- boards:[],activeBoard:null,boardName:'',lastLoadedAt:null,codeFor:null,saving:false,savedAt:null,dirty:false};
+ boards:[],activeBoard:null,boardName:'',lastLoadedAt:null,codeFor:null,saving:false,savedAt:null,dirty:false,comments:[],replyDrafts:{},notifs:[],previewing:null,versions:[]};
 let cloudAutosaveTimer=null;
 function cloudRank(r){return CLOUD_ROLE_RANK[r]||0}
 function cloudCanEdit(){return cloudRank(cloudState.projRole)>=3}
@@ -5464,14 +5494,14 @@ function cloudStatusPill(){const el=$('cwStatusPill');if(!el)return;
  const save=cloudState.activeBoard?(cloudState.saving?' · saving…':cloudState.dirty&&cloudCanEdit()?' · unsaved':cloudState.savedAt?' · saved':''):'';
  el.textContent=`☁ ${cloudState.email}${crumb?' · '+crumb:''}${save}`;el.title=el.textContent}
 function cloudResetState(keepEmail){const e=keepEmail?cloudState.email:null;
- cloudState={email:e,workspaces:[],activeWs:null,wsName:'',wsRole:null,wsMembers:[],projects:[],activeProject:null,projName:'',projRole:null,projPrivate:false,projMembers:[],boards:[],activeBoard:null,boardName:'',lastLoadedAt:null,codeFor:null,saving:false,savedAt:null,dirty:false}}
+ cloudState={email:e,workspaces:[],activeWs:null,wsName:'',wsRole:null,wsMembers:[],projects:[],activeProject:null,projName:'',projRole:null,projPrivate:false,projMembers:[],boards:[],activeBoard:null,boardName:'',lastLoadedAt:null,codeFor:null,saving:false,savedAt:null,dirty:false,comments:[],replyDrafts:{},notifs:[],previewing:null,versions:[]}}
 // which panel section shows: admin connect / sign in / workspace-project-board
-function cloudUiRefreshStep(){cloudStatusPill();
+function cloudUiRefreshStep(){cloudStatusPill();if(typeof cloudBellUpdate==='function')cloudBellUpdate();
  const cfg=cloudCfgLoad(),host=cfg?(()=>{try{return new URL(cfg.url).host}catch(e){return cfg.url}})():'',show=(id,on)=>{const el=$(id);if(el)el.style.display=on?'block':'none'};
  show('cwConnectSec',!sb);show('cwLoginSec',!!sb&&!cloudState.email);show('cwAppSec',!!sb&&!!cloudState.email);
  $('cwConnectedHost').textContent=host;$('cwAdminLinks').style.display=cfg&&cfg.builtin?'none':'inline';$('cwReconnect2').style.display=cfg&&cfg.builtin?'none':'inline';
  if(!sb||!cloudState.email)return;
- $('cwWhoAmI').textContent=cloudState.email;cloudRenderLevels()}
+ $('cwWhoAmI').textContent=cloudState.email;cloudRenderLevels();if(typeof cloudShowTab==='function'&&cloudTab!=='files')cloudShowTab(cloudTab)}
 function cloudConnect(url,key){
  if(!url||!key){$('cwConnectMsg').textContent='Both the project URL and the anon key are needed.';return}
  if(typeof window.supabase==='undefined'){$('cwConnectMsg').textContent="Couldn't load the Supabase library — check your internet connection and try again.";return}
@@ -5540,7 +5570,10 @@ function cloudRefreshMembers(scope){const [t,col,id]=cloudMemberTable(scope);if(
 function cloudInvite(scope){scope=scope||'proj';const P=scope==='ws'?'cwWs':'cwProj',email=$(P+'InviteEmail').value.trim().toLowerCase(),role=$(P+'InviteRole').value,[t,col,id]=cloudMemberTable(scope);
  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){$(P+'InviteMsg').textContent='Enter a valid email.';return Promise.resolve()}
  return sb.from(t).insert({[col]:id,email,role,invited_by:cloudState.email}).then(({error})=>{
-  $(P+'InviteMsg').textContent=error?('Could not invite — '+(/duplicate|unique/i.test(error.message)?'already a member':error.message)):`Invited ${email} as ${role}. They sign in with that email — no account setup needed.`;
+  const where=scope==='ws'?`workspace “${cloudState.wsName}”`:`project “${cloudState.projName}”`,
+   body=`Hi,\n\nI've added you to the ${where} in Design Studio as ${role}.\n\nOpen ${cloudAppUrl()} , click ☁ Cloud and sign in with this email address (${email}) — you'll get a 6-digit code by email. No password or account set-up needed.\n\n${cloudState.email}`;
+  if(error)$(P+'InviteMsg').textContent='Could not invite — '+(/duplicate|unique/i.test(error.message)?'already a member':error.message);
+  else $(P+'InviteMsg').innerHTML=`Invited <b>${escHtml(email)}</b> as ${role}. They get a notification here when they sign in. <a href="mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent('You’re invited to '+where+' in Design Studio')}&body=${encodeURIComponent(body)}">✉ Email them the link</a>`;
   if(!error){$(P+'InviteEmail').value='';return cloudRefreshMembers(scope)}})}
 function cloudSetMemberRole(scope,email,role){const [t,col,id]=cloudMemberTable(scope);
  return sb.from(t).update({role}).eq(col,id).eq('email',email).then(({error})=>{if(error)toast('Could not change role — '+error.message);return cloudRefreshMembers(scope)})}
@@ -5566,7 +5599,7 @@ function cloudCreateBoard(){const name=$('cwNewBoardName').value.trim()||'Untitl
   $('cwNewBoardName').value='';cloudState.lastLoadedAt=new Date().toISOString();cloudState.activeBoard=row.id;cloudState.boardName=name;cloudState.dirty=false;cloudState.savedAt=Date.now();
   if(typeof rtJoinBoard==='function')rtJoinBoard(row.id);
   return cloudRefreshBoards().then(()=>{$('cwBoardMsg').textContent=`Saved as “${name}”. Others on this project can open it now.`})})}
-function cloudSaveBoard(silent){if(!cloudState.activeBoard){if(!silent)toast('Open a board first, or save as a new one');return Promise.resolve()}
+function cloudSaveBoard(silent){if(cloudState.previewing){if(!silent)toast('You’re previewing an old version — Restore it or go back to latest first');return Promise.resolve()}if(!cloudState.activeBoard){if(!silent)toast('Open a board first, or save as a new one');return Promise.resolve()}
  if(!cloudCanEdit()){if(cloudCanComment())return cloudPostComments(silent);if(!silent)toast('View only — you can’t save this board');return Promise.resolve()}
  cloudState.saving=true;cloudStatusPill();
  return sb.from('boards').update({data:cloudBoardPayload(),updated_by:cloudState.email,updated_at:new Date().toISOString()}).eq('id',cloudState.activeBoard).then(({error})=>{
@@ -5577,7 +5610,7 @@ function cloudSaveBoard(silent){if(!cloudState.activeBoard){if(!silent)toast('Op
 function cloudLoadBoard(){const id=$('cwBoard').value;if(!id){toast('No board to open');return Promise.resolve()}
  return sb.from('boards').select('data,updated_at,name').eq('id',id).single().then(({data,error})=>{
   if(error){$('cwBoardMsg').textContent='Could not open — '+error.message;return}
-  loadProjectObj(data.data);cloudState.activeBoard=id;cloudState.boardName=data.name||'';cloudState.lastLoadedAt=data.updated_at;cloudState.dirty=false;cloudState.savedAt=Date.now();
+  cloudState.previewing=null;loadProjectObj(data.data);cloudState.activeBoard=id;cloudState.boardName=data.name||'';cloudState.lastLoadedAt=data.updated_at;cloudState.dirty=false;cloudState.savedAt=Date.now();
   if(typeof rtJoinBoard==='function')rtJoinBoard(id);
   return cloudLoadComments().then(()=>{$('cwBoardMsg').textContent='Opened.';cloudStatusPill();closeCloudModal()})})}
 function cloudCheckUpdates(){if(!cloudState.activeBoard)return Promise.resolve();
@@ -5587,17 +5620,19 @@ function cloudCheckUpdates(){if(!cloudState.activeBoard)return Promise.resolve()
   else $('cwBoardMsg').textContent='You have the latest save.'})}
 // ---- comments (stored per board, so commenters can post without edit rights) ----
 function cloudLoadComments(){if(!sb||!cloudState.activeBoard)return Promise.resolve();
- return sb.from('board_comments').select('id,floor,x,y,text,author,resolved,created_at').eq('board_id',cloudState.activeBoard).then(({data,error})=>{if(error)return;
+ return sb.from('board_comments').select('id,parent_id,floor,x,y,text,author,resolved,resolved_by,mentions,created_at').eq('board_id',cloudState.activeBoard).order('created_at').then(({data,error})=>{if(error)return;
+  cloudState.comments=data||[];
+  // pins for top-level comments on this floor; keep any not-yet-posted local ones
   S.objs=S.objs.filter(o=>!(o.type==='comment'&&o.cid));
-  (data||[]).filter(c=>(c.floor||0)===curFloor).forEach(c=>S.objs.push({type:'comment',id:nextId(),cid:c.id,x:c.x,y:c.y,text:c.text,author:c.author,resolved:!!c.resolved,ts:Date.parse(c.created_at)||Date.now()}));
+  cloudState.comments.filter(c=>!c.parent_id&&(c.floor||0)===curFloor).forEach(c=>S.objs.push({type:'comment',id:nextId(),cid:c.id,x:c.x,y:c.y,text:c.text,author:c.author,resolved:!!c.resolved,ts:Date.parse(c.created_at)||Date.now()}));
   sync()})}
 function cloudPostComments(silent){if(!sb||!cloudState.activeBoard||!cloudCanComment())return Promise.resolve();
  const fresh=S.objs.filter(o=>o.type==='comment'&&!o.cid&&o.text),edits=S.objs.filter(o=>o.type==='comment'&&o.cid&&o._cdirty);
- const ins=fresh.map(o=>sb.from('board_comments').insert({board_id:cloudState.activeBoard,floor:curFloor,x:o.x,y:o.y,text:String(o.text).slice(0,4000),resolved:!!o.resolved}).select('id,author').single().then(({data,error})=>{if(!error&&data){o.cid=data.id;o.author=data.author}}));
- const upd=edits.map(o=>sb.from('board_comments').update({resolved:!!o.resolved,text:o.text}).eq('id',o.cid).then(()=>{delete o._cdirty}));
- return Promise.all([...ins,...upd]).then(()=>{if(!silent&&(fresh.length||edits.length))$('cwBoardMsg').textContent=`Posted ${fresh.length} comment${fresh.length===1?'':'s'}.`})}
+ const ins=fresh.map(o=>sb.from('board_comments').insert({board_id:cloudState.activeBoard,floor:curFloor,x:o.x,y:o.y,text:String(o.text).slice(0,4000),resolved:!!o.resolved,mentions:cloudParseMentions(o.text)}).select('id,author').single().then(({data,error})=>{if(!error&&data){o.cid=data.id;o.author=data.author}}));
+ const upd=edits.map(o=>sb.from('board_comments').update({resolved:!!o.resolved,text:o.text,resolved_by:o.resolved?cloudState.email:null}).eq('id',o.cid).then(()=>{delete o._cdirty}));
+ return Promise.all([...ins,...upd]).then(()=>{if(fresh.length||edits.length){cloudCommentsChanged();if(!silent)$('cwBoardMsg').textContent=`Posted ${fresh.length} comment${fresh.length===1?'':'s'}.`;return cloudLoadComments()}})}
 // ---- auto-save: a few seconds after the last edit (wired into push() alongside live sync) ----
-function cloudScheduleAutosave(){if(!sb||!cloudState.activeBoard||!cloudState.email)return;cloudState.dirty=true;cloudStatusPill();
+function cloudScheduleAutosave(){if(!sb||!cloudState.activeBoard||!cloudState.email||cloudState.previewing)return;cloudState.dirty=true;cloudStatusPill();
  if(!$('cwAutosave').checked)return;clearTimeout(cloudAutosaveTimer);cloudAutosaveTimer=setTimeout(()=>{cloudSaveBoard(true)},4000)}
 // ---- rendering ----
 function cloudRoleChip(r){return r?`<span class="cwChip cwRole_${r}">${r}</span>`:'<span class="cwChip">no access</span>'}
@@ -5657,6 +5692,129 @@ $('cwPostComments').onclick=()=>cloudPostComments(false);
 $('cwCheckUpdates').onclick=cloudCheckUpdates;
 try{const a=localStorage.getItem('zoningAutosave');if(a!==null)$('cwAutosave').checked=a==='1'}catch(e){}
 $('cwAutosave').onchange=e=>{try{localStorage.setItem('zoningAutosave',e.target.checked?'1':'0')}catch(_){}};
+
+// ---- V15.4 Stage 3: dashboard, version history, activity, comment threads, notifications ----
+const CLOUD_APP_URL='https://dhirajkumarranchi-design.github.io/Zoning_Blocking_UX-Journey/';
+function cloudAppUrl(){return /^https?:$/.test(location.protocol)&&!/localhost|127\.0\.0\.1/.test(location.host)?location.origin+location.pathname:CLOUD_APP_URL}
+function cloudAgo(t){const s=(Date.now()-new Date(t).getTime())/1000;if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+' min ago';if(s<86400)return Math.floor(s/3600)+' h ago';if(s<86400*7)return Math.floor(s/86400)+' d ago';return new Date(t).toLocaleDateString()}
+// tabs inside the cloud panel
+let cloudTab='files';
+function cloudShowTab(t){cloudTab=t;document.querySelectorAll('#cwTabs [data-cwt]').forEach(d=>d.classList.toggle('on',d.dataset.cwt===t));
+ ['files','dash','hist','act'].forEach(k=>{const el=$('cwTab_'+k);if(el)el.style.display=k===t?'block':'none'});
+ if(t==='dash')cloudRenderDashboard();else if(t==='hist')cloudRefreshVersions();else if(t==='act')cloudRefreshActivity()}
+// ---- dashboard: every project in the workspace at a glance + recent activity ----
+function cloudRenderDashboard(){const box=$('cwDash');if(!box)return Promise.resolve();
+ if(!sb||!cloudState.activeWs){box.innerHTML='<div class="sub">Create or pick a workspace first (Files tab).</div>';return Promise.resolve()}
+ box.innerHTML='<div class="sub">Loading…</div>';const ps=cloudState.projects,ids=ps.map(p=>p.id);
+ return Promise.all([
+  ids.length?sb.from('boards').select('id,name,project_id,updated_at,updated_by').in('project_id',ids).then(r=>r.data||[]):Promise.resolve([]),
+  ids.length?sb.from('project_members').select('project_id,email').in('project_id',ids).then(r=>r.data||[]):Promise.resolve([]),
+  Promise.all(ps.map(p=>sb.rpc('project_role',{p:p.id}).then(r=>[p.id,r.data]))),
+  sb.from('activity').select('actor,action,detail,created_at,project_id').eq('workspace_id',cloudState.activeWs).order('created_at',{ascending:false}).limit(12).then(r=>r.data||[])
+ ]).then(([boards,mems,roles,acts])=>{const roleOf=Object.fromEntries(roles);
+  const cards=ps.map(p=>{const bs=boards.filter(b=>b.project_id===p.id).sort((a,b)=>a.updated_at<b.updated_at?1:-1),last=bs[0],n=mems.filter(m=>m.project_id===p.id).length;
+   return`<div class="cwCard${p.id===cloudState.activeProject?' on':''}" data-proj="${escHtml(p.id)}"><div class="cwCardT">📁 ${escHtml(p.name)}${p.private?' 🔒':''} ${cloudRoleChip(roleOf[p.id])}</div>
+    <div class="sub">${bs.length} board${bs.length===1?'':'s'} · ${n} direct member${n===1?'':'s'}</div>
+    <div class="sub">${last?`Last change ${cloudAgo(last.updated_at)}${last.updated_by?' by '+escHtml(last.updated_by):''} — ${escHtml(last.name)}`:'No boards yet'}</div></div>`}).join('');
+  box.innerHTML=`<div class="cwDashHead"><b>🏢 ${escHtml(cloudState.wsName)}</b> ${cloudRoleChip(cloudState.wsRole||'guest')} <span class="sub">· ${ps.length} project${ps.length===1?'':'s'}${cloudState.wsMembers.length?' · '+cloudState.wsMembers.length+' workspace members':''}</span></div>`+
+   (cards?`<div class="cwCards">${cards}</div>`:'<div class="sub">No projects you can see yet.</div>')+
+   `<h4 style="margin:14px 0 6px">Recent activity</h4>`+cloudActivityHtml(acts);
+  box.querySelectorAll('[data-proj]').forEach(c=>c.onclick=()=>{cloudSelectProject(c.dataset.proj).then(()=>cloudShowTab('files'))})})}
+// ---- activity ----
+function cloudActivityHtml(rows){if(!rows.length)return'<div class="sub">Nothing yet.</div>';
+ return rows.map(a=>`<div class="cwAct"><span class="sub">${cloudAgo(a.created_at)}</span> <b>${escHtml(a.actor)}</b> ${escHtml(a.action)}${a.detail?` <span class="sub">— ${escHtml(a.detail)}</span>`:''}</div>`).join('')}
+function cloudRefreshActivity(){const box=$('cwActList');if(!box||!sb)return Promise.resolve();
+ const byProj=!!cloudState.activeProject&&$('cwActScope').value==='proj';
+ if(!cloudState.activeWs){box.innerHTML='<div class="sub">Pick a workspace first.</div>';return Promise.resolve()}
+ let qy=sb.from('activity').select('actor,action,detail,created_at,project_id');qy=byProj?qy.eq('project_id',cloudState.activeProject):qy.eq('workspace_id',cloudState.activeWs);
+ return qy.order('created_at',{ascending:false}).limit(60).then(({data,error})=>{box.innerHTML=error?'<div class="sub">Couldn’t load activity.</div>':cloudActivityHtml(data||[])})}
+// ---- version history ----
+function cloudRefreshVersions(){const box=$('cwVerList');if(!box||!sb)return Promise.resolve();
+ if(!cloudState.activeBoard){box.innerHTML='<div class="sub">Open a board first (Files tab) to see its history.</div>';$('cwVerSaveRow').style.display='none';return Promise.resolve()}
+ $('cwVerSaveRow').style.display=cloudCanEdit()?'flex':'none';$('cwVerBoard').textContent=cloudState.boardName;
+ return sb.from('board_versions').select('id,note,auto,created_by,created_at').eq('board_id',cloudState.activeBoard).order('created_at',{ascending:false}).limit(100).then(({data,error})=>{
+  const rows=error?[]:(data||[]);cloudState.versions=rows;
+  box.innerHTML=(cloudState.previewing?`<div class="cwPreview">👁 Previewing the version from ${escHtml(new Date(cloudState.previewing.at).toLocaleString())} — nothing is saved while previewing. <a href="#" id="cwBackLatest">Back to latest</a></div>`:'')+
+   (rows.length?rows.map(v=>`<div class="cwVer${cloudState.previewing&&cloudState.previewing.id===v.id?' on':''}"><div><b>${v.note?escHtml(v.note):v.auto?'Auto-saved checkpoint':'Version'}</b><div class="sub">${new Date(v.created_at).toLocaleString()} · ${escHtml(v.created_by||'')}</div></div>
+    <button data-vprev="${v.id}">Preview</button>${cloudCanEdit()?`<button data-vrest="${v.id}">Restore</button>`:''}</div>`).join(''):'<div class="sub">No earlier versions yet. A checkpoint is kept automatically every 10 minutes of editing, and you can save named versions any time.</div>');
+  box.querySelectorAll('[data-vprev]').forEach(b=>b.onclick=()=>cloudPreviewVersion(b.dataset.vprev));
+  box.querySelectorAll('[data-vrest]').forEach(b=>b.onclick=()=>cloudRestoreVersion(b.dataset.vrest));
+  const bl=$('cwBackLatest');if(bl)bl.onclick=e=>{e.preventDefault();cloudBackToLatest()}})}
+function cloudSaveVersion(){if(!cloudCanEdit()||!cloudState.activeBoard)return Promise.resolve();const note=$('cwVerNote').value.trim()||null;
+ return sb.from('board_versions').insert({board_id:cloudState.activeBoard,data:cloudBoardPayload(),note,auto:false,created_by:cloudState.email}).then(({error})=>{
+  if(error){toast('Could not save version — '+error.message);return}$('cwVerNote').value='';toast('Version saved');return cloudRefreshVersions()})}
+function cloudPreviewVersion(id){return sb.from('board_versions').select('data,created_at').eq('id',id).single().then(({data,error})=>{if(error){toast('Could not open that version');return}
+ cloudState.previewing={id,at:data.created_at};clearTimeout(cloudAutosaveTimer);loadProjectObj(data.data);toast('Previewing an earlier version — nothing is saved until you Restore or go back',4500);cloudStatusPill();return cloudRefreshVersions()})}
+function cloudBackToLatest(){cloudState.previewing=null;if(!sb||!cloudState.activeBoard||typeof sb.from!=='function')return Promise.resolve();return sb.from('boards').select('data,updated_at').eq('id',cloudState.activeBoard).single().then(({data,error})=>{if(error)return;
+ loadProjectObj(data.data);cloudState.lastLoadedAt=data.updated_at;cloudState.dirty=false;return cloudLoadComments()}).then(()=>{cloudStatusPill();return cloudRefreshVersions()})}
+function cloudRestoreVersion(id){if(!confirm('Restore this version for everyone on the board? The current state is kept as a version first, so this can be undone.'))return Promise.resolve();
+ return sb.rpc('restore_version',{v:id}).then(({error})=>{if(error){toast('Could not restore — '+error.message,4000);return}
+  cloudState.previewing=null;if(typeof rtChannel!=='undefined'&&rtChannel)rtChannel.send({type:'broadcast',event:'restored',payload:{by:cloudState.email}});
+  toast('Version restored');return cloudBackToLatest()})}
+// ---- comment threads ----
+function cloudParseMentions(text){const out=new Set(),re=/@([^\s@,;:()]+@[^\s@,;:()]+\.[A-Za-z]{2,})/g;let m;while((m=re.exec(text)))out.add(m[1].toLowerCase());return[...out]}
+function cloudCommentsChanged(){if(typeof rtChannel!=='undefined'&&rtChannel)rtChannel.send({type:'broadcast',event:'comments',payload:{}})}
+function cloudReply(rootCid,text){text=(text||'').trim();if(!text||!cloudCanComment())return Promise.resolve();
+ return sb.from('board_comments').insert({board_id:cloudState.activeBoard,parent_id:rootCid,floor:curFloor,x:0,y:0,text:text.slice(0,4000),mentions:cloudParseMentions(text)}).then(({error})=>{
+  if(error){toast('Could not reply — '+error.message);return}delete cloudState.replyDrafts[rootCid];cloudCommentsChanged();return cloudLoadComments()})}
+function cloudSetResolved(cid,on){return sb.from('board_comments').update({resolved:on,resolved_by:on?cloudState.email:null}).eq('id',cid).then(({error,data})=>{
+ if(error||(Array.isArray(data)&&!data.length)){toast('Only the author or an editor can do that');return}cloudCommentsChanged();return cloudLoadComments()})}
+function cloudThreadsActive(){return !!(sb&&cloudState.email&&cloudState.activeBoard)}
+function cloudRenderThreads(){const cl=$('cList');if(!cl)return;
+ // don't wipe a reply someone is typing; re-render when they leave the box
+ if(document.activeElement&&document.activeElement.classList&&document.activeElement.classList.contains('cReply')){cloudState.threadsPending=true;return}
+ cloudState.threadsPending=false;
+ const all=cloudState.comments||[],roots=all.filter(c=>!c.parent_id),pins=S.objs.filter(o=>o.type==='comment'),local=pins.filter(o=>!o.cid);
+ const members=[...new Set([...(cloudState.projMembers||[]),...(cloudState.wsMembers||[])].map(m=>m.email))].filter(e=>e!==cloudState.email);
+ const hi=t=>escHtml(t).replace(/@([^\s@,;:()]+@[^\s@,;:()]+\.[A-Za-z]{2,})/g,'<span class="cMention">@$1</span>');
+ const showRes=$('cShowResolved')&&$('cShowResolved').checked;
+ let h='';
+ roots.filter(c=>showRes||!c.resolved).forEach(c=>{const reps=all.filter(r=>r.parent_id===c.id).sort((a,b)=>a.created_at<b.created_at?-1:1),canRes=c.author===cloudState.email||cloudCanEdit();
+  h+=`<div class="cThread${c.resolved?' res':''}" data-cid="${c.id}"><div class="cHead"><b>${escHtml(c.author)}</b> <span class="sub">${cloudAgo(c.created_at)}${c.floor!==curFloor?' · floor '+(c.floor+1):''}</span>${c.resolved?' <span class="cwChip">resolved</span>':''}</div>
+   <div class="cBody">${hi(c.text)}</div>
+   ${reps.map(r=>`<div class="cRep"><b>${escHtml(r.author)}</b> <span class="sub">${cloudAgo(r.created_at)}</span><div>${hi(r.text)}</div></div>`).join('')}
+   <div class="cActs"><a href="#" data-zoom="${c.id}">📍 Show on plan</a>${canRes?` · <a href="#" data-res="${c.id}">${c.resolved?'Reopen':'Resolve'}</a>`:''}</div>
+   ${cloudCanComment()?`<textarea class="cReply" data-reply="${c.id}" rows="1" placeholder="Reply… type @ to mention">${escHtml((cloudState.replyDrafts||{})[c.id]||'')}</textarea>
+   <div class="cMentionBar" data-for="${c.id}">${members.slice(0,8).map(e=>`<a href="#" data-mention="${escHtml(e)}">@${escHtml(e.split('@')[0])}</a>`).join(' ')}</div>`:''}</div>`});
+ local.forEach(o=>{h+=`<div class="cThread local"><div class="cHead"><b>Not posted yet</b></div><div class="cBody">${escHtml(o.text||'')}</div><div class="sub">Posts on the next save${cloudCanComment()?'':' — you don’t have comment rights on this board'}.</div></div>`});
+ cl.innerHTML=h||'<div class="sub" style="padding:10px">No comments on this board yet. Pick the <b>Comment</b> tool and click the plan to start a thread.</div>';
+ const open=roots.filter(c=>!c.resolved).length;
+ $('ctot').innerHTML=`${roots.length} thread${roots.length===1?'':'s'} · ${open} open · <label style="display:inline"><input type="checkbox" id="cShowResolved"${showRes?' checked':''}> show resolved</label>`;
+ $('cShowResolved').onchange=()=>cloudRenderThreads();
+ cl.querySelectorAll('[data-zoom]').forEach(a=>a.onclick=e=>{e.preventDefault();const o=S.objs.find(x=>x.cid===a.dataset.zoom);if(o){sels=[o];view.x=cv.width/2-o.x*view.k;view.y=cv.height/2-o.y*view.k;sync()}else toast('That comment is on another floor')});
+ cl.querySelectorAll('[data-res]').forEach(a=>a.onclick=e=>{e.preventDefault();const c=roots.find(x=>x.id===a.dataset.res);cloudSetResolved(c.id,!c.resolved)});
+ cl.querySelectorAll('.cReply').forEach(t=>{t.oninput=()=>{cloudState.replyDrafts[t.dataset.reply]=t.value};
+  t.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();cloudReply(t.dataset.reply,t.value)}};
+  t.onblur=()=>{if(cloudState.threadsPending)setTimeout(cloudRenderThreads,0)}});
+ cl.querySelectorAll('[data-mention]').forEach(a=>a.onmousedown=e=>{e.preventDefault();const id=a.parentElement.dataset.for,t=cl.querySelector(`.cReply[data-reply="${id}"]`);
+  t.value=(t.value&&!/\s$/.test(t.value)?t.value+' ':t.value)+'@'+a.dataset.mention+' ';cloudState.replyDrafts[id]=t.value;t.focus()})}
+// ---- notifications bell ----
+let cloudNotifTimer=null;
+function cloudBellUpdate(){const b=$('bBell');if(!b)return;const on=!!(sb&&cloudState.email);b.style.display=on?'':'none';
+ if(on&&!cloudNotifTimer){cloudRefreshNotifs();cloudNotifTimer=setInterval(cloudRefreshNotifs,60000)}
+ if(!on&&cloudNotifTimer){clearInterval(cloudNotifTimer);cloudNotifTimer=null;cloudState.notifs=[];$('bellN').textContent=''}}
+function cloudRefreshNotifs(){if(!sb||!cloudState.email)return Promise.resolve();
+ return sb.from('notifications').select('id,kind,message,workspace_id,project_id,board_id,read,created_at').order('created_at',{ascending:false}).limit(40).then(({data,error})=>{
+  if(error)return;cloudState.notifs=data||[];const n=cloudState.notifs.filter(x=>!x.read).length;$('bellN').textContent=n?String(n>9?'9+':n):'';
+  if($('bellMenu').style.display==='block')cloudRenderBell()})}
+function cloudRenderBell(){const m=$('bellMenu'),list=cloudState.notifs||[],icon={invite:'➕',mention:'@',reply:'↩',resolved:'✓',role:'🔑'};
+ m.innerHTML=`<div class="bellHead"><b>Notifications</b>${list.some(x=>!x.read)?'<a href="#" id="bellAll">Mark all read</a>':''}</div>`+
+  (list.length?list.map(x=>`<div class="bellItem${x.read?'':' unread'}" data-n="${x.id}"><span class="bellIc">${icon[x.kind]||'•'}</span><div><div>${escHtml(x.message)}</div><div class="sub">${cloudAgo(x.created_at)}</div></div></div>`).join(''):'<div class="sub" style="padding:10px">Nothing yet.</div>');
+ const all=$('bellAll');if(all)all.onclick=e=>{e.preventDefault();const ids=list.filter(x=>!x.read).map(x=>x.id);sb.from('notifications').update({read:true}).in('id',ids).then(()=>cloudRefreshNotifs())};
+ m.querySelectorAll('[data-n]').forEach(d=>d.onclick=()=>cloudOpenNotif(list.find(x=>String(x.id)===d.dataset.n)))}
+function cloudToggleBell(){const m=$('bellMenu'),open=m.style.display!=='block';m.style.display=open?'block':'none';if(open){const r=$('bBell').getBoundingClientRect();m.style.top=(r.bottom+6)+'px';m.style.left=Math.max(8,Math.min(r.left-260,window.innerWidth-340))+'px';cloudRenderBell()}}
+function cloudOpenNotif(x){if(!x)return Promise.resolve();$('bellMenu').style.display='none';
+ const mark=x.read?Promise.resolve():sb.from('notifications').update({read:true}).eq('id',x.id).then(()=>cloudRefreshNotifs());
+ return mark.then(()=>{if(!x.workspace_id)return;cloudState.activeWs=x.workspace_id;if(x.project_id)cloudState.activeProject=x.project_id;
+  return cloudRefreshWorkspaces().then(()=>{openCloudModal();cloudShowTab('files');
+   if(x.board_id&&cloudState.boards.some(b=>b.id===x.board_id)){$('cwBoard').value=x.board_id;return cloudLoadBoard().then(()=>{switchTab('pC')})}})})}
+$('bBell').onclick=e=>{e.stopPropagation();cloudToggleBell()};
+document.addEventListener('mousedown',e=>{const m=$('bellMenu');if(m&&m.style.display==='block'&&!m.contains(e.target)&&e.target!==$('bBell')&&!$('bBell').contains(e.target))m.style.display='none'});
+document.querySelectorAll('#cwTabs [data-cwt]').forEach(d=>d.onclick=()=>cloudShowTab(d.dataset.cwt));
+$('cwVerSave').onclick=cloudSaveVersion;
+$('cwActScope').onchange=cloudRefreshActivity;
+$('cwActRefresh').onclick=cloudRefreshActivity;
+
 cloudTryAutoConnect(); // pick up the built-in / previously connected project + signed-in session, if any
 
 
@@ -5690,6 +5848,8 @@ function rtJoinBoard(boardId){
  rtActorId=(cloudState.email||'anon')+':'+Math.random().toString(36).slice(2);
  const ch=sb.channel('board:'+boardId,{config:{presence:{key:rtActorId}}});
  ch.on('broadcast',{event:'edit'},({payload})=>{if(payload&&payload.actor!==rtActorId)rtApplyRemote(payload)});
+ ch.on('broadcast',{event:'comments'},()=>{if(typeof cloudLoadComments==='function')cloudLoadComments()});
+ ch.on('broadcast',{event:'restored'},({payload})=>{if(typeof cloudBackToLatest==='function'){cloudBackToLatest();toast(`${(payload&&payload.by)||'Someone'} restored an earlier version`,4000)}});
  ch.on('presence',{event:'sync'},()=>{
   const state=ch.presenceState();rtPeers={};
   Object.keys(state).forEach(key=>{if(key===rtActorId)return;const metas=state[key];if(metas&&metas.length)rtPeers[key]=metas[metas.length-1]});
@@ -5703,7 +5863,7 @@ function rtBroadcastNow(){
  const ts=Date.now();
  S.objs.forEach(o=>{o.rtTs=ts});
  rtChannel.send({type:'broadcast',event:'edit',payload:{actor:rtActorId,floorIdx:curFloor,ts,objs:S.objs}})}
-function rtScheduleBroadcast(){if(!rtChannel||(typeof cloudCanEdit==='function'&&!cloudCanEdit()))return;clearTimeout(rtDirtyTimer);rtDirtyTimer=setTimeout(rtBroadcastNow,RT_DEBOUNCE_MS)}
+function rtScheduleBroadcast(){if(!rtChannel||(typeof cloudCanEdit==='function'&&!cloudCanEdit())||(typeof cloudState!=='undefined'&&cloudState.previewing))return;clearTimeout(rtDirtyTimer);rtDirtyTimer=setTimeout(rtBroadcastNow,RT_DEBOUNCE_MS)}
 // Merge an incoming floor snapshot from another peer into our own objects for the floor
 // you're both currently looking at. Per object: newer rtTs wins outright; an object we have
 // that's missing from the incoming snapshot is dropped only if it's OLDER than that snapshot
