@@ -16,6 +16,8 @@
 --   5. Project Settings → API → copy the "Project URL" and the "anon public" key and send them
 --      over (NOT the "service_role" key — never share that one). They get built into the app,
 --      so teammates only ever type their email.
+--   6. OPTIONAL — email notifications (mentions, replies, invites): run cloud_email.sql too.
+--      Its header explains the 10-minute Brevo setup (free, no domain needed).
 --
 -- WHO SEES WHAT
 --   workspace member  → every project in the workspace (except private ones, unless owner)

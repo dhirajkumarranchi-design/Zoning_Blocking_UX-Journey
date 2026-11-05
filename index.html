@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Review fix: bump this version number (here AND the .betaTag span below) with every shipped
      version from now on -- it had gone stale at "v12" for several versions. -->
-<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v15.9</title>
+<html lang="en"><head><meta charset="utf-8"><title>Design Studio — Beta v16.0</title>
 <style>
 :root{--acc:#c99a5c;--acc2:#3a2f20;--acc2txt:#e8c088;--line:#3d3d3d;--txt:#e4e4e4;--mut:#9a9a9a;--bg:#1b1b1b;--panel:#262626;--panel2:#2f2f2f;--inputbg:#1f1f1f;--border2:#4a4a4a;--canvaspaper:#303030}
 *{box-sizing:border-box;font-family:"Segoe UI",system-ui,Arial,sans-serif}
@@ -285,7 +285,7 @@ footer .fHintTouch{display:none}
 @media (hover:none) and (pointer:coarse){footer .fHintMouse{display:none}footer .fHintTouch{display:inline}}
 @media (max-width:1100px){footer{gap:10px}footer #fSel{display:none}}
 /* modal */
-#modal,#vmodal,#scaleSetupModal,#settingsModal,#dayModal,#lightModal,#floorNameModal,#exportModal,#libModal,#wallifyScopeModal,#cloudModal,#ssJModal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:60} /* above the floating HUD (46) and Plan assistant (47) */
+#modal,#vmodal,#scaleSetupModal,#settingsModal,#dayModal,#lightModal,#floorNameModal,#exportModal,#furnSchedModal,#cadModal,#libModal,#wallifyScopeModal,#cloudModal,#ssJModal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:60} /* above the floating HUD (46) and Plan assistant (47) */
 /* Furniture library is a floating PALETTE, not a blocking modal -- it has to stay open and the
    canvas stay visible/clickable underneath it so pieces can be dragged straight onto the plan. */
 #furnLibModal{position:absolute;left:14px;top:60px;width:min(380px,92vw);max-height:min(76vh,620px);
@@ -327,6 +327,7 @@ footer .fHintTouch{display:none}
 #cloudModal a{color:var(--acc)}
 #bBell{position:relative;margin-right:4px}#bellN:not(:empty){position:absolute;top:-5px;right:-5px;background:#e5534b;color:#fff;font-size:10px;font-weight:700;border-radius:9px;padding:1px 5px;line-height:1.3}
 #bellMenu{position:fixed;display:none;z-index:70;width:330px;max-height:60vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.55)}
+.bellMail{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px}.bellMail input{margin:0}
 .bellHead{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line)}.bellHead a{color:var(--acc);font-size:12px}
 .bellItem{display:flex;gap:9px;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:12.5px}.bellItem:hover{background:var(--panel2)}.bellItem.unread{background:rgba(201,154,92,.08)}.bellItem.unread .bellIc{color:var(--acc)}
 .bellIc{flex:0 0 18px;text-align:center;font-weight:700}
@@ -380,7 +381,7 @@ input[type=date],input[type=time]{color-scheme:dark}
 </div>
 <div id="toolView">
 <header>
- <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v15.9</i></div>
+ <div class="logo">Design <span>Studio</span><i class="betaTag">BETA v16.0</i></div>
  <div class="hb"><button id="bPlan">📂 Floor plan</button><button id="bProg" class="pri">📋 Space program</button></div>
  <div class="hb"><button id="bBell" title="Notifications" style="display:none">🔔<span id="bellN"></span></button><button id="bCloud">☁ Cloud</button><span id="cwStatusPill" class="sub" style="margin-left:4px"></span></div>
  <div class="hb"><span style="font-size:12px;color:#777">Units</span><div class="seg"><button id="uSF" class="on">SF</button><button id="uM2">m²</button></div></div>
@@ -394,6 +395,7 @@ input[type=date],input[type=time]{color-scheme:dark}
    <button id="bSave">💾 Save</button>
    <button id="bOpen">📂 Open</button>
    <button id="bVer" title="Version history">🕑 Version history</button>
+   <button id="hmCad" title="AutoCAD / BricsCAD / Revit-exported DXF or DWG — read at true scale, walls, doors, windows and rooms from its layers">📐 Import CAD (DXF / DWG)…</button>
    <div class="hamSep"></div>
    <div class="hamSec">Export</div>
    <button id="hmExport">⤓ Export…</button>
@@ -504,17 +506,21 @@ input[type=date],input[type=time]{color-scheme:dark}
    <div class="sub" style="margin:8px 0">Drag a piece straight onto the plan (sized to the current scale), or tick pieces and use Import to drop them centred in view. Sizes/colours are editable now or on the piece later.</div>
    <div class="scroll" id="furnList" style="max-height:38vh"></div>
    <div style="border-top:1px solid var(--line);margin:14px 0 10px"></div>
-   <h4 style="margin:0 0 6px;font-size:13px;color:var(--txt);text-transform:none;letter-spacing:0">Add a custom piece to this list</h4>
+   <h4 style="margin:0 0 6px;font-size:13px;color:var(--txt);text-transform:none;letter-spacing:0">Add your own piece <span class="sub">(saved to ⭐ Mine — kept in this browser and in the project)</span></h4>
    <div class="row" style="align-items:flex-end">
-    <div style="flex:2"><label>Name</label><input id="furnCustName" placeholder="e.g. Corner Sofa"></div>
-    <div style="flex:1"><label>Kind</label><select id="furnCustKind"></select></div>
+    <div style="flex:3"><label>Name</label><input id="furnCustName" placeholder="e.g. Corner Sofa"></div>
+    <div style="flex:2"><label>Kind</label><select id="furnCustKind"></select></div>
+   </div>
+   <div class="row" style="align-items:flex-end;margin-top:6px">
     <div style="flex:1"><label>W (m)</label><input type="number" id="furnCustW" step=".1" value=".6"></div>
-    <div style="flex:1"><label>H (m)</label><input type="number" id="furnCustH" step=".1" value=".6"></div>
-    <div style="flex:0"><label>Colour</label><input type="color" id="furnCustColor" value="#cfe3ee"></div>
-    <div style="flex:0"><label>&nbsp;</label><button type="button" id="bFurnAddCustom">+ Add</button></div>
+    <div style="flex:1"><label>D (m)</label><input type="number" id="furnCustH" step=".1" value=".6"></div>
+   </div>
+   <div class="row" style="align-items:flex-end;margin-top:6px">
+    <div><label>Colour</label><input type="color" id="furnCustColor" value="#cfe3ee" style="width:100%;height:30px"></div>
+    <div><button type="button" id="bFurnAddCustom" style="width:100%">⭐ Save to Mine</button></div>
    </div>
   </div>
-  <div class="mf"><button onclick="closeFurnitureLibrary()">Close</button><button class="pri" id="bFurnImport">Add ticked to plan</button></div>
+  <div class="mf"><button onclick="closeFurnitureLibrary()">Close</button><button id="bFurnSchedOpen" title="Every piece on every floor, counted, with the rooms it's in">📋 Schedule…</button><button class="pri" id="bFurnImport">Add ticked to plan</button></div>
  </div></div>
  <div id="paPanel" class="floating">
   <div id="paHandle" class="floatHandle" title="Drag to move"><span>⠿ 🧭 Plan assistant <span class="sub">· advanced</span></span><button id="bPaClose" class="tog" title="Close">✕</button></div>
@@ -594,6 +600,7 @@ input[type=date],input[type=time]{color-scheme:dark}
   <div class="ctxLbl" id="ctxObjLbl"></div>
   <button data-act="delete" id="ctxDelete" class="ctxDanger">🗑 Delete <span class="sub ctxShortcut">Del</span></button>
   <button data-act="duplicate" id="ctxDuplicate">⧉ Duplicate <span class="sub ctxShortcut">Ctrl+Shift+D</span></button>
+  <button data-act="saveFurn" id="ctxSaveFurn" style="display:none">⭐ Save to My furniture</button>
   <div class="ctxSubWrap" id="ctxShapeWrap">
    <button type="button" class="ctxSubBtn" id="ctxShapeToggle">▭ Change shape <span>▸</span></button>
    <div class="ctxSubPanel" id="ctxShapePanel">
@@ -841,6 +848,7 @@ input[type=date],input[type=time]{color-scheme:dark}
    <label>Kind</label><select id="iFurnKind"></select>
    <div class="row"><div><label>W (m)</label><input type="number" id="iFurnW" step="0.1"></div><div><label>H (m)</label><input type="number" id="iFurnH" step="0.1"></div></div>
    <div class="sub" style="margin-top:4px">Sits on its own layer, overlaid on top of the zoning.</div>
+   <button id="bFurnSaveMine" style="width:100%;margin-top:8px" title="Keep this piece (or all selected pieces, as one set) in your library">⭐ Save to My furniture</button>
   </div>
   <div class="box" id="boxFloor" style="display:none"><h4>Other floors</h4>
    <label>Target floor</label><select id="iMoveFloor"></select>
@@ -909,6 +917,8 @@ input[type=date],input[type=time]{color-scheme:dark}
   <div class="box"><h4>Schedules</h4>
    <button id="bDoorSched" style="width:100%">⤓ Door schedule (CSV)</button>
    <div class="sub" style="margin-top:6px">Lists every door on this floor — type, width, swing.</div>
+   <button id="bFurnSched" style="width:100%;margin-top:8px">📋 Furniture schedule…</button>
+   <div class="sub" style="margin-top:6px">Every piece on every floor, counted by type and size, with the rooms it sits in. CSV or Excel.</div>
   </div>
   <div class="box"><h4>Scale</h4><label>mm per plan pixel</label><input type="number" id="iScale" step="0.001">
    <div class="sub" style="margin-top:6px">Set it with the ⚖ Scale tool on a long known dimension, then check a second dimension with ↔ Measure.</div></div>
@@ -1212,6 +1222,27 @@ input[type=date],input[type=time]{color-scheme:dark}
  </div>
  <div class="mf"><button id="floorNameCancel">Cancel</button><button class="pri" id="floorNameOk">OK</button></div>
 </div></div>
+<div id="cadModal"><div class="mdl" style="width:min(580px,96vw)">
+ <h3>📐 Import CAD drawing</h3>
+ <div class="mb"><div id="cadMsg" class="sub" style="margin-bottom:8px"></div>
+  <div id="cadBody" style="display:none">
+   <div class="row" style="align-items:flex-end"><div><label>Drawing units</label><select id="cadUnits"></select></div><div style="flex:2"><div class="sub" id="cadUnitsNote" style="margin-bottom:8px"></div></div></div>
+   <label style="margin-top:8px">What is on each layer</label>
+   <div id="cadLayers" style="max-height:34vh;overflow:auto;border:1px solid var(--line);border-radius:6px;padding:2px 8px"></div>
+   <div class="sub" style="margin:6px 0">Walls: pairs of parallel lines (arcs for curved walls, or filled / wide shapes). Doors &amp; windows: their blocks or swing arcs. Room outlines: closed shapes — leave none and rooms come from the walls, named from the text inside them.</div>
+   <div class="row"><div><label>Thinnest wall (mm)</label><input type="number" id="cadMinT" value="50" step="10"></div><div><label>Thickest wall (mm)</label><input type="number" id="cadMaxT" value="700" step="50"></div></div>
+   <label style="display:block"><input type="checkbox" id="cadBg" checked> Use the drawing as the floor-plan background (true scale)</label>
+   <label style="display:block"><input type="checkbox" id="cadModel" checked> Create walls, doors, windows &amp; rooms from the layers</label>
+   <label style="display:block"><input type="checkbox" id="cadReplace" checked> Replace an earlier CAD import on this floor</label>
+  </div></div>
+ <div class="mf"><button id="cadCancel">Cancel</button><button class="pri" id="cadGo">Import</button></div>
+</div></div>
+<div id="furnSchedModal"><div class="mdl" style="width:min(760px,96vw)">
+ <h3>📋 Furniture schedule</h3>
+ <div class="mb"><div class="row" style="align-items:center;margin-bottom:8px"><label style="margin:0"><input type="checkbox" id="fsByFloor" checked> Split by floor</label><label style="margin:0"><input type="checkbox" id="fsRooms" checked> Show rooms</label></div>
+  <div id="fsTable" style="overflow:auto;max-height:56vh"></div></div>
+ <div class="mf"><button id="fsClose">Close</button><button id="bFurnSchedCsv">⤓ CSV</button><button class="pri" id="bFurnSchedXlsx">⤓ Excel</button></div>
+</div></div>
 <div id="exportModal"><div class="mdl" style="width:min(420px,92vw)">
  <h3>Export</h3>
  <div class="mb" id="exportModalBody">
@@ -1221,7 +1252,8 @@ input[type=date],input[type=time]{color-scheme:dark}
   <label style="display:block;margin-bottom:5px"><input type="checkbox" class="expChk" data-target="bDxf"> DXF (CAD interchange)</label>
   <label style="display:block;margin-bottom:5px"><input type="checkbox" class="expChk" data-target="bCsv"> Zone area CSV (Target vs Drawn)</label>
   <label style="display:block;margin-bottom:5px"><input type="checkbox" class="expChk" data-target="bProgCsv"> Space program CSV (Qty &amp; Area delta)</label>
-  <label style="display:block"><input type="checkbox" class="expChk" data-target="bProgXlsx"> Space program Excel (Qty &amp; Area delta, color-coded)</label>
+  <label style="display:block;margin-bottom:5px"><input type="checkbox" class="expChk" data-target="bProgXlsx"> Space program Excel (Qty &amp; Area delta, color-coded)</label>
+  <label style="display:block"><input type="checkbox" class="expChk" data-target="bFurnSchedXlsx"> Furniture schedule Excel (all floors)</label>
  </div>
  <div class="mf"><button id="exportModalCancel">Cancel</button><button class="pri" id="exportModalGo">Export selected</button></div>
 </div></div>
@@ -1272,7 +1304,7 @@ input[type=date],input[type=time]{color-scheme:dark}
   </div>
  </div>
 </div>
-<input type="file" id="fPlan" accept="image/*,.pdf" hidden><input type="file" id="fProg" accept=".csv,.tsv,.txt,.xlsx,.xlsm,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><input type="file" id="fOpen" accept=".json" hidden><input type="file" id="fVer" accept=".json" multiple hidden>
+<input type="file" id="fPlan" accept="image/*,.pdf,.dxf,.dwg" hidden><input type="file" id="fCad" accept=".dxf,.dwg" hidden><input type="file" id="fProg" accept=".csv,.tsv,.txt,.xlsx,.xlsm,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden><input type="file" id="fOpen" accept=".json" hidden><input type="file" id="fVer" accept=".json" multiple hidden>
 </div>
 <div id="docView">
 <div class="docWrap">
@@ -1597,33 +1629,82 @@ const FURNITURE_LIB={
  ]
 };
 let furnActiveTab='Residential',furnCustomItems={Residential:[],Office:[]};
-const furnAllItems=t=>[...FURNITURE_LIB[t],...furnCustomItems[t]];
+// V16: ⭐ My furniture -- your own pieces and sets (several pieces saved together, e.g. a desk +
+// chair + pedestal), kept in this browser AND inside each project/board you save, so a teammate
+// opening the board gets them too. An item is {name,kind,wM,hM,color} or a set {name,parts:[...],wM,hM}.
+const FURN_MINE='⭐ Mine';
+let myFurn=(()=>{try{const v=JSON.parse(localStorage.getItem('dsMyFurniture')||'[]');return Array.isArray(v)?v:[]}catch(e){return[]}})();
+function myFurnSave(){try{localStorage.setItem('dsMyFurniture',JSON.stringify(myFurn))}catch(e){}}
+function myFurnKey(it){return String(it.name||'').trim().toLowerCase()}
+// add or replace by name; returns 'added' | 'updated'
+function myFurnPut(it){const k=myFurnKey(it),i=myFurn.findIndex(x=>myFurnKey(x)===k);if(i>=0){myFurn[i]=it;myFurnSave();return'updated'}myFurn.push(it);myFurnSave();return'added'}
+function myFurnMerge(list){if(!Array.isArray(list))return 0;let n=0;list.forEach(it=>{if(it&&it.name&&!myFurn.some(x=>myFurnKey(x)===myFurnKey(it))){myFurn.push(it);n++}});if(n)myFurnSave();return n}
+const furnAllItems=t=>t===FURN_MINE?myFurn:[...FURNITURE_LIB[t],...furnCustomItems[t]];
 function renderFurnitureLibrary(){
  const tabsEl=$('furnTabs');
- tabsEl.innerHTML=Object.keys(FURNITURE_LIB).map(t=>`<div data-flt="${t}" class="${t===furnActiveTab?'on':''}">${t}</div>`).join('');
+ tabsEl.innerHTML=[...Object.keys(FURNITURE_LIB),FURN_MINE].map(t=>`<div data-flt="${t}" class="${t===furnActiveTab?'on':''}">${t}${t===FURN_MINE&&myFurn.length?` (${myFurn.length})`:''}</div>`).join('');
  tabsEl.querySelectorAll('[data-flt]').forEach(d=>d.onclick=()=>{furnActiveTab=d.dataset.flt;renderFurnitureLibrary()});
  const list=$('furnList');
  list.innerHTML=furnAllItems(furnActiveTab).map((it,i)=>`<div class="row furnRow" data-i="${i}" style="align-items:center;padding:4px 2px;border-bottom:1px solid var(--border2)" title="Drag onto the plan to drop it there, to scale">`+
   `<div style="flex:0 0 16px;color:var(--mut)">⠿</div>`+
   `<div style="flex:0 0 22px"><input type="checkbox" class="furnChk" data-i="${i}"></div>`+
-  `<div style="flex:2">${esc(it.name)}<div class="sub">${esc((FURNITURE_KINDS[it.kind]||{}).label||it.kind)}</div></div>`+
-  `<div style="flex:1" class="n">${it.wM}×${it.hM} m</div>`+
-  `<div style="flex:0 0 32px"><input type="color" class="furnColor" data-i="${i}" value="${it.color}" title="Edit this piece's default colour"></div></div>`).join('');
- list.querySelectorAll('.furnColor').forEach(inp=>{inp.onclick=e=>e.stopPropagation();inp.onchange=()=>{furnAllItems(furnActiveTab)[+inp.dataset.i].color=inp.value}});
+  `<div style="flex:2">${esc(it.name)}<div class="sub">${it.parts?`set of ${it.parts.length} pieces`:esc((FURNITURE_KINDS[it.kind]||{}).label||it.kind)}</div></div>`+
+  `<div style="flex:1" class="n">${(+it.wM).toFixed(2).replace(/\.?0+$/,'')}×${(+it.hM).toFixed(2).replace(/\.?0+$/,'')} m</div>`+
+  (it.parts?`<div style="flex:0 0 32px"></div>`:`<div style="flex:0 0 32px"><input type="color" class="furnColor" data-i="${i}" value="${it.color||'#cfe3ee'}" title="Edit this piece's default colour"></div>`)+
+  (furnActiveTab===FURN_MINE?`<div style="flex:0 0 26px"><button type="button" class="furnDel" data-i="${i}" title="Remove from My furniture" style="padding:2px 6px">✕</button></div>`:'')+`</div>`).join('')+
+  (furnActiveTab===FURN_MINE&&!myFurn.length?`<div class="sub" style="padding:10px 4px">Nothing saved yet. Select a piece (or several, to save them as a set) on the plan → right-click / long-press → <b>⭐ Save to My furniture</b>. Or add one with the form below.</div>`:'');
+ list.querySelectorAll('.furnDel').forEach(b=>{b.onpointerdown=e=>e.stopPropagation();b.onclick=e=>{e.stopPropagation();const it=myFurn[+b.dataset.i];if(!it)return;myFurn.splice(+b.dataset.i,1);myFurnSave();renderFurnitureLibrary();toast(`Removed “${it.name}” from My furniture`,2000)}});
+ list.querySelectorAll('.furnColor').forEach(inp=>{inp.onclick=e=>e.stopPropagation();inp.onchange=()=>{furnAllItems(furnActiveTab)[+inp.dataset.i].color=inp.value;if(furnActiveTab===FURN_MINE)myFurnSave()}});
  list.querySelectorAll('.furnRow').forEach(row=>{row.onpointerdown=e=>furnRowPointerDown(e,+row.dataset.i)})}
 function openFurnitureLibrary(){renderFurnitureLibrary();$('furnLibModal').style.display='flex'}
+// selected furniture on the plan -> ⭐ My furniture: one piece as itself, several as one named set
+function furnSaveSelection(){const F=sels.filter(o=>o.type==='furniture');if(!F.length){toast('Select a piece of furniture first');return null}
+ const r2=v=>Math.round(v*1000)/1000;let it;
+ if(F.length===1){const o=F[0];it={name:(o.name||(FURNITURE_KINDS[o.kind]||{}).label||'Piece').trim(),kind:o.kind,wM:r2(pxM(o.w)),hM:r2(pxM(o.h)),color:o.fill||'#cfe3ee'};if(o.rot)it.rot=o.rot}
+ else{const all=F.flatMap(o=>pts(o)),x0=Math.min(...all.map(p=>p.x)),y0=Math.min(...all.map(p=>p.y)),x1=Math.max(...all.map(p=>p.x)),y1=Math.max(...all.map(p=>p.y));
+  const def=F[0].setName||'My set';let name=prompt(`Name for this set of ${F.length} pieces`,def);if(name==null)return null;name=String(name).trim()||def;
+  it={name,wM:r2(pxM(x1-x0)),hM:r2(pxM(y1-y0)),parts:F.map(o=>{const c=centerOf(o);return{name:o.name||(FURNITURE_KINDS[o.kind]||{}).label||'Piece',kind:o.kind,wM:r2(pxM(o.w)),hM:r2(pxM(o.h)),cx:r2(pxM(c.x-x0)),cy:r2(pxM(c.y-y0)),rot:o.rot||0,color:o.fill||'#cfe3ee'}})}}
+ const r=myFurnPut(it);toast(`${r==='updated'?'Updated':'Saved'} “${it.name}” in ⭐ My furniture${it.parts?` (set of ${it.parts.length})`:''}`,2500);
+ if($('furnLibModal').style.display==='flex'){furnActiveTab=FURN_MINE;renderFurnitureLibrary()}return it}
+// ---- furniture schedule: every floor, grouped by item / kind / size / colour ----
+function furnScheduleData(){if(typeof saveCurFloor==='function')saveCurFloor();const groups=new Map();
+ floors.forEach((f,fi)=>{let d;try{d=typeof f.data==='string'?JSON.parse(f.data):f.data}catch(e){d=null}if(!d||!Array.isArray(d.objs))return;
+  const sc=+d.scale||24,m=px=>px*sc/1000,zones=d.objs.filter(o=>isZone(o)&&!o.cordon);
+  d.objs.filter(o=>o.type==='furniture').forEach(o=>{const c=centerOf(o),z=zones.find(q=>{try{return inPoly(c,pts(q))}catch(e){return false}}),room=z?(z.name||ssZoneLabel(z)):'(not in a room)';
+   const name=o.name||(FURNITURE_KINDS[o.kind]||{}).label||o.kind,w=Math.round(m(o.w)*100)/100,h=Math.round(m(o.h)*100)/100,k=[fi,name,o.kind,w,h,(o.fill||'').toLowerCase()].join('|');
+   let g=groups.get(k);if(!g){g={floorIdx:fi,floor:f.name||('Level '+(fi+1)),name,kind:o.kind,kindLabel:(FURNITURE_KINDS[o.kind]||{}).label||o.kind,w,h,ht:FURNITURE_HEIGHT[o.kind]||.45,color:o.fill||'',qty:0,rooms:{}};groups.set(k,g)}
+   g.qty++;g.rooms[room]=(g.rooms[room]||0)+1})});
+ return[...groups.values()].sort((a,b)=>a.floorIdx-b.floorIdx||a.name.localeCompare(b.name)||a.w-b.w)}
+function furnScheduleRows(byFloor,withRooms){const D=furnScheduleData();let list=D;
+ if(!byFloor){const m=new Map();D.forEach(g=>{const k=[g.name,g.kind,g.w,g.h,g.color].join('|');let t=m.get(k);if(!t){t={...g,floor:'All floors',qty:0,rooms:{}};m.set(k,t)}t.qty+=g.qty;Object.entries(g.rooms).forEach(([r,n])=>{const key=floors.length>1?`${r} (${g.floor})`:r;t.rooms[key]=(t.rooms[key]||0)+n})});list=[...m.values()].sort((a,b)=>a.name.localeCompare(b.name))}
+ const head=['Mark',...(byFloor?['Floor']:[]),'Item','Type','Width (m)','Depth (m)','Height (m)','Colour','Qty',...(withRooms?['Rooms']:[])];
+ const rows=list.map((g,i)=>['F'+String(i+1).padStart(2,'0'),...(byFloor?[g.floor]:[]),g.name,g.kindLabel,g.w,g.h,g.ht,g.color,g.qty,...(withRooms?[Object.entries(g.rooms).map(([r,n])=>n>1?`${r} ×${n}`:r).join(', ')]:[])]);
+ const total=list.reduce((s,g)=>s+g.qty,0);
+ return{head,rows,total,count:list.length}}
+function furnSchedRender(){const R=furnScheduleRows($('fsByFloor').checked,$('fsRooms').checked);
+ $('fsTable').innerHTML=R.rows.length?`<table class="tbl" style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>${R.head.map(h=>`<th style="text-align:left;padding:4px 6px;border-bottom:1px solid var(--line)">${esc(h)}</th>`).join('')}</tr></thead><tbody>`+
+  R.rows.map(r=>`<tr>${r.map((c,i)=>`<td style="padding:4px 6px;border-bottom:1px solid var(--border2)">${R.head[i]==='Colour'&&c?`<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${esc(c)};margin-right:4px;vertical-align:middle;border:1px solid #0003"></span>`:''}${esc(String(c))}</td>`).join('')}</tr>`).join('')+
+  `</tbody><tfoot><tr><td colspan="${R.head.indexOf('Qty')}" style="padding:6px;font-weight:600">Total</td><td style="padding:6px;font-weight:600">${R.total}</td>${R.head.length>R.head.indexOf('Qty')+1?'<td></td>':''}</tr></tfoot></table>`
+  :'<div class="sub">No furniture on any floor yet — add some from the 🛋️ Furniture Library.</div>'}
+function openFurnSchedule(){$('furnSchedModal').style.display='flex';furnSchedRender()}
+function furnSchedFileBase(){return'furniture_schedule'+(cloudState&&cloudState.boardName?'_'+cloudState.boardName.replace(/[^a-z0-9]+/ig,'_'):'')}
+function furnSchedCsv(){const R=furnScheduleRows($('fsByFloor').checked,$('fsRooms').checked),q=v=>{const t=String(v);return/[",\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+ return[R.head,...R.rows,[...R.head.map((h,i)=>i===0?'Total':h==='Qty'?R.total:'')]].map(r=>r.map(q).join(',')).join('\n')}
 function closeFurnitureLibrary(){$('furnLibModal').style.display='none'}
 // Builds a furniture object centred at an explicit world point (cx,cy), already sized to the
 // current plan scale via mPx() -- shared by both placement paths: the tick+Import flow below
 // (centred in view, with a cascading offset) and drag-and-drop (centred on the drop point).
 function furniturePieceObj(it,cx,cy){const w=mPx(it.wM),h=mPx(it.hM);
- return{type:'furniture',id:nextId(),x:cx-w/2,y:cy-h/2,w,h,rot:0,kind:it.kind,name:it.name,fill:it.color,stroke:'#555555'}}
+ return{type:'furniture',id:nextId(),x:cx-w/2,y:cy-h/2,w,h,rot:it.rot||0,kind:it.kind,name:it.name,fill:it.color,stroke:'#555555'}}
+// one library item -> the objects to add (a set becomes all its pieces, laid out as saved, centred on cx,cy)
+function furnItemObjs(it,cx,cy){if(!it.parts)return[furniturePieceObj(it,cx,cy)];const W=mPx(it.wM),H=mPx(it.hM),x0=cx-W/2,y0=cy-H/2,set='set'+nextId();
+ return it.parts.map(p=>{const o=furniturePieceObj(p,x0+mPx(p.cx),y0+mPx(p.cy));o.furnSet=set;o.setName=it.name;return o})}
 // Drops each checked library piece onto the plan, centred in the current view, cascading the
 // offset so a multi-select doesn't stack every piece exactly on top of the last one. Selects
 // everything just placed so it can be dragged into position right away.
 function placeFurniturePiece(it,offsetIdx){
  const cx=(cv.width/2-view.x)/view.k,cy=(cv.height/2-view.y)/view.k,off=offsetIdx*mPx(.3);
- return furniturePieceObj(it,cx+off,cy+off)}
+ return furnItemObjs(it,cx+off,cy+off)}
 // Manual drag-and-drop (mirrors the app's own mousedown/move/up drag convention elsewhere in
 // this file rather than the native HTML5 DnD API, which this codebase doesn't use anywhere and
 // which jsdom can't exercise in tests) -- pointer events cover mouse, touch and pen alike. A
@@ -1646,7 +1727,7 @@ function furnDragMove(e){if(!furnDrag||e.pointerId!==furnDrag.pointerId)return;
 function furnDragEnd(e){if(!furnDrag||e.pointerId!==furnDrag.pointerId)return;
  const w=furnDrag.moved?furnOverCanvas(e.clientX,e.clientY):null;
  if(w){const it=furnAllItems(furnDrag.tab)[furnDrag.idx];
-  push();const piece=furniturePieceObj(it,w.x,w.y);S.objs.push(piece);sels=[piece];loadSel();sync();
+  push();const pieces=furnItemObjs(it,w.x,w.y);S.objs.push(...pieces);sels=pieces;loadSel();sync();
   toast(`Dropped “${it.name}” onto the plan`,2200)}
  furnDrag.ghost.remove();furnDrag=null}
 let libActiveTab='Residential',libCustomItems={Residential:[],Office:[]};
@@ -4183,7 +4264,7 @@ $('bCopy').onclick=dup;$('bDel').onclick=del;$('bUndo').onclick=undo;$('bRedo').
 $('bFurnClose').onclick=closeFurnitureLibrary;
 setupFloatDrag($('furnLibHandle'),'#furnLibModal');
 window.addEventListener('pointermove',furnDragMove);window.addEventListener('pointerup',furnDragEnd);
-window.onkeydown=e=>{if($('modal').style.display==='flex'||$('vmodal').style.display==='flex'||$('settingsModal').style.display==='flex'||$('scaleSetupModal').style.display==='flex'||$('lightModal').style.display==='flex'||$('floorNameModal').style.display==='flex'||$('exportModal').style.display==='flex'||$('furnLibModal').style.display==='flex'||$('wallifyScopeModal').style.display==='flex'||$('cloudModal').style.display==='flex'||$('ssJModal').style.display==='flex')return;
+window.onkeydown=e=>{if($('modal').style.display==='flex'||$('vmodal').style.display==='flex'||$('settingsModal').style.display==='flex'||$('scaleSetupModal').style.display==='flex'||$('lightModal').style.display==='flex'||$('floorNameModal').style.display==='flex'||$('exportModal').style.display==='flex'||$('furnSchedModal').style.display==='flex'||$('cadModal').style.display==='flex'||$('furnLibModal').style.display==='flex'||$('wallifyScopeModal').style.display==='flex'||$('cloudModal').style.display==='flex'||$('ssJModal').style.display==='flex')return;
  if($('dayModal').style.display==='flex'){if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'){e.preventDefault();closeDayModal()}return}
  if((e.target.tagName==='INPUT'&&!['range','checkbox','color'].includes(e.target.type))||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA')return;
  const k=e.key.toLowerCase();
@@ -4314,13 +4395,13 @@ $('bLibImport').onclick=()=>{
  sync();closeLibrary();toast(added?`Added ${added} space type${added>1?'s':''} to the program`:'Those were already in the program')};
 $('bFurnAddCustom').onclick=()=>{
  const name=($('furnCustName').value||'').trim();if(!name){toast('Type a name first');return}
- furnCustomItems[furnActiveTab].push({name,kind:$('furnCustKind').value,wM:+$('furnCustW').value||.6,hM:+$('furnCustH').value||.6,color:$('furnCustColor').value});
- $('furnCustName').value='';renderFurnitureLibrary()};
+ const r=myFurnPut({name,kind:$('furnCustKind').value,wM:+$('furnCustW').value||.6,hM:+$('furnCustH').value||.6,color:$('furnCustColor').value});
+ $('furnCustName').value='';furnActiveTab=FURN_MINE;renderFurnitureLibrary();toast(r==='updated'?`Updated “${name}” in My furniture`:`Saved “${name}” to My furniture`,2200)};
 $('bFurnImport').onclick=()=>{
  const items=furnAllItems(furnActiveTab),chosen=[];
  $('furnList').querySelectorAll('.furnChk:checked').forEach(c=>chosen.push(items[+c.dataset.i]));
  if(!chosen.length){toast('Tick at least one piece first');return}
- push();const placed=chosen.map((it,i)=>placeFurniturePiece(it,i));
+ push();const placed=chosen.flatMap((it,i)=>placeFurniturePiece(it,i));
  S.objs.push(...placed);sels=placed;loadSel();sync();closeFurnitureLibrary();
  toast(`Added ${placed.length} piece${placed.length>1?'s':''} of furniture`,3000)};
 $('furnCustKind').innerHTML=Object.entries(FURNITURE_KINDS).map(([k,v])=>`<option value="${k}">${esc(v.label)}</option>`).join('');
@@ -4413,6 +4494,7 @@ function ctxAction(act){
  else if(act==='splitUnit')splitUnit();
  else if(act==='cut')cutSel();
  else if(act==='copy'){if(sels.length)clip=JSON.stringify(sels)}
+ else if(act==='saveFurn')furnSaveSelection();
  else if(act==='paste'){if(clip){push();const c=JSON.parse(clip);c.forEach(o=>move(o,20,20));S.objs.push(...c);sels=c;clip=JSON.stringify(c);sync()}}
  else if(act==='move')setTool('move');
  else if(act==='select')setTool('select');
@@ -4465,6 +4547,7 @@ cv.oncontextmenu=e=>{e.preventDefault();
  {const onObj=!!h,anyZone=onObj&&sels.some(isZone),show=(id,on)=>{const el=$(id);if(el)el.style.display=on?'':'none'};
   $('ctxObjLbl').textContent=!onObj?'':sels.length>1?`${sels.length} selected`:ctxObjName(h);
   ['ctxDelete','ctxDuplicate','ctxCut','ctxCopy'].forEach(id=>show(id,onObj));
+  show('ctxSaveFurn',onObj&&sels.some(o=>o.type==='furniture'));
   show('ctxShapeWrap',anyZone);show('ctxConvertWrap',anyZone);
   if(anyZone)renderCtxConvertSection();
   $('ctxCombineUnit').style.display=onObj&&sels.filter(isZone).length>1?'block':'none';
@@ -4539,7 +4622,7 @@ $('iEquip').onchange=$('iEquipLbl').onchange=()=>{const s=sel();if(!s||s.type!==
 $('iCmTxt').onchange=$('iCmRes').onchange=()=>{const s=sel();if(!s||s.type!=='comment')return;if(s.cid)s._cdirty=true;push();s.text=$('iCmTxt').value;s.resolved=$('iCmRes').checked;sync()};
 /* ---------- floor plan ---------- */
 function loadScript(src){return new Promise((r,j)=>{const s=document.createElement('script');s.src=src;s.onload=r;s.onerror=()=>j(new Error('PDF support needs internet. Export the plan as PNG/JPG instead.'));document.head.appendChild(s)})}
-async function openPlan(f){try{let url;
+async function openPlan(f){if(/\.(dxf|dwg)$/i.test(f.name))return cadOpenFile(f);try{let url;
  if(/\.pdf$/i.test(f.name)){toast('Rendering PDF…');if(!window.pdfjsLib){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'}
   const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise,pg=await pdf.getPage(1),vp=pg.getViewport({scale:3}),c=document.createElement('canvas');c.width=vp.width;c.height=vp.height;
   await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;url=c.toDataURL('image/png')}
@@ -4548,7 +4631,384 @@ async function openPlan(f){try{let url;
  if(S.objs.length&&confirm('Clear existing zones? (They were drawn on the previous plan.)'))S.objs=[];
  if(floors[curFloor]&&/^Level \d+$/.test(floors[curFloor].name)){const base=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim();if(base)floors[curFloor].name=base.slice(0,40)}
  setPlan(url,true);sync();openScaleSetupModal()}catch(err){alert(err.message)}}
+// after a crash while opening a DWG: offer the plan as it was just before
+function cadOfferRecovery(){let r=null;try{r=JSON.parse(localStorage.getItem('dsRecovery')||'null')}catch(e){}if(!r||!r.snap)return false;
+ if(Date.now()-(r.at||0)>3*86400000){try{localStorage.removeItem('dsRecovery')}catch(e){}return false}
+ const bar=document.createElement('div');bar.id='recoverBar';bar.style.cssText='position:fixed;left:50%;top:70px;transform:translateX(-50%);z-index:80;background:#2b2b2b;color:#eee;border:1px solid #c0392b;border-radius:8px;padding:10px 14px;box-shadow:0 8px 30px #0008;max-width:min(560px,92vw);font-size:13px';
+ bar.innerHTML=`The page stopped while opening <b>${esc(r.file||'a DWG')}</b>. Restore your plan as it was just before? <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end"><button id="recNo">Discard</button><button class="pri" id="recYes">Restore</button></div>`;
+ document.body.appendChild(bar);const end=()=>{try{localStorage.removeItem('dsRecovery')}catch(e){}bar.remove()};
+ $('recYes').onclick=()=>{try{loadProjectObj(JSON.parse(r.snap));toast('Plan restored. That DWG can\'t be read here — save it as DXF from your CAD app and import that.',6000)}catch(e){toast('Could not restore: '+e.message)}end()};
+ $('recNo').onclick=end;return true}
+setTimeout(cadOfferRecovery,600);
+$('hmCad').onclick=()=>{if(typeof toggleHamMenu==='function')toggleHamMenu(false);$('fCad').click()};$('fCad').onchange=e=>{if(e.target.files[0])cadOpenFile(e.target.files[0]);e.target.value=''};
+$('cadCancel').onclick=closeCadModal;
+$('cadGo').onclick=async()=>{if(!cadLast)return;$('cadGo').disabled=true;$('cadMsg').textContent='Building the plan…';await paYield();
+ try{const r=await cadImport({background:$('cadBg').checked,model:$('cadModel').checked,replace:$('cadReplace').checked,minT:+$('cadMinT').value||50,maxT:+$('cadMaxT').value||700});
+  closeCadModal();if(r&&($('paPanel')&&paOpen))paRunCheck()}catch(e){$('cadMsg').textContent='⚠ '+(e.message||e)}finally{$('cadGo').disabled=false}};
 $('bPlan').onclick=()=>$('fPlan').click();$('fPlan').onchange=e=>{if(e.target.files[0])openPlan(e.target.files[0]);e.target.value=''};
+// ========================================================================
+// V16: CAD import (DXF / DWG). DXF is read by the small parser below; DWG by LibreDWG compiled
+// to WebAssembly (open source, GPL-3.0, ~11 MB, downloaded from the CDN only the first time a DWG
+// is opened -- nothing is uploaded). Both give the same drawing model (the shape LibreDWG's
+// converter produces), which then becomes:
+//  (a) an exact-scale background image (the real units are known, so no scale step), and
+//  (b) real walls / doors / windows / rooms built from the layers you assign:
+//      walls = pairs of parallel lines (or concentric arcs = curved walls, or filled solids /
+//      wide polylines), doors = door blocks / swing arcs, windows = window blocks, rooms = closed
+//      outlines on a room layer or else the spaces the walls enclose, named from the text in them.
+// ========================================================================
+const CAD_UNIT_MM={1:25.4,2:304.8,4:1,5:10,6:1000,14:100};
+const CAD_UNIT_NAMES=[[1,'millimetres',4],[10,'centimetres',5],[1000,'metres',6],[25.4,'inches',1],[304.8,'feet',2]];
+let CAD_DWG_VER='0.8.1',CAD_DWG_BASE='https://cdn.jsdelivr.net/npm/@mlightcad/libredwg-web@'+CAD_DWG_VER+'/';
+const CAD_ROLES=[['bg','Background only'],['wall','Walls'],['door','Doors'],['window','Windows'],['room','Room outlines'],['hide','Hide']];
+var cadLast=null,cadBusy=false;
+// ---------- DXF text -> drawing model ----------
+function cadParseDxf(text){
+ if(/^AutoCAD Binary DXF/.test(text.slice(0,22)))throw new Error('This is a binary DXF. Save it as an ASCII DXF (the default) and try again.');
+ const L=text.split(/\r\n|\n|\r/),P=[];
+ for(let k=0;k+1<L.length;k+=2){const c=parseInt(L[k],10);if(isNaN(c)){k--;continue}P.push([c,L[k+1]])}
+ const N=P.length,db={header:{},tables:{LAYER:{entries:[]},BLOCK_RECORD:{entries:[]}},entities:[]},rad=Math.PI/180;
+ let p=0;const at=i=>P[i]||[-1,''],is0=(i,v)=>at(i)[0]===0&&at(i)[1].trim()===v;
+ const group=()=>{const g=[];p++;while(p<N&&P[p][0]!==0){g.push(P[p]);p++}return g}; // codes after a "0 TYPE" line
+ const G=g=>{const m=new Map();g.forEach(([c,v])=>{if(!m.has(c))m.set(c,v)});return{s:c=>m.has(c)?m.get(c).trim():'',n:(c,d)=>m.has(c)?parseFloat(m.get(c)):(d==null?0:d),all:c=>g.filter(x=>x[0]===c).map(x=>x[1])}};
+ const decode=t=>String(t).replace(/\\U\+([0-9a-f]{4})/ig,(_,h)=>String.fromCharCode(parseInt(h,16))).replace(/%%[cC]/g,'Ø').replace(/%%[dD]/g,'°').replace(/%%[pP]/g,'±').replace(/%%%/g,'%');
+ function entity(type,g){const q=G(g),base={type,layer:q.s(8)||'0',colorIndex:q.n(62,256)};if(q.n(67)===1)base.isInPaperSpace=true;if(q.n(60)===1)base.isVisible=false;
+  const pt=(cx,cy)=>({x:q.n(cx),y:q.n(cy)});
+  if(type==='LINE')return{...base,startPoint:pt(10,20),endPoint:pt(11,21)};
+  if(type==='LWPOLYLINE'){const v=[];g.forEach(([c,val])=>{if(c===10)v.push({x:parseFloat(val),y:0,bulge:0});else if(c===20&&v.length)v[v.length-1].y=parseFloat(val);else if(c===42&&v.length)v[v.length-1].bulge=parseFloat(val)||0});
+   return{...base,flag:q.n(70),constantWidth:q.n(43),vertices:v}}
+  if(type==='ARC')return{...base,center:pt(10,20),radius:q.n(40),startAngle:q.n(50)*rad,endAngle:q.n(51)*rad};
+  if(type==='CIRCLE')return{...base,center:pt(10,20),radius:q.n(40)};
+  if(type==='ELLIPSE')return{...base,center:pt(10,20),majorAxisEndPoint:pt(11,21),axisRatio:q.n(40,1),startAngle:q.n(41,0),endAngle:q.n(42,Math.PI*2)};
+  if(type==='SPLINE'){const cp=[],fp=[];g.forEach(([c,val])=>{if(c===10)cp.push({x:parseFloat(val),y:0});else if(c===20&&cp.length)cp[cp.length-1].y=parseFloat(val);else if(c===11)fp.push({x:parseFloat(val),y:0});else if(c===21&&fp.length)fp[fp.length-1].y=parseFloat(val)});
+   return{...base,flag:q.n(70),degree:q.n(71,3),controlPoints:cp,fitPoints:fp}}
+  if(type==='TEXT'||type==='ATTRIB'||type==='ATTDEF'){if(type!=='TEXT'&&(q.n(70)&1))return null; // invisible attribute
+   return{...base,type:'TEXT',text:decode(q.s(1)),startPoint:pt(10,20),endPoint:pt(11,21),textHeight:q.n(40,1),rotation:q.n(50)*rad,halign:q.n(72),valign:q.n(type==='TEXT'?73:74)}}
+  if(type==='MTEXT'){const t=[...q.all(3),...q.all(1)].join('');const dir=g.some(x=>x[0]===11)?Math.atan2(q.n(21),q.n(11)):q.n(50)*rad;
+   return{...base,text:decode(t),insertionPoint:pt(10,20),textHeight:q.n(40,1),rotation:dir,attachmentPoint:q.n(71,1),rectWidth:q.n(41)}}
+  if(type==='INSERT')return{...base,name:q.s(2),insertionPoint:pt(10,20),xScale:q.n(41,1),yScale:q.n(42,1),rotation:q.n(50)*rad,columnCount:q.n(70,1)||1,rowCount:q.n(71,1)||1,columnSpacing:q.n(44),rowSpacing:q.n(45)};
+  if(type==='DIMENSION')return{...base,name:q.s(2)};
+  if(type==='SOLID'||type==='TRACE')return{...base,type:'SOLID',corner1:pt(10,20),corner2:pt(11,21),corner3:pt(12,22),corner4:g.some(x=>x[0]===13)?pt(13,23):null};
+  if(type==='POINT'||type==='HATCH')return null;
+  return null}
+ // reads entities until one of the stop words; handles POLYLINE ... VERTEX ... SEQEND
+ function entities(stop){const out=[];
+  while(p<N&&!(P[p][0]===0&&stop.includes(P[p][1].trim()))){
+   if(P[p][0]!==0){p++;continue}
+   const type=P[p][1].trim(),g=group();
+   if(type==='POLYLINE'){const q=G(g),fl=q.n(70),v=[];
+    while(p<N&&is0(p,'VERTEX')){const vg=G(group());if(!(vg.n(70)&16))v.push({x:vg.n(10),y:vg.n(20),bulge:vg.n(42)})}
+    if(is0(p,'SEQEND'))group();
+    if(!(fl&(16|64)))out.push({type:'POLYLINE2D',layer:q.s(8)||'0',flag:fl,vertices:v,isInPaperSpace:q.n(67)===1});continue}
+   const e=entity(type,g);if(e)out.push(e);
+   if(type==='INSERT'){while(p<N&&(is0(p,'ATTRIB'))){const ag=group();const a=entity('ATTRIB',ag);if(a)out.push(a)}if(is0(p,'SEQEND'))group()}}
+  return out}
+ while(p<N){
+  if(!is0(p,'SECTION')){p++;continue}
+  const name=at(p+1)[1].trim();p+=2;
+  if(name==='HEADER'){while(p<N&&!is0(p,'ENDSEC')){if(P[p][0]===9){const k=P[p][1].trim();if(k==='$INSUNITS'&&P[p+1])db.header.INSUNITS=parseInt(P[p+1][1]);if(k==='$MEASUREMENT'&&P[p+1])db.header.MEASUREMENT=parseInt(P[p+1][1])}p++}}
+  else if(name==='TABLES'){while(p<N&&!is0(p,'ENDSEC')){if(is0(p,'LAYER')){const q=G(group());if(q.s(2))db.tables.LAYER.entries.push({name:q.s(2),colorIndex:q.n(62,7),off:q.n(62,7)<0,frozen:!!(q.n(70)&1)})}else p++}}
+  else if(name==='BLOCKS'){while(p<N&&!is0(p,'ENDSEC')){if(is0(p,'BLOCK')){const q=G(group());const b={name:q.s(2),basePoint:{x:q.n(10),y:q.n(20)},flags:q.n(70),entities:[]};b.entities=entities(['ENDBLK','ENDSEC']);if(is0(p,'ENDBLK'))group();db.tables.BLOCK_RECORD.entries.push(b)}else p++}}
+  else if(name==='ENTITIES'){db.entities=entities(['ENDSEC'])}
+  else{while(p<N&&!is0(p,'ENDSEC'))p++}
+  if(is0(p,'ENDSEC'))p++}
+ return db}
+// ---------- DWG via LibreDWG (WebAssembly) ----------
+// runs in a Web Worker: a file the reader chokes on can't freeze or take down the page
+function cadDwgWorkerSrc(base){return `
+self.onmessage=async e=>{try{
+ const mod=await import(${JSON.stringify(base)}+'dist/libredwg-web.js');
+ const lib=await mod.LibreDwg.create(${JSON.stringify(base)}+'wasm');
+ self.postMessage({stage:'read'});
+ const dwg=lib.dwg_read_data(e.data,mod.Dwg_File_Type.DWG);if(!dwg)throw new Error('unreadable');
+ const db=lib.convert(dwg);try{lib.dwg_free(dwg)}catch(x){}
+ const clean=JSON.parse(JSON.stringify(db,(k,v)=>typeof v==='bigint'?Number(v):(v instanceof Uint8Array?undefined:v)));
+ self.postMessage({db:clean})}catch(err){self.postMessage({error:String(err&&err.message||err)})}};`}
+function cadReadDwg(buf,onMsg){
+ onMsg&&onMsg('Loading the DWG reader (first time only, about 11 MB)…');
+ return new Promise((ok,no)=>{let w,done=false;const fail=m=>{if(done)return;done=true;try{w.terminate()}catch(e){}no(new Error('The DWG reader could not open this file'+(m?' ('+m+')':'')+'. Save it as DXF from your CAD app (Save As → DXF) and import that instead.'))};
+  try{w=new Worker(URL.createObjectURL(new Blob([cadDwgWorkerSrc(CAD_DWG_BASE)],{type:'text/javascript'})),{type:'module'})}catch(e){fail('workers unavailable');return}
+  const timer=setTimeout(()=>fail('timed out'),120000);
+  w.onmessage=e=>{const d=e.data||{};if(d.stage==='read'){onMsg&&onMsg('Reading the DWG…');return}clearTimeout(timer);if(d.error){fail(d.error);return}done=true;w.terminate();ok(d.db)};
+  w.onerror=e=>{clearTimeout(timer);fail(e&&e.message)};
+  w.postMessage(buf,[buf])})}
+// ---------- flatten: blocks expanded, everything in world drawing units ----------
+function cadBulgeArc(a,b,bu){const th=4*Math.atan(bu),dx=b.x-a.x,dy=b.y-a.y,c=Math.hypot(dx,dy);if(c<1e-12)return null;
+ const r=c/(2*Math.sin(Math.abs(th)/2)),h=r*Math.cos(Math.abs(th)/2),mx=(a.x+b.x)/2,my=(a.y+b.y)/2,ux=-dy/c,uy=dx/c,s=th>0?1:-1;
+ const cx=mx+ux*h*s,cy=my+uy*h*s;let a0=Math.atan2(a.y-cy,a.x-cx),a1=Math.atan2(b.y-cy,b.x-cx);if(th<0){const t=a0;a0=a1;a1=t}
+ return{c:{x:cx,y:cy},r:Math.abs(r),a0,a1}}
+function cadArcPts(c,r,a0,a1,maxStep){let sw=a1-a0;while(sw<=0)sw+=Math.PI*2;const n=Math.max(2,Math.ceil(sw/(maxStep||Math.PI/18)));const o=[];for(let i=0;i<=n;i++){const t=a0+sw*i/n;o.push({x:c.x+r*Math.cos(t),y:c.y+r*Math.sin(t)})}return o}
+function cadFlatten(db){
+ const blocks=new Map();((db.tables&&db.tables.BLOCK_RECORD&&db.tables.BLOCK_RECORD.entries)||[]).forEach(b=>blocks.set(b.name,b));
+ const layerInfo=new Map();((db.tables&&db.tables.LAYER&&db.tables.LAYER.entries)||[]).forEach(l=>layerInfo.set(l.name,l));
+ const F={segs:[],arcs:[],polys:[],texts:[],fills:[],inserts:[],wide:[],count:{}};let n=0;const LIM=500000;
+ const ap=(T,p)=>{if(!p)throw new Error('point');return{x:T[0]*p.x+T[2]*p.y+T[4],y:T[1]*p.x+T[3]*p.y+T[5]}};
+ const mul=(A,B)=>[A[0]*B[0]+A[2]*B[1],A[1]*B[0]+A[3]*B[1],A[0]*B[2]+A[2]*B[3],A[1]*B[2]+A[3]*B[3],A[0]*B[4]+A[2]*B[5]+A[4],A[1]*B[4]+A[3]*B[5]+A[5]];
+ const tally=(layer)=>{F.count[layer]=(F.count[layer]||0)+1};
+ function addArc(T,c,r,a0,a1,layer,full){const sx=Math.hypot(T[0],T[1]),sy=Math.hypot(T[2],T[3]),det=T[0]*T[3]-T[1]*T[2],uni=Math.abs(sx-sy)<=1e-6*Math.max(sx,sy)&&Math.abs(T[0]*T[2]+T[1]*T[3])<=1e-6*sx*sy;
+  if(uni){const C=ap(T,c),R=r*sx;if(full){F.arcs.push({c:C,r:R,a0:0,a1:Math.PI*2,layer,full:1});return}
+   const P0=ap(T,{x:c.x+r*Math.cos(a0),y:c.y+r*Math.sin(a0)}),P1=ap(T,{x:c.x+r*Math.cos(a1),y:c.y+r*Math.sin(a1)});
+   let s=Math.atan2(P0.y-C.y,P0.x-C.x),e=Math.atan2(P1.y-C.y,P1.x-C.x);if(det<0){const t=s;s=e;e=t}
+   F.arcs.push({c:C,r:R,a0:s,a1:e,layer});return}
+  const pts=cadArcPts(c,r,full?0:a0,full?Math.PI*2:a1).map(q=>ap(T,q));F.polys.push({pts,closed:!!full,layer,free:1});for(let i=1;i<pts.length;i++)F.segs.push({a:pts[i-1],b:pts[i],layer,curve:1})}
+ function polyline(T,v,closed,layer,width){if(v.length<2)return;const W=[],m=closed?v.length:v.length-1,sx=Math.hypot(T[0],T[1]);
+  for(let i=0;i<m;i++){const A=v[i],B=v[(i+1)%v.length];
+   if(Math.abs(A.bulge||0)>1e-9){const arc=cadBulgeArc(A,B,A.bulge);if(arc){addArc(T,arc.c,arc.r,arc.a0,arc.a1,layer);let pts=cadArcPts(arc.c,arc.r,arc.a0,arc.a1);if(A.bulge<0)pts=pts.reverse();pts.slice(i?1:0).forEach(q=>W.push(ap(T,q)));continue}}
+   if(!i)W.push(ap(T,A));const b=ap(T,B),a=ap(T,A);W.push(b);F.segs.push({a,b,layer});if(width>0)F.wide.push({a,b,w:width*sx,layer})}
+  if(!m&&W.length===0)return;F.polys.push({pts:W,closed,layer})}
+ function walk(ents,T,layerOver,depth,owner){
+  for(const e of ents){if(n>LIM)return;if(!e||e.isInPaperSpace||e.isVisible===false)continue;
+   const layer=(e.layer==='0'||!e.layer)&&layerOver?layerOver:(e.layer||'0');const li=layerInfo.get(layer);if(li&&(li.off||li.frozen))continue;n++;tally(layer);
+   const t=e.type;
+   try{
+   if(t==='LINE')F.segs.push({a:ap(T,e.startPoint),b:ap(T,e.endPoint),layer});
+   else if(t==='LWPOLYLINE')polyline(T,e.vertices||[],!!((e.flag&1)||(e.flag&512)),layer,e.constantWidth||0);
+   else if(t==='POLYLINE2D')polyline(T,e.vertices||[],!!(e.flag&1),layer,e.startWidth||0);
+   else if(t==='ARC')addArc(T,e.center,e.radius,e.startAngle,e.endAngle,layer);
+   else if(t==='CIRCLE')addArc(T,e.center,e.radius,0,Math.PI*2,layer,true);
+   else if(t==='ELLIPSE'){const c=e.center,M=e.majorAxisEndPoint,ma=Math.hypot(M.x,M.y),rot=Math.atan2(M.y,M.x),mi=ma*(e.axisRatio||1);let s=e.startAngle||0,en=e.endAngle||Math.PI*2;while(en<=s)en+=Math.PI*2;
+    const k=Math.max(8,Math.ceil((en-s)/(Math.PI/24))),pts=[];for(let i=0;i<=k;i++){const u=s+(en-s)*i/k,x=ma*Math.cos(u),y=mi*Math.sin(u);pts.push(ap(T,{x:c.x+x*Math.cos(rot)-y*Math.sin(rot),y:c.y+x*Math.sin(rot)+y*Math.cos(rot)}))}
+    F.polys.push({pts,closed:Math.abs(en-s-Math.PI*2)<1e-6,layer,free:1})}
+   else if(t==='SPLINE'){const src=(e.fitPoints&&e.fitPoints.length>1?e.fitPoints:e.controlPoints)||[];if(src.length>1)F.polys.push({pts:src.map(q=>ap(T,q)),closed:!!(e.flag&1),layer,free:1})}
+   else if(t==='SOLID'){const c=[e.corner1,e.corner2,e.corner4||e.corner3,e.corner3].map(q=>ap(T,q));F.fills.push({pts:c,layer})} // DXF solids list corners in Z order
+   else if(t==='TEXT'||t==='MTEXT'||t==='ATTRIB'){const mt=t==='MTEXT',raw=String(e.text||'');
+    const str=mt?raw.replace(/\\[Pp]/g,'\n').replace(/\\[ACFHQTWfacfhqtw][^;]*;/g,'').replace(/\\[LlOoKk]/g,'').replace(/\\S([^;]*);/g,'$1').replace(/[{}]/g,'').replace(/\\~/g,' ').replace(/\\\\/g,'\\'):raw;
+    if(!str.trim())continue;
+    const al=!mt&&(e.halign||e.valign)&&e.endPoint&&(e.endPoint.x||e.endPoint.y),pos=ap(T,mt?e.insertionPoint:(al?e.endPoint:e.startPoint)),sx=Math.hypot(T[0],T[1]),h=(e.textHeight||1)*sx,rot=(e.rotation||0)+Math.atan2(T[1],T[0]);
+    const first=str.split('\n')[0],len=first.length*h*.62,lines=str.split('\n').length;let ox=0,oy=0;
+    if(mt){const ap_=e.attachmentPoint||1,col=(ap_-1)%3,row=Math.floor((ap_-1)/3);ox=col===0?len/2:col===2?-len/2:0;oy=row===0?-h*lines*.6:row===2?h*lines*.6:0}
+    else{const ha=e.halign||0;ox=(ha===1||ha===4)?0:ha===2?-len/2:len/2;oy=(e.valign===2||ha===4)?0:h/2}
+    const c={x:pos.x+ox*Math.cos(rot)-oy*Math.sin(rot),y:pos.y+ox*Math.sin(rot)+oy*Math.cos(rot)};
+    F.texts.push({str,pos,c,h,rot,layer,mt})}
+   else if(t==='INSERT'||t==='DIMENSION'){const b=blocks.get(e.name);if(!b||depth>8)continue;const base=b.basePoint||{x:0,y:0};
+    const rows=t==='INSERT'?Math.min(e.rowCount||1,50):1,cols=t==='INSERT'?Math.min(e.columnCount||1,50):1;
+    for(let r=0;r<rows;r++)for(let cI=0;cI<cols;cI++){
+     let M=[1,0,0,1,0,0];
+     if(t==='INSERT'){const ip=e.insertionPoint||{x:0,y:0},ro=e.rotation||0,co=Math.cos(ro),si=Math.sin(ro),sx=e.xScale||1,sy=e.yScale||1,ox=cI*(e.columnSpacing||0),oy=r*(e.rowSpacing||0);
+      M=mul([co,si,-si,co,ip.x,ip.y],mul([1,0,0,1,ox,oy],[sx,0,0,sy,-base.x*sx,-base.y*sy]))}
+     const T2=mul(T,M),rec=depth===0&&t==='INSERT'?{name:e.name,layer,T:T2,s0:F.segs.length,a0:F.arcs.length,p0:F.polys.length}:null;
+     walk(b.entities||[],T2,layer,depth+1,rec||owner);
+     if(rec){rec.s1=F.segs.length;rec.a1=F.arcs.length;rec.p1=F.polys.length;F.inserts.push(rec)}}}
+   }catch(err){F.skipped=(F.skipped||0)+1} // one odd entity never stops the import
+  }}
+ walk(db.entities||[],[1,0,0,1,0,0],null,0,null);
+ F.truncated=n>LIM;return F}
+// robust extents: ignore a few far-away strays (construction lines, a block parked far off)
+function cadExtents(F){const xs=[],ys=[];const add=p=>{if(isFinite(p.x)&&isFinite(p.y)){xs.push(p.x);ys.push(p.y)}};
+ F.segs.forEach(s=>{add(s.a);add(s.b)});F.arcs.forEach(a=>{add({x:a.c.x-a.r,y:a.c.y-a.r});add({x:a.c.x+a.r,y:a.c.y+a.r})});F.polys.forEach(q=>q.pts.forEach(add));F.texts.forEach(t=>add(t.pos));F.fills.forEach(f=>f.pts.forEach(add));
+ if(!xs.length)return null;xs.sort((a,b)=>a-b);ys.sort((a,b)=>a-b);
+ const q=(A,f)=>A[Math.max(0,Math.min(A.length-1,Math.round(f*(A.length-1))))],cut=xs.length>200?.002:0;
+ const r0=q(xs,cut),r1=q(xs,1-cut),s0=q(ys,cut),s1=q(ys,1-cut),mx=Math.max(r1-r0,s1-s0,1e-9)*2;
+ // keep everything near the drawing; drop only strays far outside it (a block parked miles away)
+ let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;for(let i=0;i<xs.length;i++){if(xs[i]>=r0-mx&&xs[i]<=r1+mx){if(xs[i]<x0)x0=xs[i];if(xs[i]>x1)x1=xs[i]}}
+ for(let i=0;i<ys.length;i++){if(ys[i]>=s0-mx&&ys[i]<=s1+mx){if(ys[i]<y0)y0=ys[i];if(ys[i]>y1)y1=ys[i]}}
+ return{x0,y0,x1,y1}}
+function cadGuessUnits(db,ext){const u=db.header&&db.header.INSUNITS;if(CAD_UNIT_MM[u])return{mm:CAD_UNIT_MM[u],from:'file'};
+ if(!ext)return{mm:1,from:'guess'};const span=Math.max(ext.x1-ext.x0,ext.y1-ext.y0);
+ // a building plan is usually 5–300 m across
+ if(span>=3000&&span<=600000)return{mm:1,from:'guess'};if(span>=3&&span<=600)return{mm:1000,from:'guess'};if(span>=300&&span<3000)return{mm:10,from:'guess'};
+ return{mm:db.header&&db.header.MEASUREMENT===0?25.4:1,from:'guess'}}
+function cadGuessRole(name){const n=String(name).toLowerCase();
+ if(/defpoints|viewport|vport|titleblock|title-block|title_block|border|xref|^\*/.test(n))return'hide';
+ if(/door|tür|tur\b|porte|porta|puerta|\bdr\b|a-door/.test(n))return'door';
+ if(/window|glaz|fenster|fen[eê]tre|ventana|finestra|\bwin\b|a-glaz|wndw/.test(n))return'window';
+ if(/wall|mur|wand|pared|parete|partition|a-wall|\bcore\b|s-wall|wal\b/.test(n))return'wall';
+ if(/room|space|area|zone|a-area|\brm\b/.test(n)&&!/text|tag|iden|name|label/.test(n))return'room';
+ return'bg'}
+// ---------- background image ----------
+function cadRender(F,ext,roles,maxSide){const W0=ext.x1-ext.x0,H0=ext.y1-ext.y0,pad=Math.max(W0,H0)*.02,ms=maxSide||4096;
+ const kx=Math.min(ms/(W0+2*pad),ms/(H0+2*pad),Math.sqrt(16e6/((W0+2*pad)*(H0+2*pad)))),w=Math.max(1,Math.round((W0+2*pad)*kx)),h=Math.max(1,Math.round((H0+2*pad)*kx));
+ const X=x=>(x-ext.x0+pad)*kx,Y=y=>(ext.y1+pad-y)*kx,show=l=>roles[l]!=='hide';
+ const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);
+ g.lineCap='round';g.lineJoin='round';
+ const col=l=>roles[l]==='wall'?'#000':'#333',lw=l=>roles[l]==='wall'?1.6:1;
+ g.fillStyle='#000';F.fills.forEach(f=>{if(!show(f.layer))return;g.beginPath();f.pts.forEach((q,i)=>i?g.lineTo(X(q.x),Y(q.y)):g.moveTo(X(q.x),Y(q.y)));g.closePath();g.fill()});
+ F.wide.forEach(s=>{if(!show(s.layer))return;g.strokeStyle='#000';g.lineWidth=Math.max(1,s.w*kx);g.beginPath();g.moveTo(X(s.a.x),Y(s.a.y));g.lineTo(X(s.b.x),Y(s.b.y));g.stroke()});
+ F.segs.forEach(s=>{if(!show(s.layer)||s.curve)return;g.strokeStyle=col(s.layer);g.lineWidth=lw(s.layer);g.beginPath();g.moveTo(X(s.a.x),Y(s.a.y));g.lineTo(X(s.b.x),Y(s.b.y));g.stroke()});
+ F.arcs.forEach(a=>{if(!show(a.layer))return;g.strokeStyle=col(a.layer);g.lineWidth=lw(a.layer);g.beginPath();g.arc(X(a.c.x),Y(a.c.y),a.r*kx,-a.a0,-a.a1,true);g.stroke()});
+ // ellipses / splines / non-uniformly scaled arcs only live in polys (lines + bulge arcs were drawn above)
+ F.polys.forEach(q=>{if(!show(q.layer)||!q.free)return;g.strokeStyle=col(q.layer);g.lineWidth=lw(q.layer);g.beginPath();q.pts.forEach((p,i)=>i?g.lineTo(X(p.x),Y(p.y)):g.moveTo(X(p.x),Y(p.y)));if(q.closed)g.closePath();g.stroke()});
+ g.fillStyle='#111';g.textBaseline='middle';g.textAlign='center';
+ F.texts.forEach(t=>{if(!show(t.layer))return;const px=t.h*kx;if(px<3)return;g.save();g.translate(X(t.c.x),Y(t.c.y));g.rotate(-t.rot);g.font=`${Math.round(px)}px Segoe UI, Arial, sans-serif`;
+  const ls=t.str.split('\n');ls.forEach((s,i)=>g.fillText(s,0,(i-(ls.length-1)/2)*px*1.25));g.restore()});
+ return{canvas:c,k:kx,pad,w,h}}
+// ---------- vector model: walls, openings, rooms ----------
+function cadBuildWalls(F,roles,uMM,opt){const minT=(opt.minT||50)/uMM,maxT=(opt.maxT||700)/uMM,minL=Math.max(minT*1.5,150/uMM),isW=l=>roles[l]==='wall';
+ const S0=F.segs.filter(s=>isW(s.layer)&&!s.curve).map(s=>{const dx=s.b.x-s.a.x,dy=s.b.y-s.a.y,L=Math.hypot(dx,dy);let th=Math.atan2(dy,dx);if(th<0)th+=Math.PI;if(th>=Math.PI-1e-9)th-=Math.PI;return{...s,L,th,ux:Math.cos(th),uy:Math.sin(th),used:[]}}).filter(s=>s.L>minT*.5);
+ const bins=new Map(),BIN=Math.PI/180;S0.forEach((s,i)=>{const b=Math.floor(s.th/BIN);(bins.get(b)||bins.set(b,[]).get(b)).push(i)});
+ const near=b=>{const n=Math.round(Math.PI/BIN);return[...(bins.get(b)||[]),...(bins.get((b+1)%n)||[]),...(bins.get((b-1+n)%n)||[])]};
+ const proj=(s,p)=>(p.x)*s.ux+(p.y)*s.uy,off=(s,p)=>-(p.x)*s.uy+(p.y)*s.ux;
+ const cands=[];
+ S0.forEach((s,i)=>{const b=Math.floor(s.th/BIN);near(b).forEach(j=>{if(j<=i)return;const t=S0[j];let dth=Math.abs(s.th-t.th);dth=Math.min(dth,Math.PI-dth);if(dth>1.5*BIN)return;
+  const d=Math.abs(off(s,{x:(t.a.x+t.b.x)/2,y:(t.a.y+t.b.y)/2})-off(s,s.a));if(d<minT||d>maxT)return;
+  const sa=proj(s,s.a),sb=proj(s,s.b),ta=proj(s,t.a),tb=proj(s,t.b),lo=Math.max(Math.min(sa,sb),Math.min(ta,tb)),hi=Math.min(Math.max(sa,sb),Math.max(ta,tb));
+  if(hi-lo<Math.max(minL*.6,d*.8))return;cands.push({i,j,d,lo,hi})})});
+ cands.sort((a,b)=>a.d-b.d||(b.hi-b.lo)-(a.hi-a.lo));
+ const free=(used,lo,hi)=>{let parts=[[lo,hi]];used.forEach(([u0,u1])=>{parts=parts.flatMap(([a,b])=>u1<=a||u0>=b?[[a,b]]:[[a,Math.min(b,u0)],[Math.max(a,u1),b]].filter(([x,y])=>y-x>1e-9))});return parts};
+ const walls=[];
+ cands.forEach(c=>{const s=S0[c.i],t=S0[c.j];
+  // the used parts are kept in s's axis for both lines (they're parallel)
+  free(s.used,c.lo,c.hi).forEach(([a0,b0])=>free(t.used,a0,b0).forEach(([lo,hi])=>{if(hi-lo<Math.max(minL*.6,c.d*.8))return;
+   s.used.push([lo,hi]);t.used.push([lo,hi]);
+   const o1=off(s,s.a),o2=off(s,{x:(t.a.x+t.b.x)/2,y:(t.a.y+t.b.y)/2}),om=(o1+o2)/2,P=(u)=>({x:u*s.ux-om*s.uy,y:u*s.uy+om*s.ux});
+   walls.push({a:P(lo),b:P(hi),t:c.d,ux:s.ux,uy:s.uy,layer:s.layer})}))});
+ // wide polylines and filled solids drawn as walls
+ F.wide.forEach(q=>{if(!isW(q.layer))return;const L=Math.hypot(q.b.x-q.a.x,q.b.y-q.a.y);if(L<minL||q.w<minT||q.w>maxT)return;walls.push({a:q.a,b:q.b,t:q.w,ux:(q.b.x-q.a.x)/L,uy:(q.b.y-q.a.y)/L,layer:q.layer})});
+ F.fills.forEach(f=>{if(!isW(f.layer))return;const p=f.pts,e1=Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y),e2=Math.hypot(p[2].x-p[1].x,p[2].y-p[1].y);const long=e1>=e2,L=Math.max(e1,e2),T=Math.min(e1,e2);
+  if(T<minT||T>maxT||L<1.5*T)return;const m=(u,v)=>({x:(u.x+v.x)/2,y:(u.y+v.y)/2});const a=long?m(p[0],p[3]):m(p[0],p[1]),b=long?m(p[1],p[2]):m(p[3],p[2]);
+  walls.push({a,b,t:T,ux:(b.x-a.x)/L,uy:(b.y-a.y)/L,layer:f.layer})});
+ // concentric arcs -> curved walls (pieces of <= 90 degrees, as the app's bow walls)
+ const A0=F.arcs.filter(a=>isW(a.layer)&&!a.full),curved=[],usedA=new Set();
+ A0.forEach((a,i)=>{if(usedA.has(i))return;let best=null;A0.forEach((b,j)=>{if(j===i||usedA.has(j))return;if(Math.hypot(a.c.x-b.c.x,a.c.y-b.c.y)>Math.max(minT*.5,a.r*.01))return;const d=Math.abs(a.r-b.r);if(d<minT||d>maxT)return;if(!best||d<best.d)best={j,d}});
+  if(!best)return;const b=A0[best.j],norm=x=>{x%=Math.PI*2;return x<0?x+Math.PI*2:x};
+  const s1=norm(a.a0),e1=s1+norm(a.a1-a.a0||Math.PI*2),s2c=norm(b.a0),cand=[s2c,s2c+Math.PI*2,s2c-Math.PI*2];let lo=null,hi=null;
+  cand.forEach(s2=>{const e2=s2+norm(b.a1-b.a0||Math.PI*2),l=Math.max(s1,s2),h=Math.min(e1,e2);if(h-l>(hi==null?0:hi-lo)){lo=l;hi=h}});
+  if(hi==null||hi-lo<Math.PI/36)return;usedA.add(i);usedA.add(best.j);
+  const rm=(a.r+b.r)/2,c=a.c,k=Math.max(1,Math.ceil((hi-lo)/(Math.PI/2)));
+  for(let q=0;q<k;q++){const t0=lo+(hi-lo)*q/k,t1=lo+(hi-lo)*(q+1)/k,P=t=>({x:c.x+rm*Math.cos(t),y:c.y+rm*Math.sin(t)}),pa=P(t0),pb=P(t1),M={x:(pa.x+pb.x)/2,y:(pa.y+pb.y)/2},Am=P((t0+t1)/2),L=Math.hypot(pb.x-pa.x,pb.y-pa.y)||1;
+   curved.push({a:pa,b:pb,t:best.d,bowD:((Am.x-M.x)*-(pb.y-pa.y)+(Am.y-M.y)*(pb.x-pa.x))/L,layer:a.layer})}});
+ cadMergeCollinear(walls,minT);
+ return{walls,curved}}
+// merge collinear pieces of the same wall (broken by a crossing line, or meeting end to end)
+function cadMergeCollinear(walls,minT){const BIN=Math.PI/180;
+ let changed=true;while(changed){changed=false;
+  for(let i=0;i<walls.length&&!changed;i++)for(let j=i+1;j<walls.length;j++){const A=walls[i],B=walls[j];if(Math.abs(A.ux*B.uy-A.uy*B.ux)>Math.sin(BIN))continue;
+   const o=Math.abs(-(B.a.x-A.a.x)*A.uy+(B.a.y-A.a.y)*A.ux);if(o>Math.min(A.t,B.t)*.25)continue;if(Math.abs(A.t-B.t)>Math.max(A.t,B.t)*.15)continue;
+   const pa=p=>(p.x-A.a.x)*A.ux+(p.y-A.a.y)*A.uy,a0=Math.min(pa(A.a),pa(A.b)),a1=Math.max(pa(A.a),pa(A.b)),b0=Math.min(pa(B.a),pa(B.b)),b1=Math.max(pa(B.a),pa(B.b));
+   if(b0>a1+minT*.2||a0>b1+minT*.2)continue;const lo=Math.min(a0,b0),hi=Math.max(a1,b1),P=u=>({x:A.a.x+A.ux*u,y:A.a.y+A.uy*u});
+   walls[i]={...A,a:P(lo),b:P(hi),t:(A.t+B.t)/2};walls.splice(j,1);changed=true;break}}
+ return walls}
+// line-line intersection of two wall centrelines
+function cadIsect(A,B){const d1x=A.b.x-A.a.x,d1y=A.b.y-A.a.y,d2x=B.b.x-B.a.x,d2y=B.b.y-B.a.y,den=d1x*d2y-d1y*d2x;if(Math.abs(den)<1e-12)return null;
+ const t=((B.a.x-A.a.x)*d2y-(B.a.y-A.a.y)*d2x)/den,u=((B.a.x-A.a.x)*d1y-(B.a.y-A.a.y)*d1x)/den;return{x:A.a.x+d1x*t,y:A.a.y+d1y*t,t,u}}
+// wall ends stop at the face of the wall they meet: carry them on to its centreline so corners close
+function cadCloseCorners(walls,tol){const lenOf=w=>Math.hypot(w.b.x-w.a.x,w.b.y-w.a.y);
+ walls.forEach(w=>['a','b'].forEach(e=>{const L=lenOf(w);if(L<1e-9)return;let best=null;
+  walls.forEach(o=>{if(o===w)return;const X=cadIsect(w,o);if(!X)return;const ang=Math.abs((w.b.x-w.a.x)*(o.b.y-o.a.y)-(w.b.y-w.a.y)*(o.b.x-o.a.x))/(L*lenOf(o));if(ang<Math.sin(Math.PI/9))return;
+   const dEnd=Math.hypot(X.x-w[e].x,X.y-w[e].y),reach=o.t/2+w.t/2+tol;if(dEnd>reach)return;
+   const Lo=lenOf(o),slack=(w.t/2+tol)/Lo;if(X.u<-slack||X.u>1+slack)return;
+   // only extend outward / trim slightly -- never flip the wall
+   const tEnd=e==='a'?0:1;if(Math.abs(X.t-tEnd)*L>reach)return;if(!best||dEnd<best.d)best={X,d:dEnd}});
+  if(best){w[e]={x:best.X.x,y:best.X.y}}}))}
+// an opening sits in the gap between two pieces of the same wall: join them so the door has a host
+function cadBridge(walls,C,width,tol){let best=null;
+ for(let i=0;i<walls.length;i++)for(let j=0;j<walls.length;j++){if(i===j)continue;const A=walls[i],B=walls[j];const L=Math.hypot(A.b.x-A.a.x,A.b.y-A.a.y)||1,ux=(A.b.x-A.a.x)/L,uy=(A.b.y-A.a.y)/L;
+  const LB=Math.hypot(B.b.x-B.a.x,B.b.y-B.a.y)||1;if(Math.abs(ux*(B.b.y-B.a.y)/LB-uy*(B.b.x-B.a.x)/LB)>Math.sin(Math.PI/90))continue;
+  const off=p=>-(p.x-A.a.x)*uy+(p.y-A.a.y)*ux,pr=p=>(p.x-A.a.x)*ux+(p.y-A.a.y)*uy;if(Math.abs(off(B.a))>Math.max(A.t,B.t)*.4||Math.abs(off(B.b))>Math.max(A.t,B.t)*.4)continue;
+  if(Math.abs(off(C))>Math.max(A.t,B.t)+tol)continue;const a1=Math.max(pr(A.a),pr(A.b)),b0=Math.min(pr(B.a),pr(B.b)),c=pr(C);
+  if(!(b0>=a1-tol&&c>=a1-tol&&c<=b0+tol))continue;const gap=b0-a1;if(gap>width+4*tol+Math.max(A.t,B.t))continue;if(!best||gap<best.gap)best={i,j,gap}}
+ if(!best)return null;const A=walls[best.i],B=walls[best.j],L=Math.hypot(A.b.x-A.a.x,A.b.y-A.a.y)||1,ux=(A.b.x-A.a.x)/L,uy=(A.b.y-A.a.y)/L,pr=p=>(p.x-A.a.x)*ux+(p.y-A.a.y)*uy;
+ const pts=[A.a,A.b,B.a,B.b].sort((p,q)=>pr(p)-pr(q));const W={...A,a:pts[0],b:pts[3],t:(A.t+B.t)/2};
+ walls.splice(Math.max(best.i,best.j),1);walls.splice(Math.min(best.i,best.j),1);walls.push(W);return W}
+function cadOpenings(F,roles,uMM,walls){const isD=l=>roles[l]==='door',isWn=l=>roles[l]==='window',out=[],r2=v=>v*uMM;
+ const doorName=/door|tür|porte|porta|puerta|^dr[-_ ]|_dr\b/i,winName=/window|win[-_ ]|glaz|fenster|fen[eê]tre|ventana|finestra/i;
+ const seenArc=new Set();
+ const arcDoor=(arcs,ins)=>{const ok=arcs.filter(a=>{const rr=r2(a.r);let sw=a.a1-a.a0;while(sw<=0)sw+=Math.PI*2;return rr>=450&&rr<=1700&&sw>Math.PI/4&&sw<Math.PI*.75});if(!ok.length)return false;
+  ok.sort((a,b)=>b.r-a.r);const a=ok[0],twin=ok.find(b=>b!==a&&Math.abs(b.r-a.r)<a.r*.1&&Math.hypot(b.c.x-a.c.x,b.c.y-a.c.y)>a.r*1.5&&Math.hypot(b.c.x-a.c.x,b.c.y-a.c.y)<a.r*2.3);
+  const P0={x:a.c.x+a.r*Math.cos(a.a0),y:a.c.y+a.r*Math.sin(a.a0)},P1={x:a.c.x+a.r*Math.cos(a.a1),y:a.c.y+a.r*Math.sin(a.a1)},mid={x:a.c.x+a.r*Math.cos((a.a0+a.a1)/2+(a.a1<a.a0?Math.PI:0)),y:a.c.y+a.r*Math.sin((a.a0+a.a1)/2+(a.a1<a.a0?Math.PI:0))};
+  ok.forEach(x=>seenArc.add(x));if(twin)seenArc.add(twin);
+  out.push({kind:'door',hinge:a.c,ends:[P0,P1],arcMid:mid,width:twin?a.r*2:a.r,double:!!twin,twinHinge:twin?twin.c:null,src:ins?ins.name:'arc'});return true};
+ F.inserts.forEach(ins=>{const lay=ins.layer,dn=doorName.test(ins.name),wn=winName.test(ins.name);
+  if(!(isD(lay)||isWn(lay)||dn||wn))return;
+  const arcs=F.arcs.slice(ins.a0,ins.a1),segs=F.segs.slice(ins.s0,ins.s1),P=[...segs.flatMap(s=>[s.a,s.b]),...arcs.flatMap(a=>[{x:a.c.x-a.r,y:a.c.y-a.r},{x:a.c.x+a.r,y:a.c.y+a.r}])];
+  if(!P.length)return;const bb={x0:Math.min(...P.map(p=>p.x)),y0:Math.min(...P.map(p=>p.y)),x1:Math.max(...P.map(p=>p.x)),y1:Math.max(...P.map(p=>p.y))};
+  const isDoor=(isD(lay)||dn)&&!wn;
+  if(isDoor&&arcDoor(arcs,ins))return;
+  out.push({kind:isDoor?'door':'window',bbox:bb,c:{x:(bb.x0+bb.x1)/2,y:(bb.y0+bb.y1)/2},src:ins.name,sliding:isDoor})});
+ // loose (exploded) swing arcs on door layers
+ const loose=F.arcs.filter(a=>isD(a.layer)&&!seenArc.has(a)&&!a.full);loose.forEach(a=>{if(!seenArc.has(a))arcDoor([a],null)});
+ // loose window geometry: cluster the window-layer lines that aren't part of a block
+ const inBlock=new Set();F.inserts.forEach(ins=>{for(let i=ins.s0;i<ins.s1;i++)inBlock.add(i)});
+ const ws=F.segs.map((s,i)=>({s,i})).filter(x=>isWn(x.s.layer)&&!inBlock.has(x.i)).map(x=>x.s);
+ if(ws.length){const tol=150/uMM,cl=[];ws.forEach(s=>{const b={x0:Math.min(s.a.x,s.b.x)-tol,y0:Math.min(s.a.y,s.b.y)-tol,x1:Math.max(s.a.x,s.b.x)+tol,y1:Math.max(s.a.y,s.b.y)+tol};
+   const hit=cl.filter(c=>!(b.x1<c.x0||b.x0>c.x1||b.y1<c.y0||b.y0>c.y1));if(!hit.length)cl.push(b);else{const m=hit[0];hit.slice(1).forEach(h=>{m.x0=Math.min(m.x0,h.x0);m.y0=Math.min(m.y0,h.y0);m.x1=Math.max(m.x1,h.x1);m.y1=Math.max(m.y1,h.y1);cl.splice(cl.indexOf(h),1)});m.x0=Math.min(m.x0,b.x0);m.y0=Math.min(m.y0,b.y0);m.x1=Math.max(m.x1,b.x1);m.y1=Math.max(m.y1,b.y1)}});
+  cl.forEach(b=>{const bb={x0:b.x0+tol,y0:b.y0+tol,x1:b.x1-tol,y1:b.y1-tol};if(Math.max(bb.x1-bb.x0,bb.y1-bb.y0)*uMM<300)return;out.push({kind:'window',bbox:bb,c:{x:(bb.x0+bb.x1)/2,y:(bb.y0+bb.y1)/2},src:'lines'})})}
+ return out}
+// ---------- read + dialog ----------
+async function cadOpenFile(f){if(cadBusy)return;cadBusy=true;const msg=t=>{const e=$('cadMsg');if(e)e.textContent=t};
+ try{openCadModal();msg('Reading '+f.name+'…');$('cadBody').style.display='none';$('cadGo').disabled=true;
+  const buf=await f.arrayBuffer();let db;
+  if(/\.dwg$/i.test(f.name)){
+   // a broken DWG can crash the browser tab (the reader is native code): keep a copy of the plan first
+   let kept=false;try{localStorage.setItem('dsRecovery',JSON.stringify({at:Date.now(),why:'dwg',file:f.name,snap:projectSnap()}));kept=true}catch(e){}
+   if(!kept&&S.objs.length&&!confirm('Opening a DWG is new and a damaged file can stop the page. Your plan is too big to keep a safety copy in this browser — save it first (☰ → Save) if it has unsaved work.\n\nContinue?'))throw new Error('Cancelled — save your plan, then open the DWG again (or use DXF).');
+   try{db=await cadReadDwg(buf,msg)}finally{try{localStorage.removeItem('dsRecovery')}catch(e){}}}
+  else{let txt;try{txt=new TextDecoder('utf-8',{fatal:true}).decode(buf)}catch(e){txt=new TextDecoder('windows-1252').decode(buf)}db=cadParseDxf(txt)}
+  await paYield();cadPrepare(db,f.name);return cadLast}
+ catch(e){msg('⚠ '+(e.message||e));return null}
+ finally{cadBusy=false}}
+function cadPrepare(db,name){const F=cadFlatten(db),ext=cadExtents(F);if(!ext)throw new Error('No drawing found in this file (model space is empty).');
+ const U=cadGuessUnits(db,ext),layers=Object.keys(F.count).sort((a,b)=>F.count[b]-F.count[a]),roles={};layers.forEach(l=>roles[l]=cadGuessRole(l));
+ // nothing named like walls? the busiest layer that has lots of long parallel lines is a fair guess
+ if(!layers.some(l=>roles[l]==='wall')){const cand=layers.filter(l=>roles[l]==='bg').map(l=>({l,n:F.segs.filter(s=>s.layer===l).length})).sort((a,b)=>b.n-a.n)[0];if(cand&&cand.n>=8)roles[cand.l]='wall?'}
+ cadLast={name,db,F,ext,units:U,layers,roles};cadRenderModal();return cadLast}
+function openCadModal(){$('cadModal').style.display='flex'}
+function closeCadModal(){$('cadModal').style.display='none'}
+function cadRenderModal(){const C=cadLast;if(!C)return;const mm=C.units.mm,w=(C.ext.x1-C.ext.x0)*mm/1000,h=(C.ext.y1-C.ext.y0)*mm/1000;
+ $('cadBody').style.display='block';$('cadGo').disabled=false;
+ $('cadMsg').innerHTML=`<b>${esc(C.name)}</b> · ${C.layers.length} layers · ${Object.values(C.F.count).reduce((a,b)=>a+b,0).toLocaleString()} items${C.F.truncated?' (very large — only the first 500,000 read)':''}`;
+ $('cadUnits').innerHTML=CAD_UNIT_NAMES.map(([v,l])=>`<option value="${v}"${Math.abs(v-mm)<1e-9?' selected':''}>${l}</option>`).join('');
+ $('cadUnitsNote').textContent=(C.units.from==='file'?'From the file':'Guessed — check it')+` · drawing is ${w.toFixed(1)} × ${h.toFixed(1)} m`;
+ $('cadLayers').innerHTML=C.layers.map((l,i)=>{const r=C.roles[l]==='wall?'?'wall':C.roles[l];return`<div class="row" style="align-items:center;border-bottom:1px solid var(--border2);padding:3px 0"><div style="flex:2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(l)}">${esc(l)} <span class="sub">${C.F.count[l]}</span>${C.roles[l]==='wall?'?' <span class="sub" title="No layer is named like walls; this one has the most lines">(guess)</span>':''}</div>`+
+  `<div style="flex:1.3"><select class="cadRole" data-i="${i}">${CAD_ROLES.map(([v,t])=>`<option value="${v}"${v===r?' selected':''}>${t}</option>`).join('')}</select></div></div>`}).join('');
+ $('cadLayers').querySelectorAll('.cadRole').forEach(s=>s.onchange=()=>{C.roles[C.layers[+s.dataset.i]]=s.value});
+ $('cadUnits').onchange=()=>{C.units={mm:+$('cadUnits').value,from:'you'};const ww=(C.ext.x1-C.ext.x0)*C.units.mm/1000,hh=(C.ext.y1-C.ext.y0)*C.units.mm/1000;$('cadUnitsNote').textContent=`Set by you · drawing is ${ww.toFixed(1)} × ${hh.toFixed(1)} m`}}
+// ---------- build into the current floor ----------
+async function cadImport(opts){const C=cadLast;if(!C)return null;opts=Object.assign({background:true,model:true,replace:true,minT:50,maxT:700,rooms:true},opts||{});
+ const roles={};C.layers.forEach(l=>roles[l]=C.roles[l]==='wall?'?'wall':C.roles[l]);const uMM=C.units.mm,F=C.F,ext=C.ext;
+ const R=cadRender(F,ext,roles,opts.maxSide||4096);const mmPerPx=uMM/R.k;
+ const W=p=>({x:(p.x-ext.x0+R.pad)*R.k,y:(ext.y1+R.pad-p.y)*R.k});   // drawing units -> world px (= image px)
+ push();
+ if(opts.replace)S.objs=S.objs.filter(o=>!(o.traced&&o.src==='cad'));
+ if(opts.background){const url=R.canvas.toDataURL('image/png');S.plan=url;S.bound=null;setPlan(url,true)}
+ S.scale=mmPerPx;S.verified=true;
+ let nW=0,nD=0,nWin=0,nR=0,nC=0,m2=0;const made=[];
+ if(opts.model){const B=cadBuildWalls(F,roles,uMM,opts),walls=B.walls;cadCloseCorners(walls,60/uMM);cadMergeCollinear(walls,(opts.minT||50)/uMM);
+  const ops=cadOpenings(F,roles,uMM,walls),tol=60/uMM;
+  // host each opening: bridge the gap it sits in, then attach
+  const placed=[];
+  ops.forEach(op=>{let C0,width,ux=null,uy=null;
+   if(op.hinge){const J=op.ends.slice().sort((p,q)=>{const d=pt=>{const w=walls.map(w=>distToSeg(pt,w.a,w.b)).sort((a,b)=>a-b)[0];return w==null?1e9:w};return d(p)-d(q)})[0];
+    C0=op.double?{x:(op.hinge.x+op.twinHinge.x)/2,y:(op.hinge.y+op.twinHinge.y)/2}:{x:(op.hinge.x+J.x)/2,y:(op.hinge.y+J.y)/2};width=op.width}
+   else{C0=op.c;width=Math.max(op.bbox.x1-op.bbox.x0,op.bbox.y1-op.bbox.y0)}
+   let host=cadBridge(walls,C0,width,tol);
+   if(!host){let bd=Infinity;walls.forEach(w=>{const d=distToSeg(C0,w.a,w.b);if(d<bd&&d<=w.t/2+Math.max(tol*3,width*.35)){bd=d;host=w}})}
+   if(!host)return;if(op.bbox){const L=Math.hypot(host.b.x-host.a.x,host.b.y-host.a.y)||1;ux=(host.b.x-host.a.x)/L;uy=(host.b.y-host.a.y)/L;width=Math.abs((op.bbox.x1-op.bbox.x0)*ux)+Math.abs((op.bbox.y1-op.bbox.y0)*uy)}
+   placed.push({op,host,C0,width})});
+  // walls -> app objects
+  const id=new Map();
+  walls.forEach(w=>{const a=W(w.a),b=W(w.b);if(Math.hypot(b.x-a.x,b.y-a.y)<2)return;const o={type:'wall',id:nextId(),a,b,mat:'opaque',th:Math.max(50,Math.round(w.t*uMM/10)*10),color:'#cfcfcf',bow:0,traced:1,conf:'high',src:'cad'};id.set(w,o);made.push(o);nW++});
+  B.curved.forEach(w=>{const o={type:'wall',id:nextId(),a:W(w.a),b:W(w.b),mat:'opaque',th:Math.max(50,Math.round(w.t*uMM/10)*10),color:'#cfcfcf',bow:-w.bowD*R.k,traced:1,conf:'high',curved:1,src:'cad'};made.push(o);nW++;nC++});
+  S.objs.push(...made);
+  placed.forEach(({op,host,C0,width})=>{const hw=id.get(host);if(!hw)return;const c=W(C0),t=wallProjT(hw,c),wmm=Math.max(400,Math.min(4000,Math.round(width*uMM/10)*10));
+   let o;if(op.kind==='window'){o={type:'window',x:c.x,y:c.y,ang:0,wmm,sillH:900,stroke:'#2f6f8f',wid:hw.id,t,traced:1,conf:'high',src:'cad'};nWin++}
+   else{let swing='li';if(op.hinge){const L=Math.hypot(hw.b.x-hw.a.x,hw.b.y-hw.a.y)||1,ux=(hw.b.x-hw.a.x)/L,uy=(hw.b.y-hw.a.y)/L,mid=W(op.arcMid),side=(-(mid.x-c.x)*uy+(mid.y-c.y)*ux)>0?'i':'o',th=wallProjT(hw,W(op.hinge));swing=(th<t?'l':'r')+side}
+    o={type:'door',x:c.x,y:c.y,ang:0,dtype:op.double?'double':op.sliding&&!op.hinge?'sliding':'single',swing:op.double?'i':swing,wmm,stroke:'#8a5a2a',wid:hw.id,t,traced:1,conf:'high',src:'cad'};nD++}
+   snapOpeningToWall(o);S.objs.push(o);made.push(o)});
+  // rooms: outlines on a room layer, else the spaces the walls enclose
+  const zoneOf=(poly,name)=>{const cat='Other';return{type:'poly',pts:poly,segArc:poly.map(_=>0),name,cat,fill:CATS[cat].fill,stroke:CATS[cat].stroke,op:+$('iOp').value||.75,num:nextRoomNum(cat),id:nextId(),traced:1,conf:'auto',src:'cad'}};
+  const zones=[];
+  if(opts.rooms){F.polys.filter(q=>roles[q.layer]==='room'&&q.closed&&q.pts.length>=3).forEach(q=>{const poly=q.pts.map(W);if(pxToM2(Math.abs(areaPx(poly)))<1)return;zones.push(zoneOf(poly,''))});
+   if(!zones.length&&nW){const allW=S.objs.filter(o=>o.type==='wall'&&layerVisible(o)),G=paCheckGrid(allW,[]);if(G&&G.W*G.H<=6e6){const WM=paRasterWalls(allW,G,0),{regions}=paEnclosedRegions(WM,G,1.5);
+     regions.forEach(r=>{if(S.objs.some(o=>isZone(o)&&!o.traced&&inPoly(centroid(r.poly),pts(o))))return;zones.push(zoneOf(r.poly,''))})}}
+   // names from the text inside each room
+   const texts=F.texts.filter(t=>roles[t.layer]!=='hide').map(t=>({...t,w:W(t.c)}));
+   zones.forEach(z=>{const P=pts(z),inside=texts.filter(t=>inPoly(t.w,P));let best=null;
+    inside.forEach(t=>t.str.split('\n').forEach((line,li)=>{const L={text:line.trim(),area:paOcrArea(line),letters:(line.match(/[a-z]/ig)||[]).length,conf:100,h:t.h};if(!paOcrIsName(L))return;const sc=t.h*(li?0.9:1);if(!best||sc>best.sc)best={sc,text:L.text}}));
+    if(best){z.name=paOcrClean(best.text);const g=paOcrCat(z.name);if(g&&CATS[g.cat]){z.cat=g.cat;z.fill=CATS[g.cat].fill;z.stroke=CATS[g.cat].stroke;z.num=nextRoomNum(g.cat)}}
+    if(!z.name)z.name='Room '+(zones.indexOf(z)+1);m2+=pxToM2(Math.abs(areaPx(P)));nR++});
+   S.objs.push(...zones);made.push(...zones)}
+  // walls touching the outside are the building's perimeter
+  {const allW=S.objs.filter(o=>o.type==='wall'&&o.src==='cad'),G=paCheckGrid(allW,[]);if(G&&G.W*G.H<=6e6){const WM=paRasterWalls(allW,G,0),n=G.W*G.H,free=new Uint8Array(n);for(let i=0;i<n;i++)free[i]=WM[i]?0:1;const CC=paComponents(free,G.W,G.H,false);
+    allW.forEach(w=>{const mx=(w.a.x+w.b.x)/2,my=(w.a.y+w.b.y)/2,dx=w.b.x-w.a.x,dy=w.b.y-w.a.y,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L,off=mPx(w.th/1000)/2+G.f*2;
+     const ext_=[1,-1].some(sg=>{const x=Math.floor((mx+nx*off*sg-G.ox)/G.f),y=Math.floor((my+ny*off*sg-G.oy)/G.f);if(x<0||y<0||x>=G.W||y>=G.H)return true;const id_=CC.lab[y*G.W+x];return id_>=0&&CC.comps[id_].edge});
+     if(ext_){w.mat='solid';w.perim=1}})}}}
+ if(floors[curFloor]&&/^Level \d+$/.test(floors[curFloor].name)){const base=String(C.name).replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim();if(base)floors[curFloor].name=base.slice(0,40)}
+ sync();if(typeof fit==='function')fit();
+ const res={walls:nW,curved:nC,doors:nD,windows:nWin,rooms:nR,m2,scale:mmPerPx,w:R.w,h:R.h};cadLast.result=res;
+ toast(`Imported ${C.name}: ${nW} walls${nC?` (${nC} curved)`:''}, ${nD} doors, ${nWin} windows, ${nR} rooms — at true scale. One undo reverses it.`,5000);
+ return res}
+
 /* ---------- space program import (no internet needed) ---------- */
 let IMP={sheets:[],si:0},importAppendMode=false;
 function showImpErr(m){let e=$('impErr');if(!e){e=document.createElement('div');e.id='impErr';e.className='err';$('st1').appendChild(e)}e.textContent='⚠ '+m;$('st1').style.display='block';$('st2').style.display='none'}
@@ -5115,6 +5575,14 @@ $('bProgCsv').onclick=()=>{if(!S.prog.length){toast('Import a space program firs
 $('bProgXlsx').onclick=()=>{if(!S.prog.length){toast('Import a space program first');return}
  const{rows,styles}=buildProgramDeltaXlsx();
  dl(`space_program_delta_${(floors[curFloor]?floors[curFloor].name:'floor').replace(/[^a-z0-9]+/ig,'_')}.xlsx`,URL.createObjectURL(new Blob([xlsxFromRows('Program Delta',rows,styles)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})))};
+$('bFurnSched').onclick=openFurnSchedule;$('bFurnSchedOpen').onclick=openFurnSchedule;$('bFurnSaveMine').onclick=furnSaveSelection;
+$('fsClose').onclick=()=>{$('furnSchedModal').style.display='none'};$('fsByFloor').onchange=furnSchedRender;$('fsRooms').onchange=furnSchedRender;
+$('bFurnSchedCsv').onclick=()=>{if(!furnScheduleData().length){toast('No furniture on any floor yet');return}dl(furnSchedFileBase()+'.csv',URL.createObjectURL(new Blob(['\ufeff'+furnSchedCsv()],{type:'text/csv'})))};
+$('bFurnSchedXlsx').onclick=()=>{if(!furnScheduleData().length){toast('No furniture on any floor yet');return}
+ const byF=$('fsByFloor')?$('fsByFloor').checked:true,wr=$('fsRooms')?$('fsRooms').checked:true,R=furnScheduleRows(byF,wr),styles={};
+ const out=[R.head,...R.rows,R.head.map((h,i)=>i===0?'Total':h==='Qty'?R.total:'')];
+ for(let c=0;c<R.head.length;c++){styles[`0_${c}`]=XLSX_STYLE.HEADER;styles[`${out.length-1}_${c}`]=XLSX_STYLE.HEADER}
+ dl(furnSchedFileBase()+'.xlsx',URL.createObjectURL(new Blob([xlsxFromRows('Furniture',out,styles)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})))};
 $('bDoorSched').onclick=()=>{const doors=S.objs.filter(o=>o.type==='door');
  if(!doors.length){toast('No doors on this floor yet');return}
  const DT={single:'Single leaf',double:'Double leaf',sliding:'Sliding',revolving:'Revolving'},SW={li:'Left-hand, in',lo:'Left-hand, out',ri:'Right-hand, in',ro:'Right-hand, out',na:'N/A'};
@@ -5479,12 +5947,13 @@ function applyUI(ui){if(!ui)return;try{
   renderMetricsPanel()}
  resize();setTimeout(resize,200)
 }catch(e){}}
-function projectSnap(){saveCurFloor();const slim=floors.map(f=>({name:f.name,data:f.data}));return JSON.stringify({floors:slim,curFloor,ui:captureUI()})}
+function projectSnap(){saveCurFloor();const slim=floors.map(f=>({name:f.name,data:f.data}));return JSON.stringify({floors:slim,curFloor,ui:captureUI(),myFurn})}
 function loadProjectObj(obj){hist=[];fut=[];
  if(obj&&Array.isArray(obj.floors)&&obj.floors.length){floors=obj.floors;curFloor=Math.min(obj.curFloor||0,floors.length-1)}
  else{floors=[{name:'Level 1',data:JSON.stringify(obj||{})}];curFloor=0}
  loadFloor(curFloor);
- if(obj&&obj.ui)applyUI(obj.ui)}
+ if(obj&&obj.ui)applyUI(obj.ui);
+ if(obj&&obj.myFurn){const n=myFurnMerge(obj.myFurn);if(n&&typeof toast==='function')toast(`${n} piece${n>1?'s':''} added to ⭐ My furniture from this project`,2500)}}
 // ========================================================================
 // V14 Stage 1: Cloud workspaces (Supabase: auth + Postgres + RLS)
 // Opt-in collaboration on top of the existing local/offline editor -- email login, shared
@@ -5549,7 +6018,8 @@ function cloudConnect(url,key){
  let client;try{client=window.supabase.createClient(url,key)}catch(e){$('cwConnectMsg').textContent='That URL/key pair looks invalid.';return}
  sb=client;const cfg=cloudCfgLoad();if(!(cfg&&cfg.builtin&&cfg.url===url))cloudCfgSave(url,key);$('cwConnectMsg').textContent='Connected.';
  const onSession=session=>{const was=cloudState.email;cloudState.email=session&&session.user&&session.user.email?String(session.user.email).toLowerCase():null;
-  if(cloudState.email&&cloudState.email!==was){cloudClaimInvites().then(()=>cloudRefreshWorkspaces())}
+  if(cloudState.email&&cloudState.email!==was){cloudClaimInvites().then(()=>cloudRefreshWorkspaces()).then(()=>{cloudLoadEmailPref();return cloudFollowDeepLink()})}
+  if(!cloudState.email&&cloudDeepLink&&!was){openCloudModal();const lm=$('cwLoginMsg');if(lm)lm.textContent='Sign in to open the board from your email.'}
   if(!cloudState.email)cloudResetState(false);
   cloudUiRefreshStep()};
  sb.auth.onAuthStateChange((_event,session)=>onSession(session));
@@ -5856,11 +6326,28 @@ function cloudRefreshNotifs(){if(!sb||!cloudState.email)return Promise.resolve()
  return sb.from('notifications').select('id,kind,message,workspace_id,project_id,board_id,read,created_at').order('created_at',{ascending:false}).limit(40).then(({data,error})=>{
   if(error)return;cloudState.notifs=data||[];const n=cloudState.notifs.filter(x=>!x.read).length;$('bellN').textContent=n?String(n>9?'9+':n):'';
   if($('bellMenu').style.display==='block')cloudRenderBell()})}
-function cloudRenderBell(){const m=$('bellMenu'),list=cloudState.notifs||[],icon={invite:'➕',mention:'@',reply:'↩',resolved:'✓',role:'🔑'};
+function cloudRenderBell(){const m=$('bellMenu'),list=cloudState.notifs||[],icon={invite:'➕',mention:'@',reply:'↩',resolved:'✓',role:'🔑'},ep=cloudState.emailPref;
  m.innerHTML=`<div class="bellHead"><b>Notifications</b>${list.some(x=>!x.read)?'<a href="#" id="bellAll">Mark all read</a>':''}</div>`+
+  (ep&&ep.avail?`<label class="bellMail" title="Sent to ${escHtml(cloudState.email||'')}"><input type="checkbox" id="bellEmail"${ep.enabled?' checked':''}> ✉ Email me about mentions, replies &amp; invites</label>`:'')+
   (list.length?list.map(x=>`<div class="bellItem${x.read?'':' unread'}" data-n="${x.id}"><span class="bellIc">${icon[x.kind]||'•'}</span><div><div>${escHtml(x.message)}</div><div class="sub">${cloudAgo(x.created_at)}</div></div></div>`).join(''):'<div class="sub" style="padding:10px">Nothing yet.</div>');
  const all=$('bellAll');if(all)all.onclick=e=>{e.preventDefault();const ids=list.filter(x=>!x.read).map(x=>x.id);sb.from('notifications').update({read:true}).in('id',ids).then(()=>cloudRefreshNotifs())};
- m.querySelectorAll('[data-n]').forEach(d=>d.onclick=()=>cloudOpenNotif(list.find(x=>String(x.id)===d.dataset.n)))}
+ m.querySelectorAll('[data-n]').forEach(d=>d.onclick=()=>cloudOpenNotif(list.find(x=>String(x.id)===d.dataset.n)));
+ const em=$('bellEmail');if(em)em.onchange=()=>cloudSetEmailPref(em.checked)}
+// ---- V16: email notifications (optional cloud_email.sql add-on). Each person's own on/off. If the
+// add-on isn't installed the table doesn't exist and the switch simply doesn't show.
+function cloudLoadEmailPref(){if(!sb||!cloudState.email||typeof sb.from!=='function')return Promise.resolve();
+ try{return sb.from('email_prefs').select('enabled').eq('email',cloudState.email).limit(1).then(({data,error})=>{
+  cloudState.emailPref=error?{avail:false}:{avail:true,enabled:!(data&&data[0]&&data[0].enabled===false)};
+  if($('bellMenu').style.display==='block')cloudRenderBell()},()=>{cloudState.emailPref={avail:false}})}catch(e){cloudState.emailPref={avail:false};return Promise.resolve()}}
+function cloudSetEmailPref(on){if(!sb||!cloudState.email)return Promise.resolve();cloudState.emailPref={avail:true,enabled:!!on};
+ return sb.from('email_prefs').upsert({email:cloudState.email,enabled:!!on,updated_at:new Date().toISOString()},{onConflict:'email'}).then(({error})=>{
+  if(error){toast('Could not change email setting — '+error.message,3500);cloudLoadEmailPref();return}
+  toast(on?`Emails on — sent to ${cloudState.email}`:'Emails off — you\'ll still see everything in the 🔔',2500)})}
+// ---- V16: links in those emails (…?ws=&project=&board=) open that board after sign-in
+var cloudDeepLink=(()=>{try{const q=new URLSearchParams(location.search),b=q.get('board'),w=q.get('ws'),p=q.get('project');return w||b?{ws:w||null,project:p||null,board:b||null}:null}catch(e){return null}})();
+function cloudFollowDeepLink(){const d=cloudDeepLink;if(!d||!sb||!cloudState.email)return Promise.resolve(false);cloudDeepLink=null;
+ try{history.replaceState(null,'',location.pathname)}catch(e){}
+ return cloudOpenNotif({read:true,workspace_id:d.ws,project_id:d.project,board_id:d.board}).then(()=>true,()=>false)}
 function cloudToggleBell(){const m=$('bellMenu'),open=m.style.display!=='block';m.style.display=open?'block':'none';if(open){const r=$('bBell').getBoundingClientRect();m.style.top=(r.bottom+6)+'px';m.style.left=Math.max(8,Math.min(r.left-260,window.innerWidth-340))+'px';cloudRenderBell()}}
 function cloudOpenNotif(x){if(!x)return Promise.resolve();$('bellMenu').style.display='none';
  const mark=x.read?Promise.resolve():sb.from('notifications').update({read:true}).eq('id',x.id).then(()=>cloudRefreshNotifs());
@@ -5900,14 +6387,33 @@ function rtColorFor(email){let h=0;for(let i=0;i<(email||'').length;i++)h=(h*31+
  const palette=['#e74c3c','#e67e22','#f1c40f','#27ae60','#16a085','#2980b9','#8e44ad','#d63384'];
  return palette[Math.abs(h)%palette.length]}
 function rtEnsureIds(){const seen=new Set();S.objs.forEach(o=>{if(!o.id||seen.has(o.id))o.id=nextId();seen.add(o.id)})} // (boards saved before v15.8 can hold the same id twice)
-function rtLeaveChannel(){if(rtChannel&&sb){try{sb.removeChannel(rtChannel)}catch(e){}}clearTimeout(rtDirtyTimer);rtChannel=null;rtPeers={};rtActorId=null}
+function rtLeaveChannel(){if(rtChannel&&sb){try{sb.removeChannel(rtChannel)}catch(e){}}clearTimeout(rtDirtyTimer);clearInterval(rtSetTimer);rtChannel=null;rtPeers={};rtActorId=null}
+// ---- V16: plan settings travel live too: north angle + its lock, north confirmed, and the
+// drawing scale of the floor you're both on. Checked a few times a second (they change from many
+// places -- the arrow, the side panel, the plan check, the scale dialog); sent only when changed.
+var rtSetSig='',rtSetTimer=null;
+function rtSettingsNow(){return{northA:+$('iNorthA').value||0,rotLocked:!!hud.north.rotLocked,northOk:!!S.northOk,floorIdx:curFloor,scale:+S.scale,verified:!!S.verified}}
+function rtSettingsSig(v){return JSON.stringify(v)}
+function rtSettingsTick(){if(!rtChannel||drag||(typeof cloudCanEdit==='function'&&!cloudCanEdit())||(cloudState&&cloudState.previewing))return;
+ const v=rtSettingsNow(),g=rtSettingsSig(v);if(g===rtSetSig)return;rtSetSig=g;
+ rtChannel.send({type:'broadcast',event:'settings',payload:{actor:rtActorId,...v}})}
+function rtApplySettings(p){if(!p)return;let ch=false;
+ if(Number.isFinite(+p.northA)&&+p.northA!==(+$('iNorthA').value||0)){$('iNorthA').value=+p.northA;ch=true}
+ if(!!p.rotLocked!==!!hud.north.rotLocked){northSetRotLock(!!p.rotLocked,true);ch=true}
+ if(p.northOk&&!S.northOk){S.northOk=true;ch=true}
+ if(p.floorIdx===curFloor&&+p.scale>0&&(Math.abs(+p.scale-S.scale)>1e-9||!!p.verified!==!!S.verified)){S.scale=+p.scale;S.verified=!!p.verified;if($('iScale'))$('iScale').value=+S.scale.toFixed(3);ch=true;
+  if(typeof toast==='function')toast(`Drawing scale changed by ${String(p.actor||'').split(':')[0]||'someone'}`,2500)}
+ rtSetSig=rtSettingsSig(rtSettingsNow()); // what we now show = what they sent: never echo it back
+ if(ch){if(typeof renderMetricsPanel==='function')renderMetricsPanel();draw()}}
 function rtJoinBoard(boardId){
  rtLeaveChannel();
  if(!sb||!boardId||typeof sb.channel!=='function')return;
  rtActorId=(cloudState.email||'anon')+':'+Math.random().toString(36).slice(2);rtResetSigs();
+ rtSetSig=rtSettingsSig(rtSettingsNow());clearInterval(rtSetTimer);rtSetTimer=setInterval(rtSettingsTick,400);
  const ch=sb.channel('board:'+boardId,{config:{presence:{key:rtActorId}}});
  ch.on('broadcast',{event:'edit'},({payload})=>{if(payload&&payload.actor!==rtActorId)rtApplyRemote(payload)});
  ch.on('broadcast',{event:'comments'},()=>{if(typeof cloudLoadComments==='function')cloudLoadComments()});
+ ch.on('broadcast',{event:'settings'},({payload})=>{if(payload&&payload.actor!==rtActorId)rtApplySettings(payload)});
  ch.on('broadcast',{event:'restored'},({payload})=>{if(typeof cloudBackToLatest==='function'){cloudBackToLatest();toast(`${(payload&&payload.by)||'Someone'} restored an earlier version`,4000)}});
  ch.on('presence',{event:'sync'},()=>{
   const state=ch.presenceState();rtPeers={};
